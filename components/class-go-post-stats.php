@@ -42,7 +42,7 @@ class GO_Post_Stats
 		screen_icon('index');
 
 		// if stats are requested, show them
-		if( isset( $_GET['type'], $_GET['key'] ))
+		if( isset( $_GET['type'], $_GET['key'] ) )
 		{
 
 			// set the upper limit of posts
@@ -116,7 +116,7 @@ class GO_Post_Stats
 		// print lists of items people can get stats on
 		// authors here
 		$authors = $this->get_authors_list();
-		if( is_array( $authors ))
+		if( is_array( $authors ) )
 		{
 			echo '<h2>Authors</h2>';
 			$this->do_list( $authors );
@@ -126,7 +126,7 @@ class GO_Post_Stats
 		foreach( $this->taxonomies as $tax )
 		{
 			$terms = $this->get_terms_list( $tax );
-			if( is_array( $terms ))
+			if( is_array( $terms ) )
 			{
 				echo '<h2>'. $tax .'</h2>';
 				$this->do_list( $terms , $tax );
@@ -146,14 +146,14 @@ class GO_Post_Stats
 	// get a list of posts by author to display
 	public function get_author_stats( $author )
 	{
-		add_filter( 'posts_where', array( $this, 'posts_where' ));
+		add_filter( 'posts_where', array( $this, 'posts_where' ) );
 		$query = new WP_Query( array( 
 			'author' => (int) $author,
 			'posts_per_page' => -1,
 		) );
-		remove_filter( 'posts_where', array( $this, 'posts_where' ));
+		remove_filter( 'posts_where', array( $this, 'posts_where' ) );
 
-		if( ! isset( $query->posts ))
+		if( ! isset( $query->posts ) )
 		{
 			return FALSE;
 		}
@@ -164,15 +164,15 @@ class GO_Post_Stats
 	// get a list of posts by taxonomy to display
 	public function get_taxonomy_stats( $taxonomy , $term )
 	{
-		add_filter( 'posts_where', array( $this, 'posts_where' ));
+		add_filter( 'posts_where', array( $this, 'posts_where' ) );
 		$query = new WP_Query( array( 
 			'taxonomy' => $taxonomy,
 			'term' => $term,
 			'posts_per_page' => -1,
-		));
-		remove_filter( 'posts_where', array( $this, 'posts_where' ));
+		) );
+		remove_filter( 'posts_where', array( $this, 'posts_where' ) );
 
-		if( ! isset( $query->posts ))
+		if( ! isset( $query->posts ) )
 		{
 			return FALSE;
 		}
@@ -183,7 +183,7 @@ class GO_Post_Stats
 	// actually display the stats for the selected posts
 	public function display_stats( $posts )
 	{
-		if( ! is_array( $posts ))
+		if( ! is_array( $posts ) )
 		{
 			return FALSE;
 		}
@@ -191,16 +191,16 @@ class GO_Post_Stats
 		// iterate through the posts, aggregate their stats, and assign those into the calendar
 		foreach( $posts as $post )
 		{
-			$post_date = date( 'Y-m-d', strtotime( $post->post_date ));
+			$post_date = date( 'Y-m-d', strtotime( $post->post_date ) );
 			$this->calendar[ $post_date ]->day = $post_date;
 			$this->calendar[ $post_date ]->posts++;
 			$this->calendar[ $post_date ]->pvs += $this->get_pvs( $post->ID );
 			$this->calendar[ $post_date ]->comments += $post->comment_count;
-			if( preg_match( '/pro\.gigaom\.com/', $post->post_content ))
+			if( preg_match( '/pro\.gigaom\.com/', $post->post_content ) )
 			{
 				$this->calendar[ $post_date ]->pro_links++;			
 			}
-			if( preg_match( '/event(s?)\.gigaom\.com/', $post->post_content ))
+			if( preg_match( '/event(s?)\.gigaom\.com/', $post->post_content ) )
 			{
 				$this->calendar[ $post_date ]->events_links++;
 			}
@@ -312,7 +312,7 @@ class GO_Post_Stats
 	{
 
 		// test the cache like a good API user
-		if( ! $hits = wp_cache_get( $post_id , 'go-post-stats-hits' ))
+		if( ! $hits = wp_cache_get( $post_id , 'go-post-stats-hits' ) )
 		{
 			// attempt to get the API key from the user
 			$user = wp_get_current_user();
@@ -331,12 +331,12 @@ class GO_Post_Stats
 			$hits_api = wp_remote_request(
 				'http://stats.wordpress.com/csv.php?api_key=' . $this->wpcom_api_key . '&blog_uri=' . urlencode( home_url() ) . '&table=postviews&post_id=' . $post_id . '&days=-1&limit=-1&format=json&summarize'
 			);
-			if( ! is_wp_error( $hits_api ))
+			if( ! is_wp_error( $hits_api ) )
 			{
 				$hits_api = wp_remote_retrieve_body( $hits_api );
 				$hits_api = json_decode( $hits_api );
 
-				if( isset( $hits_api->views ))
+				if( isset( $hits_api->views ) )
 				{
 					$hits = $hits_api->views;
 				}
@@ -355,7 +355,7 @@ class GO_Post_Stats
 	// print a list of items to get stats on
 	public function do_list( $list, $type = 'author' )
 	{
-		if( ! is_array( $list ))
+		if( ! is_array( $list ) )
 		{
 			return FALSE;
 		}
@@ -381,7 +381,7 @@ class GO_Post_Stats
 
 		$author_ids = $wpdb->get_results( "SELECT post_author, COUNT(1) AS hits FROM {$wpdb->posts} GROUP BY post_author" );
 
-		if( ! is_array( $author_ids ))
+		if( ! is_array( $author_ids ) )
 		{
 			return FALSE;
 		}
@@ -403,7 +403,7 @@ class GO_Post_Stats
 	// get a list of the most popular terms in the given taxonomy
 	public function get_terms_list( $taxonomy )
 	{
-		if( ! taxonomy_exists( $taxonomy ))
+		if( ! taxonomy_exists( $taxonomy ) )
 		{
 			return FALSE;
 		}
@@ -412,9 +412,9 @@ class GO_Post_Stats
 			'orderby' => 'count',
 			'order' => 'DESC',
 			'number' => 23,
-		));
+		) );
 
-		if( ! is_array( $terms ))
+		if( ! is_array( $terms ) )
 		{
 			return FALSE;
 		}
@@ -434,14 +434,24 @@ class GO_Post_Stats
 
 	public function pick_month()
 	{
+		$months = array();
+		$months[] = '<option value="' . date( 'Y-m', strtotime( '-31 days' ) ) . '">Last 30 days</option>';
+		$starting_month = (int) date( 'n' );
+		for( $year = (int) date( 'Y' ); $year >= 2001; $year-- )
+		{
+			for( $month = $starting_month; $month >= 1; $month-- )
+			{
+				$temp_time = strtotime( $year . '-' . $month . '-' . '1' );
+				$months[] = '<option value="' . date( 'Y-m', $temp_time ) . '" ' . selected( date( 'Y-m', $this->date_lesser_stamp ), date( 'Y-m', $temp_time ), FALSE ) . '>' . date( 'M Y', $temp_time ) . '</option>';
+			}
+
+			$starting_month = 12;
+		}
+
 		?>
-		<p>
-			<select>
-				<option>Last 30 days</option>
-				<option>This currently</option>
-				<option>Does nothing</option>
-			</select>
-		</p>
+		<select onchange="window.location = window.location + '&date_lesser=' + this.value + '-1' + '&date_greater=' + this.value + '-31'">
+			<?php echo implode( $months ); ?>
+		</select>
 		<?php
 	} // END pick_month
 } // END GO_Post_Stats
@@ -450,7 +460,7 @@ function go_post_stats( $taxonomies )
 {
 	global $go_post_stats;
 
-	if( ! is_object( $go_post_stats ))
+	if( ! is_object( $go_post_stats ) )
 	{
 		$go_post_stats = new GO_Post_Stats( $taxonomies );
 	}
