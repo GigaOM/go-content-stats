@@ -300,6 +300,19 @@ class GO_Post_Stats
 		// test the cache like a good API user
 		if( ! $hits = wp_cache_get( $post_id , 'go-post-stats-hits' ))
 		{
+			// attempt to get the API key from the user
+			$user = wp_get_current_user();
+			$api_key = isset( $user->api_key ) ? $user->api_key : NULL;
+
+			// a locally set API key overrides everything
+			$api_key = $this->wpcom_api_key ? $this->wpcom_api_key : NULL;
+
+			// no shirt, no shoes, no service
+			if( ! $api_key )
+			{
+				return NULL;
+			}
+
 			// the api has some very hacker-ish docs at http://stats.wordpress.com/csv.php
 			$hits_api = wp_remote_request(
 				'http://stats.wordpress.com/csv.php?api_key=' . $this->wpcom_api_key . '&blog_uri=' . urlencode( home_url() ) . '&table=postviews&post_id=' . $post_id . '&days=-1&limit=-1&format=json&summarize'
