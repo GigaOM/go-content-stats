@@ -9,4 +9,4 @@ Author URI: http://kitchen.gigaom.com
 */
 
 require_once __DIR__ .'/components/class-go-post-stats.php';
-go_post_stats( array( 'post_tag', 'category' ));
+go_post_stats( array( 'primary_channel', 'post_tag' , 'company' , 'technology' ));

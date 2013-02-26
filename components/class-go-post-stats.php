@@ -434,14 +434,24 @@ class GO_Post_Stats
 
 	public function pick_month()
 	{
+		$months = array();
+		$months[] = '<option value="' . date( 'Y-m', strtotime( '-31 days' ) ) . '">Last 30 days</option>';
+		$starting_month = (int) date( 'n' );
+		for( $year = (int) date( 'Y' ); $year >= 2001; $year-- )
+		{
+			for( $month = $starting_month; $month >= 1; $month-- )
+			{
+				$temp_time = strtotime( $year . '-' . $month . '-' . '1' );
+				$months[] = '<option value="' . date( 'Y-m', $temp_time ) . '" ' . selected( date( 'Y-m', $this->date_lesser_stamp ), date( 'Y-m', $temp_time ), FALSE ) . '>' . date( 'M Y', $temp_time ) . '</option>';
+			}
+
+			$starting_month = 12;
+		}
+
 		?>
-		<p>
-			<select>
-				<option>Last 30 days</option>
-				<option>This currently</option>
-				<option>Does nothing</option>
-			</select>
-		</p>
+		<select onchange="window.location = window.location + '&date_lesser=' + this.value + '-1' + '&date_greater=' + this.value + '-31'">
+			<?php echo implode( $months ); ?>
+		</select>
 		<?php
 	} // END pick_month
 } // END GO_Post_Stats
