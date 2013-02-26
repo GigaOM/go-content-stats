@@ -15,7 +15,6 @@ class GO_Post_Stats
 		$this->taxonomies = (array) $taxonomies;
 		
 		add_action( 'init', array( $this, 'init' ) );
-		add_action( 'admin_menu', array( $this, 'admin_menu_init' ) );
 	} // END __construct
 
 	// add the menu item to the dashboard
@@ -28,6 +27,8 @@ class GO_Post_Stats
 
 	public function init()
 	{
+		add_action( 'admin_menu', array( $this, 'admin_menu_init' ) );
+		
 		if ( is_admin() )
 		{
 			wp_enqueue_style( 'go-post_stats', plugins_url( 'css/go-post-stats.css', __FILE__ ), array(), '1' );
@@ -235,15 +236,15 @@ class GO_Post_Stats
 
 		// print the summary row for all these stats
 		printf( '
-			<tr>
-				<td class="summary">%1$s</td>
-				<td class="summary">%2$s</td>
-				<td class="summary">%3$s</td>
-				<td class="summary">%4$s</td>
-				<td class="summary">%5$s</td>
-				<td class="summary">%6$s</td>
-				<td class="summary">%7$s</td>
-				<td class="summary">%8$s</td>
+			<tr class="summary">
+				<td>%1$s</td>
+				<td>%2$s</td>
+				<td>%3$s</td>
+				<td>%4$s</td>
+				<td>%5$s</td>
+				<td>%6$s</td>
+				<td>%7$s</td>
+				<td>%8$s</td>
 			</tr>', 
 			$summary->day .' days',
 			$summary->posts ? $summary->posts : 0,
@@ -283,15 +284,15 @@ class GO_Post_Stats
 
 		// print the summary row for all these stats
 		printf( '
-			<tr>
-				<td class="summary-footer">%1$s</td>
-				<td class="summary-footer">%2$s</td>
-				<td class="summary-footer">%3$s</td>
-				<td class="summary-footer">%4$s</td>
-				<td class="summary-footer">%5$s</td>
-				<td class="summary-footer">%6$s</td>
-				<td class="summary-footer">%7$s</td>
-				<td class="summary-footer">%8$s</td>
+			<tr class="summary-footer">
+				<td>%1$s</td>
+				<td>%2$s</td>
+				<td>%3$s</td>
+				<td>%4$s</td>
+				<td>%5$s</td>
+				<td>%6$s</td>
+				<td>%7$s</td>
+				<td>%8$s</td>
 			</tr>', 
 			$summary->day .' days',
 			$summary->posts ? $summary->posts : 0,
@@ -434,11 +435,13 @@ class GO_Post_Stats
 	public function pick_month()
 	{
 		?>
-		<select>
-			<option>Last 30 days</option>
-			<option>This currently</option>
-			<option>Does nothing</option>
-		</select>
+		<p>
+			<select>
+				<option>Last 30 days</option>
+				<option>This currently</option>
+				<option>Does nothing</option>
+			</select>
+		</p>
 		<?php
 	} // END pick_month
 } // END GO_Post_Stats

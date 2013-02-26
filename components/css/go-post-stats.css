@@ -33,12 +33,12 @@
 	background-color: white;
 }
 
-.dashboard_page_go-post-stats table tr td.summary,
-.dashboard_page_go-post-stats table tr td.summary-footer {
+.dashboard_page_go-post-stats table tr.summary td,
+.dashboard_page_go-post-stats table tr.summary-footer td {
 	background-color: #7f7f7f;
 	color: white;
 }
 
-.dashboard_page_go-post-stats table tr td.summary {
+.dashboard_page_go-post-stats table tr.summary td {
 	border: none;
 }
