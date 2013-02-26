@@ -13,8 +13,10 @@ class GO_Post_Stats
 	public function __construct( $taxonomies = array() )
 	{
 		$this->taxonomies = (array) $taxonomies;
-		add_action( 'admin_menu', array( $this, 'admin_menu_init' ));
-	}
+		
+		add_action( 'init', array( $this, 'init' ) );
+		add_action( 'admin_menu', array( $this, 'admin_menu_init' ) );
+	} // END __construct
 
 	// add the menu item to the dashboard
 	public function admin_menu_init()
@@ -22,11 +24,21 @@ class GO_Post_Stats
 		$this->menu_url = admin_url( 'index.php?page=go-post-stats' );
 
 		add_submenu_page( 'index.php', 'GigaOM Post Stats', 'GigaOM Post Stats', 'edit_posts', 'go-post-stats', array( $this, 'admin_menu' ) );
-	}
+	} // END admin_menu_init
+
+	public function init()
+	{
+		if ( is_admin() )
+		{
+			wp_enqueue_style( 'go-post_stats', plugins_url( 'css/go-post-stats.css', __FILE__ ), array(), '1' );
+		}
+	} // END init
 
 	// the stats page/admin menu
 	public function admin_menu()
 	{
+		echo '<div class="wrap">';
+		screen_icon('index');
 
 		// if stats are requested, show them
 		if( isset( $_GET['type'], $_GET['key'] ))
@@ -86,17 +98,17 @@ class GO_Post_Stats
 			// run the stats
 			if( 'author' == $_GET['type'] && ( $author = get_user_by( 'id', $_GET['key'] ) ) )
 			{
-					echo '<h1>Stats for ' . esc_html( $author->display_name ) . '</h1>';
+					echo '<h2>Stats for ' . esc_html( $author->display_name ) . '</h2>';
 					$this->get_author_stats( $_GET['key'] );				
 			}
 			elseif( taxonomy_exists( $_GET['type'] ) && term_exists( $_GET['key'] , $_GET['type'] ) )
 			{
-					echo '<h1>Stats for ' . sanitize_title_with_dashes( $_GET['type'] ) . ':' .  sanitize_title_with_dashes( $_GET['key'] ) . '</h1>';
+					echo '<h2>Stats for ' . sanitize_title_with_dashes( $_GET['type'] ) . ':' .  sanitize_title_with_dashes( $_GET['key'] ) . '</h2>';
 					$this->get_taxonomy_stats( $_GET['type'] , $_GET['key'] );
 			}
 		}
 
-		echo '<h1>Select a knife to slice through the stats</h1>';
+		echo '<h2>Select a knife to slice through the stats</h2>';
 		// display a picker for the time period
 		$this->pick_month();
 
@@ -119,14 +131,16 @@ class GO_Post_Stats
 				$this->do_list( $terms , $tax );
 			}
 		}
-	}
+		
+		echo '</div>';
+	} // END admin_menu
 
 	// a filter for the posts sql to limit by date range
 	public function posts_where( $where = '' )
 	{
 		$where .= " AND post_date <= '{$this->date_greater}' AND post_date >= '{$this->date_lesser}'";
 		return $where;
-	}
+	} // END posts_where
 
 	// get a list of posts by author to display
 	public function get_author_stats( $author )
@@ -144,7 +158,7 @@ class GO_Post_Stats
 		}
 
 		return $this->display_stats( $query->posts );
-	}
+	} // END get_author_stats
 
 	// get a list of posts by taxonomy to display
 	public function get_taxonomy_stats( $taxonomy , $term )
@@ -163,7 +177,7 @@ class GO_Post_Stats
 		}
 
 		return $this->display_stats( $query->posts );
-	}
+	} // END get_taxonomy_stats
 
 	// actually display the stats for the selected posts
 	public function display_stats( $posts )
@@ -193,18 +207,18 @@ class GO_Post_Stats
 
 		// display the aggregated stats in a table
 		echo '
-			<h3>Post performance by date published</h3>
-			<table>
-				<tr>
-					<td>Day</td>
-					<td>Posts</td>
-					<td>PVs</td>
-					<td>PVs/post</td>
-					<td>Comments</td>
-					<td>Comments/post</td>
-					<td>w/Pro links</td>
-					<td>w/events links</td>
-				</tr>
+		<h3>Post performance by date published</h3>
+		<table border="0" cellspacing="0" cellpadding="0">
+			<tr>
+				<th>Day</th>
+				<th>Posts</th>
+				<th>PVs</th>
+				<th>PVs/post</th>
+				<th>Comments</th>
+				<th>Comments/post</th>
+				<th>w/Pro links</th>
+				<th>w/events links</th>
+			</tr>
 		';
 
 		// iterate through and generate the summary stats (yes, this means I'm iterating extra)
@@ -216,21 +230,20 @@ class GO_Post_Stats
 			$summary->pvs += $day->pvs;
 			$summary->comments += $day->comments;
 			$summary->pro_links += $day->pro_links;			
-			$summary->events_links += $day->event_links;
-
+			$summary->events_links += ( isset( $day->event_links ) ) ? $day->event_links : '';
 		}
 
 		// print the summary row for all these stats
 		printf( '
 			<tr>
-				<td>%1$s</td>
-				<td>%2$s</td>
-				<td>%3$s</td>
-				<td>%4$s</td>
-				<td>%5$s</td>
-				<td>%6$s</td>
-				<td>%7$s</td>
-				<td>%8$s</td>
+				<td class="summary">%1$s</td>
+				<td class="summary">%2$s</td>
+				<td class="summary">%3$s</td>
+				<td class="summary">%4$s</td>
+				<td class="summary">%5$s</td>
+				<td class="summary">%6$s</td>
+				<td class="summary">%7$s</td>
+				<td class="summary">%8$s</td>
 			</tr>', 
 			$summary->day .' days',
 			$summary->posts ? $summary->posts : 0,
@@ -239,7 +252,7 @@ class GO_Post_Stats
 			$summary->comments ? number_format( $summary->comments ) : 0,
 			$summary->posts ? number_format( ( $summary->comments / $summary->posts ), 1 ) : 0,
 			$summary->pro_links ? $summary->pro_links : 0,
-			$summary->event_links ? $summary->event_links : 0
+			isset( $summary->event_links ) ? $summary->event_links : 0
 		);
 
 		// iterate through the calendar (includes empty days), print stats for each day
@@ -263,7 +276,7 @@ class GO_Post_Stats
 				$day->comments ? number_format( $day->comments ) : '&nbsp;',
 				$day->posts ? number_format( ( $day->comments / $day->posts ), 1 ) : '&nbsp;',
 				$day->pro_links ? $day->pro_links : '&nbsp;',
-				$day->event_links ? $day->event_links : '&nbsp;'
+				isset( $day->event_links ) ? $day->event_links : '&nbsp;'
 			);
 
 		}
@@ -271,14 +284,14 @@ class GO_Post_Stats
 		// print the summary row for all these stats
 		printf( '
 			<tr>
-				<td>%1$s</td>
-				<td>%2$s</td>
-				<td>%3$s</td>
-				<td>%4$s</td>
-				<td>%5$s</td>
-				<td>%6$s</td>
-				<td>%7$s</td>
-				<td>%8$s</td>
+				<td class="summary-footer">%1$s</td>
+				<td class="summary-footer">%2$s</td>
+				<td class="summary-footer">%3$s</td>
+				<td class="summary-footer">%4$s</td>
+				<td class="summary-footer">%5$s</td>
+				<td class="summary-footer">%6$s</td>
+				<td class="summary-footer">%7$s</td>
+				<td class="summary-footer">%8$s</td>
 			</tr>', 
 			$summary->day .' days',
 			$summary->posts ? $summary->posts : 0,
@@ -287,11 +300,11 @@ class GO_Post_Stats
 			$summary->comments ? number_format( $summary->comments ) : 0,
 			$summary->posts ? number_format( ( $summary->comments / $summary->posts ), 1 ) : 0,
 			$summary->pro_links ? $summary->pro_links : 0,
-			$summary->event_links ? $summary->event_links : 0
+			isset( $summary->event_links ) ? $summary->event_links : 0
 		);
 
 		echo '</table>';
-	}
+	} // END display_stats
 
 	// get pageviews for the given post ID from Automattic's stats API
 	public function get_pvs( $post_id )
@@ -336,7 +349,7 @@ class GO_Post_Stats
 		}
 
 		return $hits;
-	}
+	} // END get_pvs
 
 	// print a list of items to get stats on
 	public function do_list( $list, $type = 'author' )
@@ -358,7 +371,7 @@ class GO_Post_Stats
 			);
 		}
 		echo '</ul>';
-	}
+	} // END do_list
 
 	// get a list of authors from actual posts (rather than just authors on the blog)
 	public function get_authors_list()
@@ -384,7 +397,7 @@ class GO_Post_Stats
 		}
 
 		return $return;
-	}
+	} // END get_authors_list
 
 	// get a list of the most popular terms in the given taxonomy
 	public function get_terms_list( $taxonomy )
@@ -416,7 +429,7 @@ class GO_Post_Stats
 		}
 
 		return $return;
-	}
+	} // END get_terms_list
 
 	public function pick_month()
 	{
@@ -427,8 +440,8 @@ class GO_Post_Stats
 			<option>Does nothing</option>
 		</select>
 		<?php
-	}
-}
+	} // END pick_month
+} // END GO_Post_Stats
 
 function go_post_stats( $taxonomies )
 {
@@ -440,4 +453,4 @@ function go_post_stats( $taxonomies )
 	}
 
 	return $go_post_stats;
-}
+} // END go_post_stats
