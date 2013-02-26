@@ -449,9 +449,11 @@ class GO_Post_Stats
 		}
 
 		?>
-		<select onchange="window.location = window.location + '&date_lesser=' + this.value + '-1' + '&date_greater=' + this.value + '-31'">
-			<?php echo implode( $months ); ?>
-		</select>
+		<p>
+			<select onchange="window.location = window.location + '&date_lesser=' + this.value + '-1' + '&date_greater=' + this.value + '-31'">
+				<?php echo implode( $months ); ?>
+			</select>
+		</p>
 		<?php
 	} // END pick_month
 } // END GO_Post_Stats
