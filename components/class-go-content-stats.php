@@ -3,17 +3,17 @@
 class GO_Content_Stats
 {
 	public $wpcom_api_key = ''; // get yours at http://apikey.wordpress.com/
-	public $taxonomies;
+	public $config;
 	public $date_greater_stamp;
 	public $date_greater;
 	public $date_lesser_stamp;
 	public $date_lesser;
 	public $calendar;
 
-	public function __construct( $taxonomies = array() )
+	public function __construct( $config = array() )
 	{
-		$this->taxonomies = (array) $taxonomies;
-		
+		$this->config = (array) $config;
+
 		add_action( 'init', array( $this, 'init' ) );
 	} // END __construct
 
@@ -28,7 +28,7 @@ class GO_Content_Stats
 	public function init()
 	{
 		add_action( 'admin_menu', array( $this, 'admin_menu_init' ) );
-		
+
 		if ( is_admin() )
 		{
 			wp_enqueue_style( 'go-content-stats', plugins_url( 'css/go-content-stats.css', __FILE__ ), array(), '1' );
@@ -38,6 +38,23 @@ class GO_Content_Stats
 	// the stats page/admin menu
 	public function admin_menu()
 	{
+		// prep the config vars so we don't have to check them later
+		if( ! isset( $this->config['taxonomies'] ))
+		{
+			$this->config['taxonomies'] = array();
+		}
+		if( ! isset( $this->config['content_matches'] ))
+		{
+			$this->config['content_matches'] = array();
+		}
+
+		// prefix the matches so we can avoid collissions
+		foreach( $this->config['content_matches'] as $k => $v )
+		{
+			$this->config['content_matches'][ 'match_' . $k ] = $v;
+			unset( $this->config['content_matches'][ $k ] );
+		}
+
 		echo '<div class="wrap">';
 		screen_icon('index');
 
@@ -57,8 +74,6 @@ class GO_Content_Stats
 				$this->date_greater = date( 'Y-m-d', $this->date_greater_stamp );
 			}
 
-
-
 			// set the lower limit of posts
 			if( isset( $_GET['date_lesser'] ) && strtotime( urldecode( $_GET['date_lesser'] ) ) )
 			{
@@ -71,16 +86,17 @@ class GO_Content_Stats
 				$this->date_lesser = date( 'Y-m-d', $this->date_lesser_stamp );
 			}
 
-
-
 			// prefill the results list
-			$this->pieces = (object) array(
-				'day' => NULL,
-				'posts' => NULL,
-				'pvs' => NULL,
-				'comments' => NULL,
-				'pro_links' => NULL,
-				'events_links' => NULL,
+			$this->pieces = (object) array_merge(
+
+				array(
+					'day' => NULL,
+					'posts' => NULL,
+					'pvs' => NULL,
+					'comments' => NULL,
+				),
+
+				array_fill_keys( array_keys( $this->config['content_matches'] ), NULL )
 			);
 
 			$temp_time = $this->date_lesser_stamp;
@@ -94,13 +110,12 @@ class GO_Content_Stats
 			while( $temp_time < $this->date_greater_stamp );
 			$this->calendar = array_reverse( $this->calendar );
 
-
-
 			// run the stats
 			if( 'author' == $_GET['type'] && ( $author = get_user_by( 'id', $_GET['key'] ) ) )
 			{
 					echo '<h2>Stats for ' . esc_html( $author->display_name ) . '</h2>';
-					$this->get_author_stats( $_GET['key'] );				
+					$this->get_author_stats( $_GET['key'] );
+
 			}
 			elseif( taxonomy_exists( $_GET['type'] ) && term_exists( $_GET['key'] , $_GET['type'] ) )
 			{
@@ -128,7 +143,7 @@ class GO_Content_Stats
 		}
 
 		// all configured taxonomies here
-		foreach( $this->taxonomies as $tax )
+		foreach( $this->config['taxonomies'] as $tax )
 		{
 			$terms = $this->get_terms_list( $tax );
 			if( is_array( $terms ) )
@@ -137,7 +152,7 @@ class GO_Content_Stats
 				$this->do_list( $terms , $tax );
 			}
 		}
-		
+
 		echo '</div>';
 	} // END admin_menu
 
@@ -152,7 +167,8 @@ class GO_Content_Stats
 	public function get_author_stats( $author )
 	{
 		add_filter( 'posts_where', array( $this, 'posts_where' ) );
-		$query = new WP_Query( array( 
+		$query = new WP_Query( array(
+
 			'author' => (int) $author,
 			'posts_per_page' => -1,
 		) );
@@ -170,7 +186,8 @@ class GO_Content_Stats
 	public function get_taxonomy_stats( $taxonomy , $term )
 	{
 		add_filter( 'posts_where', array( $this, 'posts_where' ) );
-		$query = new WP_Query( array( 
+		$query = new WP_Query( array(
+
 			'taxonomy' => $taxonomy,
 			'term' => $term,
 			'posts_per_page' => -1,
@@ -201,14 +218,25 @@ class GO_Content_Stats
 			$this->calendar[ $post_date ]->posts++;
 			$this->calendar[ $post_date ]->pvs += $this->get_pvs( $post->ID );
 			$this->calendar[ $post_date ]->comments += $post->comment_count;
-			if( preg_match( '/pro\.gigaom\.com/', $post->post_content ) )
+			foreach( $this->config['content_matches'] as $key => $match )
 			{
-				$this->calendar[ $post_date ]->pro_links++;			
+				if( preg_match( $match['regex'], $post->post_content ) )
+				{
+					$this->calendar[ $post_date ]->$key++;
+
+				}
 			}
-			if( preg_match( '/event(s?)\.gigaom\.com/', $post->post_content ) )
+		}
+
+		// create a sub-list of content match table headers
+		$content_match_th = '';
+		if( is_array( $this->config['content_matches'] ))
+		{
+			foreach( $this->config['content_matches'] as $match )
 			{
-				$this->calendar[ $post_date ]->events_links++;
+				$content_match_th .= '<th>' . $match['label'] . '</th>';
 			}
+
 		}
 
 		// display the aggregated stats in a table
@@ -222,8 +250,7 @@ class GO_Content_Stats
 				<th>PVs/post</th>
 				<th>Comments</th>
 				<th>Comments/post</th>
-				<th>w/Pro links</th>
-				<th>w/events links</th>
+				' . $content_match_th .'
 			</tr>
 		';
 
@@ -235,8 +262,18 @@ class GO_Content_Stats
 			$summary->posts += $day->posts;
 			$summary->pvs += $day->pvs;
 			$summary->comments += $day->comments;
-			$summary->pro_links += $day->pro_links;			
-			$summary->events_links += ( isset( $day->event_links ) ) ? $day->event_links : '';
+			foreach( $this->config['content_matches'] as $key => $match )
+			{
+				$summary->$key += $day->$key;
+
+			}
+		}
+
+		// iterate the content matches for the summary
+		$content_match_summary_values = '';
+		foreach( $this->config['content_matches'] as $key => $match )
+		{
+			$content_match_summary_values .= '<td>' . ( $summary->$key ? $summary->$key : 0 ) . '</td>';
 		}
 
 		// print the summary row for all these stats
@@ -248,22 +285,28 @@ class GO_Content_Stats
 				<td>%4$s</td>
 				<td>%5$s</td>
 				<td>%6$s</td>
-				<td>%7$s</td>
-				<td>%8$s</td>
-			</tr>', 
+				%7$s
+			</tr>',
+
 			$summary->day .' days',
 			$summary->posts ? $summary->posts : 0,
 			$summary->pvs ? number_format( $summary->pvs ) : 0,
 			$summary->posts ? number_format( ( $summary->pvs / $summary->posts ), 1 ) : 0,
 			$summary->comments ? number_format( $summary->comments ) : 0,
 			$summary->posts ? number_format( ( $summary->comments / $summary->posts ), 1 ) : 0,
-			$summary->pro_links ? $summary->pro_links : 0,
-			isset( $summary->event_links ) ? $summary->event_links : 0
+			$content_match_summary_values
 		);
 
 		// iterate through the calendar (includes empty days), print stats for each day
 		foreach( $this->calendar as $day )
 		{
+			// iterate the content matches for each row
+			$content_match_row_values = '';
+			foreach( $this->config['content_matches'] as $key => $match )
+			{
+				$content_match_row_values .= '<td>' . ( $day->$key ? $day->$key : '&nbsp;' ) . '</td>';
+			}
+
 			printf( '
 				<tr>
 					<td>%1$s</td>
@@ -272,17 +315,16 @@ class GO_Content_Stats
 					<td>%4$s</td>
 					<td>%5$s</td>
 					<td>%6$s</td>
-					<td>%7$s</td>
-					<td>%8$s</td>
-				</tr>', 
+					%7$s
+				</tr>',
+
 				$day->day,
 				$day->posts ? $day->posts : '&nbsp;',
 				$day->pvs ? number_format( $day->pvs ): '&nbsp;',
 				$day->posts ? number_format( ( $day->pvs / $day->posts ), 1 ) : '&nbsp;',
 				$day->comments ? number_format( $day->comments ) : '&nbsp;',
 				$day->posts ? number_format( ( $day->comments / $day->posts ), 1 ) : '&nbsp;',
-				$day->pro_links ? $day->pro_links : '&nbsp;',
-				isset( $day->event_links ) ? $day->event_links : '&nbsp;'
+				$content_match_row_values
 			);
 
 		}
@@ -296,17 +338,16 @@ class GO_Content_Stats
 				<td>%4$s</td>
 				<td>%5$s</td>
 				<td>%6$s</td>
-				<td>%7$s</td>
-				<td>%8$s</td>
-			</tr>', 
+				%7$s
+			</tr>',
+
 			$summary->day .' days',
 			$summary->posts ? $summary->posts : 0,
 			$summary->pvs ? number_format( $summary->pvs ) : 0,
 			$summary->posts ? number_format( ( $summary->pvs / $summary->posts ), 1 ) : 0,
 			$summary->comments ? number_format( $summary->comments ) : 0,
 			$summary->posts ? number_format( ( $summary->comments / $summary->posts ), 1 ) : 0,
-			$summary->pro_links ? $summary->pro_links : 0,
-			isset( $summary->event_links ) ? $summary->event_links : 0
+			$content_match_summary_values
 		);
 
 		echo '</table>';
@@ -395,7 +436,8 @@ class GO_Content_Stats
 		foreach( $author_ids as $author_id )
 		{
 			$name = get_the_author_meta( 'display_name', $author_id->post_author );
-			$return[ $author_id->post_author ] = (object) array( 
+			$return[ $author_id->post_author ] = (object) array(
+
 				'key' => $author_id->post_author,
 				'name' => $name ? $name : 'No author name',
 				'hits' => $author_id->hits,
@@ -427,7 +469,8 @@ class GO_Content_Stats
 		$return = array();
 		foreach( $terms as $term )
 		{
-			$return[ $term->term_id ] = (object) array( 
+			$return[ $term->term_id ] = (object) array(
+
 				'key' => $term->slug,
 				'name' => $term->name,
 				'hits' => $term->count,
@@ -461,13 +504,13 @@ class GO_Content_Stats
 	} // END pick_month
 } // END Go_Content_Stats
 
-function go_content_stats( $taxonomies )
+function go_content_stats( $config )
 {
 	global $go_content_stats;
 
 	if( ! is_object( $go_content_stats ) )
 	{
-		$go_content_stats = new GO_Content_Stats( $taxonomies );
+		$go_content_stats = new GO_Content_Stats( $config );
 	}
 
 	return $go_content_stats;

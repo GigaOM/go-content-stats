@@ -9,4 +9,21 @@ Author URI: http://kitchen.gigaom.com
 */
 
 require_once __DIR__ .'/components/class-go-content-stats.php';
-go_content_stats( array( 'primary_channel', 'post_tag' , 'company' , 'technology' ));
+go_content_stats( array(
+	'taxonomies' => array(
+		'primary_channel',
+		'post_tag',
+		'company',
+		'technology',
+	),
+	'content_matches' => array(
+		'pro' => array(
+			'regex' => '/pro\.gigaom\.com/',
+			'label' => 'w/Pro links',
+		),
+		'events' => array(
+			'regex' => '/event(s?)\.gigaom\.com/',
+			'label' => 'w/events links',
+		),
+	),
+));
