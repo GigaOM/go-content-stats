@@ -1,6 +1,6 @@
 <?php
 
-class GO_Post_Stats
+class GO_Content_Stats
 {
 	public $wpcom_api_key = ''; // get yours at http://apikey.wordpress.com/
 	public $taxonomies;
@@ -20,9 +20,9 @@ class GO_Post_Stats
 	// add the menu item to the dashboard
 	public function admin_menu_init()
 	{
-		$this->menu_url = admin_url( 'index.php?page=go-post-stats' );
+		$this->menu_url = admin_url( 'index.php?page=go-content-stats' );
 
-		add_submenu_page( 'index.php', 'GigaOM Post Stats', 'GigaOM Post Stats', 'edit_posts', 'go-post-stats', array( $this, 'admin_menu' ) );
+		add_submenu_page( 'index.php', 'GigaOM Content Stats', 'GigaOM Content Stats', 'edit_posts', 'go-content-stats', array( $this, 'admin_menu' ) );
 	} // END admin_menu_init
 
 	public function init()
@@ -31,7 +31,7 @@ class GO_Post_Stats
 		
 		if ( is_admin() )
 		{
-			wp_enqueue_style( 'go-post_stats', plugins_url( 'css/go-post-stats.css', __FILE__ ), array(), '1' );
+			wp_enqueue_style( 'go-content-stats', plugins_url( 'css/go-content-stats.css', __FILE__ ), array(), '1' );
 		}
 	} // END init
 
@@ -110,15 +110,20 @@ class GO_Post_Stats
 		}
 
 		echo '<h2>Select a knife to slice through the stats</h2>';
-		// display a picker for the time period
-		$this->pick_month();
+
+		if( isset( $_GET['type'], $_GET['key'] ) )
+		{
+			// display a picker for the time period
+			echo '<h3>Time period</h3>';
+			$this->pick_month();
+		}
 
 		// print lists of items people can get stats on
 		// authors here
 		$authors = $this->get_authors_list();
 		if( is_array( $authors ) )
 		{
-			echo '<h2>Authors</h2>';
+			echo '<h3>Authors</h3>';
 			$this->do_list( $authors );
 		}
 
@@ -128,7 +133,7 @@ class GO_Post_Stats
 			$terms = $this->get_terms_list( $tax );
 			if( is_array( $terms ) )
 			{
-				echo '<h2>'. $tax .'</h2>';
+				echo '<h3>'. $tax .'</h3>';
 				$this->do_list( $terms , $tax );
 			}
 		}
@@ -312,7 +317,7 @@ class GO_Post_Stats
 	{
 
 		// test the cache like a good API user
-		if( ! $hits = wp_cache_get( $post_id , 'go-post-stats-hits' ) )
+		if( ! $hits = wp_cache_get( $post_id , 'go-content-stats-hits' ) )
 		{
 			// attempt to get the API key from the user
 			$user = wp_get_current_user();
@@ -345,7 +350,7 @@ class GO_Post_Stats
 					$hits = NULL;
 				}
 
-				wp_cache_set( $post_id, $hits, 'go-post-stats-hits', 3600 );
+				wp_cache_set( $post_id, $hits, 'go-content-stats-hits', 3600 );
 			}
 		}
 
@@ -449,23 +454,21 @@ class GO_Post_Stats
 		}
 
 		?>
-		<p>
-			<select onchange="window.location = window.location + '&date_lesser=' + this.value + '-1' + '&date_greater=' + this.value + '-31'">
-				<?php echo implode( $months ); ?>
-			</select>
-		</p>
+		<select onchange="window.location = window.location + '&date_lesser=' + this.value + '-1' + '&date_greater=' + this.value + '-31'">
+			<?php echo implode( $months ); ?>
+		</select>
 		<?php
 	} // END pick_month
-} // END GO_Post_Stats
+} // END Go_Content_Stats
 
-function go_post_stats( $taxonomies )
+function go_content_stats( $taxonomies )
 {
-	global $go_post_stats;
+	global $go_content_stats;
 
-	if( ! is_object( $go_post_stats ) )
+	if( ! is_object( $go_content_stats ) )
 	{
-		$go_post_stats = new GO_Post_Stats( $taxonomies );
+		$go_content_stats = new GO_Content_Stats( $taxonomies );
 	}
 
-	return $go_post_stats;
-} // END go_post_stats
+	return $go_content_stats;
+} // END go_content_stats

@@ -1,11 +1,11 @@
 /* @override 
-	http://localhost/wp-content/plugins/go-post-stats/components/css/go-post-stats.css?ver=1 */
+	http://localhost/wp-content/plugins/go-content-stats/components/css/go-content-stats.css?ver=1 */
 
-.dashboard_page_go-post-stats {
+.dashboard_page_go-content-stats {
 	
 }
 
-.dashboard_page_go-post-stats table {
+.dashboard_page_go-content-stats table {
 	width: 100%;
 	background: #ececec;
 	border-top: 1px solid #ddd;
@@ -14,31 +14,31 @@
 	padding: 0;
 }
 
-.dashboard_page_go-post-stats table tr th,
-.dashboard_page_go-post-stats table tr td {
+.dashboard_page_go-content-stats table tr th,
+.dashboard_page_go-content-stats table tr td {
 	padding: 0.5em;
 }
 
-.dashboard_page_go-post-stats table tr th {
+.dashboard_page_go-content-stats table tr th {
 	text-align: left;
 	background-color: #464646;
 	color: #eeeeee;
 }
 
-.dashboard_page_go-post-stats table tr td {
+.dashboard_page_go-content-stats table tr td {
 	border-top: 1px solid #ddd;
 }
 
-.dashboard_page_go-post-stats table tr:nth-child(even) td {
+.dashboard_page_go-content-stats table tr:nth-child(even) td {
 	background-color: white;
 }
 
-.dashboard_page_go-post-stats table tr.summary td,
-.dashboard_page_go-post-stats table tr.summary-footer td {
+.dashboard_page_go-content-stats table tr.summary td,
+.dashboard_page_go-content-stats table tr.summary-footer td {
 	background-color: #7f7f7f;
 	color: white;
 }
 
-.dashboard_page_go-post-stats table tr.summary td {
+.dashboard_page_go-content-stats table tr.summary td {
 	border: none;
 }
