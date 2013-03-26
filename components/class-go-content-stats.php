@@ -421,27 +421,34 @@ class GO_Content_Stats
 	} // END do_list
 
 	// get a list of authors from actual posts (rather than just authors on the blog)
+	// cached for a full day
 	public function get_authors_list()
 	{
-		global $wpdb;
 
-		$author_ids = $wpdb->get_results( "SELECT post_author, COUNT(1) AS hits FROM {$wpdb->posts} GROUP BY post_author" );
-
-		if( ! is_array( $author_ids ) )
+		if( ! $return = wp_cache_get( 'authors' , 'go-content-stats' ) )
 		{
-			return FALSE;
-		}
+			global $wpdb;
 
-		$return = array();
-		foreach( $author_ids as $author_id )
-		{
-			$name = get_the_author_meta( 'display_name', $author_id->post_author );
-			$return[ $author_id->post_author ] = (object) array(
+			$author_ids = $wpdb->get_results( "SELECT post_author, COUNT(1) AS hits FROM {$wpdb->posts} GROUP BY post_author" );
 
-				'key' => $author_id->post_author,
-				'name' => $name ? $name : 'No author name',
-				'hits' => $author_id->hits,
-			);
+			if( ! is_array( $author_ids ) )
+			{
+				return FALSE;
+			}
+
+			$return = array();
+			foreach( $author_ids as $author_id )
+			{
+				$name = get_the_author_meta( 'display_name', $author_id->post_author );
+				$return[ $author_id->post_author ] = (object) array(
+
+					'key' => $author_id->post_author,
+					'name' => $name ? $name : 'No author name',
+					'hits' => $author_id->hits,
+				);
+			}
+
+			wp_cache_set( 'authors', $return, 'go-content-stats', 86413 ); // 86413 is a prime number slightly longer than 24 hours
 		}
 
 		return $return;
