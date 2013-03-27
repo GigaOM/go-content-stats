@@ -22,7 +22,7 @@ class GO_Content_Stats
 	{
 		$this->menu_url = admin_url( 'index.php?page=go-content-stats' );
 
-		add_submenu_page( 'index.php', 'GigaOM Content Stats', 'GigaOM Content Stats', 'edit_posts', 'go-content-stats', array( $this, 'admin_menu' ) );
+		add_submenu_page( 'index.php', 'GigaOM Content Stats', 'Content Stats', 'edit_posts', 'go-content-stats', array( $this, 'admin_menu' ) );
 	} // END admin_menu_init
 
 	public function init()
@@ -113,18 +113,23 @@ class GO_Content_Stats
 			// run the stats
 			if( 'author' == $_GET['type'] && ( $author = get_user_by( 'id', $_GET['key'] ) ) )
 			{
-					echo '<h2>Stats for ' . esc_html( $author->display_name ) . '</h2>';
+					echo '<h2>GigaOM Content Stats for ' . esc_html( $author->display_name ) . '</h2>';
 					$this->get_author_stats( $_GET['key'] );
 
 			}
 			elseif( taxonomy_exists( $_GET['type'] ) && term_exists( $_GET['key'] , $_GET['type'] ) )
 			{
-					echo '<h2>Stats for ' . sanitize_title_with_dashes( $_GET['type'] ) . ':' .  sanitize_title_with_dashes( $_GET['key'] ) . '</h2>';
+					echo '<h2>GigaOM Content Stats for ' . sanitize_title_with_dashes( $_GET['type'] ) . ':' .  sanitize_title_with_dashes( $_GET['key'] ) . '</h2>';
 					$this->get_taxonomy_stats( $_GET['type'] , $_GET['key'] );
 			}
-		}
 
-		echo '<h2>Select a knife to slice through the stats</h2>';
+			echo '<h2>Select a knife to slice through the stats</h2>';
+		}
+		else
+		{
+			echo '<h2>GigaOM Content Stats</h2>';
+			echo '<h2>Select a knife to slice through the stats</h2>';
+		}
 
 		if( isset( $_GET['type'], $_GET['key'] ) )
 		{
@@ -421,27 +426,34 @@ class GO_Content_Stats
 	} // END do_list
 
 	// get a list of authors from actual posts (rather than just authors on the blog)
+	// cached for a full day
 	public function get_authors_list()
 	{
-		global $wpdb;
 
-		$author_ids = $wpdb->get_results( "SELECT post_author, COUNT(1) AS hits FROM {$wpdb->posts} GROUP BY post_author" );
-
-		if( ! is_array( $author_ids ) )
+		if( ! $return = wp_cache_get( 'authors' , 'go-content-stats' ) )
 		{
-			return FALSE;
-		}
+			global $wpdb;
 
-		$return = array();
-		foreach( $author_ids as $author_id )
-		{
-			$name = get_the_author_meta( 'display_name', $author_id->post_author );
-			$return[ $author_id->post_author ] = (object) array(
+			$author_ids = $wpdb->get_results( "SELECT post_author, COUNT(1) AS hits FROM {$wpdb->posts} GROUP BY post_author" );
 
-				'key' => $author_id->post_author,
-				'name' => $name ? $name : 'No author name',
-				'hits' => $author_id->hits,
-			);
+			if( ! is_array( $author_ids ) )
+			{
+				return FALSE;
+			}
+
+			$return = array();
+			foreach( $author_ids as $author_id )
+			{
+				$name = get_the_author_meta( 'display_name', $author_id->post_author );
+				$return[ $author_id->post_author ] = (object) array(
+
+					'key' => $author_id->post_author,
+					'name' => $name ? $name : 'No author name',
+					'hits' => $author_id->hits,
+				);
+			}
+
+			wp_cache_set( 'authors', $return, 'go-content-stats', 86413 ); // 86413 is a prime number slightly longer than 24 hours
 		}
 
 		return $return;
