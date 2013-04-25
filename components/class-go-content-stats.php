@@ -370,7 +370,7 @@ class GO_Content_Stats
 			$api_key = isset( $user->api_key ) ? $user->api_key : NULL;
 
 			// a locally set API key overrides everything
-			$api_key = $this->wpcom_api_key ? $this->wpcom_api_key : NULL;
+			$api_key = $this->wpcom_api_key ? $this->wpcom_api_key : $api_key;
 
 			// no shirt, no shoes, no service
 			if( ! $api_key )
