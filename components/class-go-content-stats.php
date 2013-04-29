@@ -380,7 +380,7 @@ class GO_Content_Stats
 
 			// the api has some very hacker-ish docs at http://stats.wordpress.com/csv.php
 			$hits_api = wp_remote_request(
-				'http://stats.wordpress.com/csv.php?api_key=' . $this->wpcom_api_key . '&blog_uri=' . urlencode( home_url() ) . '&table=postviews&post_id=' . $post_id . '&days=-1&limit=-1&format=json&summarize'
+				'http://stats.wordpress.com/csv.php?api_key=' . $api_key . '&blog_uri=' . urlencode( home_url() ) . '&table=postviews&post_id=' . $post_id . '&days=-1&limit=-1&format=json&summarize'
 			);
 			if( ! is_wp_error( $hits_api ) )
 			{
