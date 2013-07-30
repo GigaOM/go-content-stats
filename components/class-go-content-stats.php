@@ -39,11 +39,11 @@ class GO_Content_Stats
 	public function admin_menu()
 	{
 		// prep the config vars so we don't have to check them later
-		if( ! isset( $this->config['taxonomies'] ))
+		if ( ! isset( $this->config['taxonomies'] ) )
 		{
 			$this->config['taxonomies'] = array();
 		}
-		if( ! isset( $this->config['content_matches'] ))
+		if ( ! isset( $this->config['content_matches'] ) )
 		{
 			$this->config['content_matches'] = array();
 		}
@@ -59,7 +59,7 @@ class GO_Content_Stats
 		screen_icon('index');
 
 		// set the upper limit of posts
-		if( isset( $_GET['date_greater'] ) && strtotime( urldecode( $_GET['date_greater'] ) ) )
+		if ( isset( $_GET['date_greater'] ) && strtotime( urldecode( $_GET['date_greater'] ) ) )
 		{
 			$this->date_greater_stamp = strtotime( urldecode( $_GET['date_greater'] ) );
 			$this->date_greater = date( 'Y-m-d', $this->date_greater_stamp );
@@ -71,7 +71,7 @@ class GO_Content_Stats
 		}
 
 		// set the lower limit of posts
-		if( isset( $_GET['date_lesser'] ) && strtotime( urldecode( $_GET['date_lesser'] ) ) )
+		if ( isset( $_GET['date_lesser'] ) && strtotime( urldecode( $_GET['date_lesser'] ) ) )
 		{
 			$this->date_lesser_stamp = strtotime( urldecode( $_GET['date_lesser'] ) );
 			$this->date_lesser = date( 'Y-m-d', $this->date_lesser_stamp );
@@ -133,7 +133,7 @@ class GO_Content_Stats
 		// print lists of items people can get stats on
 		// authors here
 		$authors = $this->get_authors_list();
-		if( is_array( $authors ) )
+		if ( is_array( $authors ) )
 		{
 			echo '<h3>Authors</h3>';
 			$this->do_list( $authors );
@@ -143,7 +143,7 @@ class GO_Content_Stats
 		foreach( $this->config['taxonomies'] as $tax )
 		{
 			$terms = $this->get_terms_list( $tax );
-			if( is_array( $terms ) )
+			if ( is_array( $terms ) )
 			{
 				echo '<h3>'. $tax .'</h3>';
 				$this->do_list( $terms , $tax );
@@ -151,7 +151,7 @@ class GO_Content_Stats
 		}
 
 		// show the api key to help debugging
-		if ( empty( $this->wpcom_api_key ))
+		if ( empty( $this->wpcom_api_key ) )
 		{
 			echo '<p>WPCom stats using API Key '. $this->get_wpcom_api_key() .'</p>';
 		}
@@ -171,12 +171,11 @@ class GO_Content_Stats
 	{
 		add_filter( 'posts_where', array( $this, 'posts_where' ) );
 		$query = new WP_Query( array(
-
 			'posts_per_page' => -1,
 		) );
 		remove_filter( 'posts_where', array( $this, 'posts_where' ) );
 
-		if( ! isset( $query->posts ) )
+		if ( ! isset( $query->posts ) )
 		{
 			return FALSE;
 		}
@@ -189,13 +188,12 @@ class GO_Content_Stats
 	{
 		add_filter( 'posts_where', array( $this, 'posts_where' ) );
 		$query = new WP_Query( array(
-
 			'author' => (int) $author,
 			'posts_per_page' => -1,
 		) );
 		remove_filter( 'posts_where', array( $this, 'posts_where' ) );
 
-		if( ! isset( $query->posts ) )
+		if ( ! isset( $query->posts ) )
 		{
 			return FALSE;
 		}
@@ -208,14 +206,13 @@ class GO_Content_Stats
 	{
 		add_filter( 'posts_where', array( $this, 'posts_where' ) );
 		$query = new WP_Query( array(
-
 			'taxonomy' => $taxonomy,
 			'term' => $term,
 			'posts_per_page' => -1,
 		) );
 		remove_filter( 'posts_where', array( $this, 'posts_where' ) );
 
-		if( ! isset( $query->posts ) )
+		if ( ! isset( $query->posts ) )
 		{
 			return FALSE;
 		}
@@ -226,7 +223,7 @@ class GO_Content_Stats
 	// actually display the stats for the selected posts
 	public function display_stats( $posts )
 	{
-		if( ! is_array( $posts ) )
+		if ( ! is_array( $posts ) )
 		{
 			return FALSE;
 		}
@@ -241,23 +238,21 @@ class GO_Content_Stats
 			$this->calendar[ $post_date ]->comments += $post->comment_count;
 			foreach( $this->config['content_matches'] as $key => $match )
 			{
-				if( preg_match( $match['regex'], $post->post_content ) )
+				if ( preg_match( $match['regex'], $post->post_content ) )
 				{
 					$this->calendar[ $post_date ]->$key++;
-
 				}
 			}
 		}
 
 		// create a sub-list of content match table headers
 		$content_match_th = '';
-		if( is_array( $this->config['content_matches'] ))
+		if ( is_array( $this->config['content_matches'] ) )
 		{
 			foreach( $this->config['content_matches'] as $match )
 			{
 				$content_match_th .= '<th>' . $match['label'] . '</th>';
 			}
-
 		}
 
 		// display the aggregated stats in a table
@@ -286,7 +281,6 @@ class GO_Content_Stats
 			foreach( $this->config['content_matches'] as $key => $match )
 			{
 				$summary->$key += $day->$key;
-
 			}
 		}
 
@@ -401,7 +395,7 @@ class GO_Content_Stats
 	{
 
 		// test the cache like a good API user
-		if( ! $hits = wp_cache_get( $post_id , 'go-content-stats-hits' ) )
+		if ( ! $hits = wp_cache_get( $post_id , 'go-content-stats-hits' ) )
 		{
 			// attempt to get the API key
 			if ( ! $api_key = $this->get_wpcom_api_key() )
@@ -413,12 +407,12 @@ class GO_Content_Stats
 			$hits_api = wp_remote_request(
 				'http://stats.wordpress.com/csv.php?api_key=' . $api_key . '&blog_uri=' . urlencode( home_url() ) . '&table=postviews&post_id=' . $post_id . '&days=-1&limit=-1&format=json&summarize'
 			);
-			if( ! is_wp_error( $hits_api ) )
+			if ( ! is_wp_error( $hits_api ) )
 			{
 				$hits_api = wp_remote_retrieve_body( $hits_api );
 				$hits_api = json_decode( $hits_api );
 
-				if( isset( $hits_api->views ) )
+				if ( isset( $hits_api->views ) )
 				{
 					$hits = $hits_api->views;
 				}
@@ -437,7 +431,7 @@ class GO_Content_Stats
 	// print a list of items to get stats on
 	public function do_list( $list, $type = 'author' )
 	{
-		if( ! is_array( $list ) )
+		if ( ! is_array( $list ) )
 		{
 			return FALSE;
 		}
@@ -461,13 +455,13 @@ class GO_Content_Stats
 	public function get_authors_list()
 	{
 
-		if( ! $return = wp_cache_get( 'authors' , 'go-content-stats' ) )
+		if ( ! $return = wp_cache_get( 'authors' , 'go-content-stats' ) )
 		{
 			global $wpdb;
 
 			$author_ids = $wpdb->get_results( "SELECT post_author, COUNT(1) AS hits FROM {$wpdb->posts} GROUP BY post_author" );
 
-			if( ! is_array( $author_ids ) )
+			if ( ! is_array( $author_ids ) )
 			{
 				return FALSE;
 			}
@@ -493,7 +487,7 @@ class GO_Content_Stats
 	// get a list of the most popular terms in the given taxonomy
 	public function get_terms_list( $taxonomy )
 	{
-		if( ! taxonomy_exists( $taxonomy ) )
+		if ( ! taxonomy_exists( $taxonomy ) )
 		{
 			return FALSE;
 		}
@@ -504,7 +498,7 @@ class GO_Content_Stats
 			'number' => 23,
 		) );
 
-		if( ! is_array( $terms ) )
+		if ( ! is_array( $terms ) )
 		{
 			return FALSE;
 		}
@@ -551,7 +545,7 @@ function go_content_stats( $config )
 {
 	global $go_content_stats;
 
-	if( ! is_object( $go_content_stats ) )
+	if ( ! is_object( $go_content_stats ) )
 	{
 		$go_content_stats = new GO_Content_Stats( $config );
 	}
