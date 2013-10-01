@@ -22,7 +22,7 @@ class GO_Content_Stats
 	{
 		$this->menu_url = admin_url( 'index.php?page=go-content-stats' );
 
-		add_submenu_page( 'index.php', 'GigaOM Content Stats', 'Content Stats', 'edit_posts', 'go-content-stats', array( $this, 'admin_menu' ) );
+		add_submenu_page( 'index.php', 'Gigaom Content Stats', 'Content Stats', 'edit_posts', 'go-content-stats', array( $this, 'admin_menu' ) );
 	} // END admin_menu_init
 
 	public function init()
@@ -109,18 +109,18 @@ class GO_Content_Stats
 		// run the stats
 		if ( 'author' == $_GET['type'] && ( $author = get_user_by( 'id', $_GET['key'] ) ) )
 		{
-				echo '<h2>GigaOM Content Stats for ' . esc_html( $author->display_name ) . '</h2>';
+				echo '<h2>Gigaom Content Stats for ' . esc_html( $author->display_name ) . '</h2>';
 				$this->get_author_stats( $_GET['key'] );
 
 		}
 		elseif ( taxonomy_exists( $_GET['type'] ) && term_exists( $_GET['key'] , $_GET['type'] ) )
 		{
-				echo '<h2>GigaOM Content Stats for ' . sanitize_title_with_dashes( $_GET['type'] ) . ':' .  sanitize_title_with_dashes( $_GET['key'] ) . '</h2>';
+				echo '<h2>Gigaom Content Stats for ' . sanitize_title_with_dashes( $_GET['type'] ) . ':' .  sanitize_title_with_dashes( $_GET['key'] ) . '</h2>';
 				$this->get_taxonomy_stats( $_GET['type'] , $_GET['key'] );
 		}
 		else
 		{
-			echo '<h2>GigaOM Content Stats</h2>';
+			echo '<h2>Gigaom Content Stats</h2>';
 			$this->get_general_stats();
 		}
 
