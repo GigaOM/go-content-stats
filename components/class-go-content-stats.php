@@ -15,6 +15,7 @@ class GO_Content_Stats
 		$this->config = (array) $config;
 
 		add_action( 'init', array( $this, 'init' ) );
+		add_action( 'admin_menu', array( $this, 'admin_menu_init' ) );
 	} // END __construct
 
 	// add the menu item to the dashboard
@@ -23,12 +24,12 @@ class GO_Content_Stats
 		$this->menu_url = admin_url( 'index.php?page=go-content-stats' );
 
 		add_submenu_page( 'index.php', 'Gigaom Content Stats', 'Content Stats', 'edit_posts', 'go-content-stats', array( $this, 'admin_menu' ) );
+
+		add_action( 'go-content-stats-posts', array( $this, 'prime_pv_cache' ) );
 	} // END admin_menu_init
 
 	public function init()
 	{
-		add_action( 'admin_menu', array( $this, 'admin_menu_init' ) );
-
 		if ( is_admin() )
 		{
 			wp_enqueue_style( 'go-content-stats', plugins_url( 'css/go-content-stats.css', __FILE__ ), array(), '1' );
@@ -49,7 +50,7 @@ class GO_Content_Stats
 		}
 
 		// prefix the matches so we can avoid collissions
-		foreach( $this->config['content_matches'] as $k => $v )
+		foreach ( $this->config['content_matches'] as $k => $v )
 		{
 			$this->config['content_matches'][ 'match_' . $k ] = $v;
 			unset( $this->config['content_matches'][ $k ] );
@@ -228,6 +229,8 @@ class GO_Content_Stats
 			return FALSE;
 		}
 
+		do_action( 'go-content-stats-posts', wp_list_pluck( $posts, 'ID' ) );
+
 		// iterate through the posts, aggregate their stats, and assign those into the calendar
 		foreach( $posts as $post )
 		{
@@ -334,7 +337,7 @@ class GO_Content_Stats
 				</tr>',
 
 				$day->day,
-				$day->posts ? $day->posts : '&nbsp;',
+				$day->posts ? '<a href="' . admin_url( '/edit.php?m=' . $day->day ) . '">' . $day->posts . '</a>' : '&nbsp;',
 				$day->pvs ? number_format( $day->pvs ): '&nbsp;',
 				$day->posts ? number_format( ( $day->pvs / $day->posts ), 1 ) : '&nbsp;',
 				$day->comments ? number_format( $day->comments ) : '&nbsp;',
@@ -379,9 +382,9 @@ class GO_Content_Stats
 			$api_key = $this->wpcom_api_key;
 		}
 		// attempt to get the API key from the user
-		elseif ( 
+		elseif (
 			( $user = wp_get_current_user() ) &&
-			isset( $user->api_key ) 
+			isset( $user->api_key )
 		)
 		{
 			$api_key = $user->api_key;
@@ -395,6 +398,7 @@ class GO_Content_Stats
 	{
 
 		// test the cache like a good API user
+		// if the prime_pv_cache() cache method earlier is working, this should always return a cached result
 		if ( ! $hits = wp_cache_get( $post_id , 'go-content-stats-hits' ) )
 		{
 			// attempt to get the API key
@@ -403,10 +407,16 @@ class GO_Content_Stats
 				return NULL;
 			}
 
+
 			// the api has some very hacker-ish docs at http://stats.wordpress.com/csv.php
-			$hits_api = wp_remote_request(
-				'http://stats.wordpress.com/csv.php?api_key=' . $api_key . '&blog_uri=' . urlencode( home_url() ) . '&table=postviews&post_id=' . $post_id . '&days=-1&limit=-1&format=json&summarize'
+			$get_url = sprintf(
+				 'http://stats.wordpress.com/csv.php?api_key=%1$s&blog_uri=%2$s&table=postviews&post_id=%3$d&days=-1&limit=-1&format=json&summarize',
+				 $api_key,
+				 urlencode( home_url() ),
+				 $post_id
 			);
+
+			$hits_api = wp_remote_request( $get_url );
 			if ( ! is_wp_error( $hits_api ) )
 			{
 				$hits_api = wp_remote_retrieve_body( $hits_api );
@@ -421,11 +431,64 @@ class GO_Content_Stats
 					$hits = NULL;
 				}
 
-				wp_cache_set( $post_id, $hits, 'go-content-stats-hits', 3600 );
+				wp_cache_set( $post_id, $hits, 'go-content-stats-hits', 1800 );
 			}
 		}
 
 		return $hits;
+	} // END get_pvs
+
+	// prime the pageview stats cache by doing a bulk query of all posts, rather than individual queries
+	public function prime_pv_cache( $post_ids )
+	{
+
+		// caching this, but the result doesn't really matter so much as the fact that
+		// we've already run it on a specific set of posts recently
+		$cachekey = md5( serialize( $post_ids ) );
+
+		// test the cache like a good API user
+		if ( ! $hits = wp_cache_get( $cachekey , 'go-content-stats-hits-bulk' ) )
+		{
+
+			// attempt to get the API key
+			if ( ! $api_key = $this->get_wpcom_api_key() )
+			{
+				return NULL;
+			}
+
+			// the api has some very hacker-ish docs at http://stats.wordpress.com/csv.php
+			$get_url = sprintf(
+				 'http://stats.wordpress.com/csv.php?api_key=%1$s&blog_uri=%2$s&table=postviews&post_id=%3$s&days=-1&limit=-1&format=json&summarize',
+				 $api_key,
+				 urlencode( home_url() ),
+				 implode( ',', array_map( 'absint', $post_ids ) )
+			);
+
+			$hits_api = wp_remote_request( $get_url );
+			if ( ! is_wp_error( $hits_api ) )
+			{
+				$hits_api = wp_remote_retrieve_body( $hits_api );
+				$hits_api = json_decode( $hits_api );
+
+				if ( ! isset( $hits_api[0]->postviews ) )
+				{
+					return;
+				}
+
+				foreach ( $hits_api[0]->postviews as $hits_api_post )
+				{
+					if ( ! isset( $hits_api_post->post_id, $hits_api_post->views ) )
+					{
+						continue;
+					}
+
+					// the real gold here is setting the cache entry for the get_pv method to use later
+					wp_cache_set( $hits_api_post->post_id, $hits_api_post->views, 'go-content-stats-hits', 1800 );
+				}
+
+				wp_cache_set( $cachekey, $hits_api[0]->postviews, 'go-content-stats-hits-bulk', 1800 );
+			}
+		}
 	} // END get_pvs
 
 	// print a list of items to get stats on

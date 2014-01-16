@@ -18,12 +18,12 @@ go_content_stats( array(
 	),
 	'content_matches' => array(
 		'pro' => array(
-			'regex' => '/pro\.gigaom\.com/',
-			'label' => 'w/Pro links',
+			'regex' => '/(pro|research)\.gigaom\.com/',
+			'label' => 'w/Research links',
 		),
 		'events' => array(
 			'regex' => '/event(s?)\.gigaom\.com/',
-			'label' => 'w/events links',
+			'label' => 'w/Events links',
 		),
 	),
 ));
