@@ -18,7 +18,9 @@ class GO_Content_Stats
 		add_action( 'admin_menu', array( $this, 'admin_menu_init' ) );
 	} // END __construct
 
-	// add the menu item to the dashboard
+	/**
+	 * add the menu item to the dashboard
+	 */
 	public function admin_menu_init()
 	{
 		$this->menu_url = admin_url( 'index.php?page=go-content-stats' );
@@ -38,7 +40,9 @@ class GO_Content_Stats
 		wp_enqueue_style( 'go-content-stats', plugins_url( 'css/go-content-stats.css', __FILE__ ), array(), '1' );
 	} // END init
 
-	// the stats page/admin menu
+	/**
+	 * the stats page/admin menu
+	 */
 	public function admin_menu()
 	{
 		// prep the config vars so we don't have to check them later
@@ -162,14 +166,21 @@ class GO_Content_Stats
 		echo '</div>';
 	} // END admin_menu
 
-	// a filter for the posts sql to limit by date range
+	/**
+	 * a filter for the posts sql to limit by date range
+	 *
+	 * @param  string $where SQL where condition to filter
+	 * @return string filtered SQL where condition
+	 */
 	public function posts_where( $where = '' )
 	{
 		$where .= " AND post_date <= '{$this->date_greater}' AND post_date >= '{$this->date_lesser}'";
 		return $where;
 	} // END posts_where
 
-	// get a list of all posts matching the time selector
+	/**
+	 * get a list of all posts matching the time selector
+	 */
 	public function get_general_stats()
 	{
 		add_filter( 'posts_where', array( $this, 'posts_where' ) );
@@ -186,7 +197,12 @@ class GO_Content_Stats
 		return $this->display_stats( $query->posts );
 	} // END get_general_stats
 
-	// get a list of posts by author to display
+	/**
+	 * get a list of posts by author to display
+	 *
+	 * @param  int $author ID for the author
+	 * @return array posts
+	 */
 	public function get_author_stats( $author )
 	{
 		add_filter( 'posts_where', array( $this, 'posts_where' ) );
@@ -204,13 +220,18 @@ class GO_Content_Stats
 		return $this->display_stats( $query->posts );
 	} // END get_author_stats
 
-	// get a list of posts by taxonomy to display
+	/**
+	 * get a list of posts by taxonomy to display
+	 *
+	 * @param  string $taxonomy Taxonomy
+	 * @param  string $term Term
+	 */
 	public function get_taxonomy_stats( $taxonomy, $term )
 	{
 		add_filter( 'posts_where', array( $this, 'posts_where' ) );
 		$query = new WP_Query( array(
 			'taxonomy' => $taxonomy,
-			'term' => $term,
+			'term' => $term, // @TODO: does this work? docs say "terms"
 			'posts_per_page' => -1,
 		) );
 		remove_filter( 'posts_where', array( $this, 'posts_where' ) );
@@ -223,7 +244,11 @@ class GO_Content_Stats
 		return $this->display_stats( $query->posts );
 	} // END get_taxonomy_stats
 
-	// actually display the stats for the selected posts
+	/**
+	 * actually display the stats for the selected posts
+	 * @param  array $posts array of post objects
+	 * @return null outputs HTML
+	 */
 	public function display_stats( $posts )
 	{
 		if ( ! is_array( $posts ) )
@@ -393,7 +418,11 @@ class GO_Content_Stats
 		return $api_key;
 	}//end get_wpcom_api_key
 
-	// get pageviews for the given post ID from Automattic's stats API
+	/**
+	 * get pageviews for the given post ID from Automattic's stats API
+	 *
+	 * @param  int $post_id Post ID
+	 */
 	public function get_pvs( $post_id )
 	{
 		// test the cache like a good API user
@@ -405,7 +434,6 @@ class GO_Content_Stats
 			{
 				return NULL;
 			}
-
 
 			// the api has some very hacker-ish docs at http://stats.wordpress.com/csv.php
 			$get_url = sprintf(
@@ -437,7 +465,12 @@ class GO_Content_Stats
 		return $hits;
 	} // END get_pvs
 
-	// prime the pageview stats cache by doing a bulk query of all posts, rather than individual queries
+	/**
+	 * prime the pageview stats cache by doing a bulk query of all posts, rather than individual queries
+	 *
+	 * @param  array $post_ids Post IDs
+	 * @return null
+	 */
 	public function prime_pv_cache( $post_ids )
 	{
 		// caching this, but the result doesn't really matter so much as the fact that
@@ -488,7 +521,13 @@ class GO_Content_Stats
 		}// end if
 	} // END prime_pv_cache
 
-	// print a list of items to get stats on
+	/**
+	 * print a list of items to get stats on
+	 *
+	 * @param  array $list items to list
+	 * @param  string $type the item type
+	 * @return null outputs unordered list
+	 */
 	public function do_list( $list, $type = 'author' )
 	{
 		if ( ! is_array( $list ) )
@@ -510,8 +549,10 @@ class GO_Content_Stats
 		echo '</ul>';
 	} // END do_list
 
-	// get a list of authors from actual posts (rather than just authors on the blog)
-	// cached for a full day
+	/**
+	 * get a list of authors from actual posts (rather than just authors on the blog)
+	 * cached for a full day
+	 */
 	public function get_authors_list()
 	{
 		if ( ! $return = wp_cache_get( 'authors', 'go-content-stats' ) )
@@ -543,7 +584,12 @@ class GO_Content_Stats
 		return $return;
 	} // END get_authors_list
 
-	// get a list of the most popular terms in the given taxonomy
+	/**
+	 * get a list of the most popular terms in the given taxonomy
+	 *
+	 * @param  string $taxonomy Taxonomy
+	 * @return array objects with 'key', 'name', and 'count'
+	 */
 	public function get_terms_list( $taxonomy )
 	{
 		if ( ! taxonomy_exists( $taxonomy ) )
