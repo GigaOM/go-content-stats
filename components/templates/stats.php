@@ -36,16 +36,18 @@
 			</tfoot>
 		</table>
 
-		<script type="text/mustache" id="stat-row-template">
-			<tr>
-				<td class="day"></td>
-				<td class="posts"></td>
-				<td class="pvs"></td>
-				<td class="pvs-per-post"></td>
-				<td class="comments"></td>
-				<td class="comments-per-posts"></td>
+		<script type="text/x-handlebars-template" id="stat-row-template">
+			{{#each stats}}
+			<tr id="{{@key}}">
+				<td class="day">{{day}}</td>
+				<td class="posts">{{posts}}</td>
+				<td class="pvs">{{pvs}}</td>
+				<td class="pvs-per-post">{{pvs_per_post}}</td>
+				<td class="comments">{{comments}}</td>
+				<td class="comments-per-posts">{{comments_per_posts}}</td>
 				<?php echo $content_summary; ?>
 			</tr>
+			{{/each}}
 		</script>
 	</section>
 

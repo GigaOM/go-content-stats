@@ -105,8 +105,29 @@ class GO_Content_Stats
 
 		wp_enqueue_style( 'go-content-stats', plugins_url( 'css/go-content-stats.css', __FILE__ ), array(), $script_config['version'] );
 
-		wp_register_script( 'go-content-stats', plugins_url( 'js/go-content-stats.js', __FILE__ ), array( 'jquery-mustache' ), $script_config['version'], TRUE );
+		$data = array(
+			'endpoint' => admin_url( 'admin-ajax.php?action=go_content_stats_fetch' ),
+		);
+
+		wp_register_script(
+			'handlebars',
+			plugins_url( 'js/external/handlebars.js', __FILE__ ),
+			array( 'jquery' ),
+			$script_config['version'],
+			TRUE
+		);
+
+		wp_register_script(
+			'go-content-stats',
+			plugins_url( 'js/go-content-stats.js', __FILE__ ),
+			array( 'handlebars' ),
+			$script_config['version'],
+			TRUE
+		);
+
 		wp_enqueue_script( 'go-content-stats' );
+
+		wp_localize_script( 'go-content-stats', 'go_content_stats', $data );
 	}//end admin_enqueue_scripts
 
 	/**
@@ -731,7 +752,7 @@ class GO_Content_Stats
 		do
 		{
 			$temp_date = date( 'Y-m-d', $temp_time );
-			$stats[ $temp_date ] = clone $this->pieces;
+			$stats[ $temp_date ] = $this->pieces();
 			$stats[ $temp_date ]->day = $temp_date;
 			$temp_time += 86400;
 		}// end do
