@@ -9,12 +9,15 @@ class GO_Content_Stats
 	public $date_lesser_stamp;
 	public $date_lesser;
 	public $calendar;
+	private $pieces;
+	private $id_base = 'go-content-stats';
 
-	public function __construct( $config = array() )
+	/**
+	 * constructor
+	 */
+	public function __construct()
 	{
-		$this->config = (array) $config;
-
-		add_action( 'init', array( $this, 'init' ) );
+		add_action( 'admin_init', array( $this, 'admin_init' ) );
 		add_action( 'admin_menu', array( $this, 'admin_menu_init' ) );
 	} // END __construct
 
@@ -23,28 +26,28 @@ class GO_Content_Stats
 	 */
 	public function admin_menu_init()
 	{
+		$this->config();
 		$this->menu_url = admin_url( 'index.php?page=go-content-stats' );
-
 		add_submenu_page( 'index.php', 'Gigaom Content Stats', 'Content Stats', 'edit_posts', 'go-content-stats', array( $this, 'admin_menu' ) );
-
-		add_action( 'go-content-stats-posts', array( $this, 'prime_pv_cache' ) );
 	} // END admin_menu_init
 
-	public function init()
+	public function admin_init()
 	{
-		if ( ! is_admin() )
+		$this->config();
+		add_action( 'go-content-stats-posts', array( $this, 'prime_pv_cache' ) );
+		add_action( 'wp_ajax_go_content_stats_fetch', array( $this, 'fetch_ajax' ) );
+
+		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ) );
+	}// end admin_init
+
+	private function config()
+	{
+		if ( $this->config )
 		{
-			return;
-		}// end if
+			return $this->config;
+		}//end if
 
-		wp_enqueue_style( 'go-content-stats', plugins_url( 'css/go-content-stats.css', __FILE__ ), array(), '1' );
-	} // END init
-
-	/**
-	 * the stats page/admin menu
-	 */
-	public function admin_menu()
-	{
+		$this->config = apply_filters( 'go_config', array(), 'go-content-stats' );
 		// prep the config vars so we don't have to check them later
 		if ( ! isset( $this->config['taxonomies'] ) )
 		{
@@ -56,41 +59,23 @@ class GO_Content_Stats
 			$this->config['content_matches'] = array();
 		}
 
-		// prefix the matches so we can avoid collissions
+		// prefix the matches so we can avoid collisions
 		foreach ( $this->config['content_matches'] as $k => $v )
 		{
 			$this->config['content_matches'][ 'match_' . $k ] = $v;
 			unset( $this->config['content_matches'][ $k ] );
 		}
 
-		echo '<div class="wrap">';
-		screen_icon( 'index' );
+		return $this->config;
+	}// end config
 
-		// set the upper limit of posts
-		if ( isset( $_GET['date_greater'] ) && strtotime( urldecode( $_GET['date_greater'] ) ) )
+	private function pieces()
+	{
+		if ( $this->pieces )
 		{
-			$this->date_greater_stamp = strtotime( urldecode( $_GET['date_greater'] ) );
-			$this->date_greater = date( 'Y-m-d', $this->date_greater_stamp );
-		}
-		else
-		{
-			$this->date_greater_stamp = time();
-			$this->date_greater = date( 'Y-m-d', $this->date_greater_stamp );
-		}
+			return clone $this->pieces;
+		}// end if
 
-		// set the lower limit of posts
-		if ( isset( $_GET['date_lesser'] ) && strtotime( urldecode( $_GET['date_lesser'] ) ) )
-		{
-			$this->date_lesser_stamp = strtotime( urldecode( $_GET['date_lesser'] ) );
-			$this->date_lesser = date( 'Y-m-d', $this->date_lesser_stamp );
-		}
-		else
-		{
-			$this->date_lesser_stamp = strtotime( '-31 days' );
-			$this->date_lesser = date( 'Y-m-d', $this->date_lesser_stamp );
-		}
-
-		// prefill the results list
 		$this->pieces = (object) array_merge(
 
 			array(
@@ -103,68 +88,26 @@ class GO_Content_Stats
 			array_fill_keys( array_keys( $this->config['content_matches'] ), NULL )
 		);
 
-		$temp_time = $this->date_lesser_stamp;
-		do
-		{
-			$temp_date = date( 'Y-m-d', $temp_time );
-			$this->calendar[ $temp_date ] = clone $this->pieces;
-			$this->calendar[ $temp_date ]->day = $temp_date;
-			$temp_time += 86400;
-		}// end do
-		while ( $temp_time < $this->date_greater_stamp );
-		$this->calendar = array_reverse( $this->calendar );
+		return clone $this->pieces;
+	}// end pieces
 
-		// run the stats
-		if ( 'author' == $_GET['type'] && ( $author = get_user_by( 'id', $_GET['key'] ) ) )
-		{
-				echo '<h2>Gigaom Content Stats for ' . esc_html( $author->display_name ) . '</h2>';
-				$this->get_author_stats( $_GET['key'] );
-		}// end if
-		elseif ( taxonomy_exists( $_GET['type'] ) && term_exists( $_GET['key'], $_GET['type'] ) )
-		{
-				echo '<h2>Gigaom Content Stats for ' . sanitize_title_with_dashes( $_GET['type'] ) . ':' .  sanitize_title_with_dashes( $_GET['key'] ) . '</h2>';
-				$this->get_taxonomy_stats( $_GET['type'], $_GET['key'] );
-		}// end elseif
-		else
-		{
-			echo '<h2>Gigaom Content Stats</h2>';
-			$this->get_general_stats();
-		}// end else
-
-		echo '<h2>Select a knife to slice through the stats</h2>';
-
-		// display a picker for the time period
-		echo '<h3>Time period</h3>';
-		$this->pick_month();
-
-		// print lists of items people can get stats on
-		// authors here
-		$authors = $this->get_authors_list();
-		if ( is_array( $authors ) )
-		{
-			echo '<h3>Authors</h3>';
-			$this->do_list( $authors );
-		}
-
-		// all configured taxonomies here
-		foreach ( $this->config['taxonomies'] as $tax )
-		{
-			$terms = $this->get_terms_list( $tax );
-			if ( is_array( $terms ) )
-			{
-				echo '<h3>' . esc_html( $tax ) . '</h3>';
-				$this->do_list( $terms, $tax );
-			}// end if
-		}// end foreach
-
-		// show the api key to help debugging
-		if ( empty( $this->wpcom_api_key ) )
-		{
-			echo '<p>WPCom stats using API Key '. $this->get_wpcom_api_key() .'</p>';
-		}
-
-		echo '</div>';
+	/**
+	 * the stats page/admin menu
+	 */
+	public function admin_menu()
+	{
+		require __DIR__ . '/templates/stats.php';
 	} // END admin_menu
+
+	public function admin_enqueue_scripts()
+	{
+		$script_config = apply_filters( 'go-config', array( 'version' => 1 ), 'go-script-version' );
+
+		wp_enqueue_style( 'go-content-stats', plugins_url( 'css/go-content-stats.css', __FILE__ ), array(), $script_config['version'] );
+
+		wp_register_script( 'go-content-stats', plugins_url( 'js/go-content-stats.js', __FILE__ ), array( 'jquery-mustache' ), $script_config['version'], TRUE );
+		wp_enqueue_script( 'go-content-stats' );
+	}//end admin_enqueue_scripts
 
 	/**
 	 * a filter for the posts sql to limit by date range
@@ -174,7 +117,7 @@ class GO_Content_Stats
 	 */
 	public function posts_where( $where = '' )
 	{
-		$where .= " AND post_date <= '{$this->date_greater}' AND post_date >= '{$this->date_lesser}'";
+		$where .= " AND post_date BETWEEN '{$this->date_lesser}' AND '{$this->date_greater}'";
 		return $where;
 	} // END posts_where
 
@@ -194,7 +137,7 @@ class GO_Content_Stats
 			return FALSE;
 		}
 
-		return $this->display_stats( $query->posts );
+		return $query->posts;
 	} // END get_general_stats
 
 	/**
@@ -217,21 +160,21 @@ class GO_Content_Stats
 			return FALSE;
 		}
 
-		return $this->display_stats( $query->posts );
+		return $query->posts;
 	} // END get_author_stats
 
 	/**
 	 * get a list of posts by taxonomy to display
 	 *
-	 * @param  string $taxonomy Taxonomy
-	 * @param  string $term Term
+	 * @param string $taxonomy Taxonomy
+	 * @param mixed $terms (int/string/array) Taxonomy terms
 	 */
-	public function get_taxonomy_stats( $taxonomy, $term )
+	public function get_taxonomy_stats( $taxonomy, $terms )
 	{
 		add_filter( 'posts_where', array( $this, 'posts_where' ) );
 		$query = new WP_Query( array(
 			'taxonomy' => $taxonomy,
-			'term' => $term, // @TODO: does this work? docs say "terms"
+			'terms' => $terms,
 			'posts_per_page' => -1,
 		) );
 		remove_filter( 'posts_where', array( $this, 'posts_where' ) );
@@ -241,11 +184,12 @@ class GO_Content_Stats
 			return FALSE;
 		}
 
-		return $this->display_stats( $query->posts );
+		return $query->posts;
 	} // END get_taxonomy_stats
 
 	/**
 	 * actually display the stats for the selected posts
+	 *
 	 * @param  array $posts array of post objects
 	 * @return null outputs HTML
 	 */
@@ -405,7 +349,7 @@ class GO_Content_Stats
 		if ( ! empty( $this->wpcom_api_key ) )
 		{
 			$api_key = $this->wpcom_api_key;
-		}
+		}// end if
 		// attempt to get the API key from the user
 		elseif (
 			( $user = wp_get_current_user() ) &&
@@ -413,7 +357,11 @@ class GO_Content_Stats
 		)
 		{
 			$api_key = $user->api_key;
-		}
+		}// end elseif
+		elseif ( isset( $this->config['pv_api_key'] ) )
+		{
+			$api_key = $this->config['pv_api_key'];
+		}// end elseif
 
 		return $api_key;
 	}//end get_wpcom_api_key
@@ -439,7 +387,7 @@ class GO_Content_Stats
 			$get_url = sprintf(
 				 'http://stats.wordpress.com/csv.php?api_key=%1$s&blog_uri=%2$s&table=postviews&post_id=%3$d&days=-1&limit=-1&format=json&summarize',
 				 $api_key,
-				 urlencode( home_url() ),
+				 urlencode( $this->config['pv_api_url'] ),
 				 $post_id
 			);
 
@@ -473,6 +421,22 @@ class GO_Content_Stats
 	 */
 	public function prime_pv_cache( $post_ids )
 	{
+		$to_fetch = array();
+		foreach ( $post_ids as $post_id )
+		{
+			$to_fetch[] = $post_id;
+			if ( 100 == count( $to_fetch ) )
+			{
+				$this->prime_pv_cache_chunk( $to_fetch );
+				$to_fetch = array();
+			}//end if
+		}// end foreach
+
+		$this->prime_pv_cache_chunk( $to_fetch );
+	}//end prime_pv_cache
+
+	private function prime_pv_cache_chunk( $post_ids )
+	{
 		// caching this, but the result doesn't really matter so much as the fact that
 		// we've already run it on a specific set of posts recently
 		$cachekey = md5( serialize( $post_ids ) );
@@ -490,11 +454,12 @@ class GO_Content_Stats
 			$get_url = sprintf(
 				 'http://stats.wordpress.com/csv.php?api_key=%1$s&blog_uri=%2$s&table=postviews&post_id=%3$s&days=-1&limit=-1&format=json&summarize',
 				 $api_key,
-				 urlencode( home_url() ),
+				 urlencode( $this->config['pv_api_url'] ),
 				 implode( ',', array_map( 'absint', $post_ids ) )
 			);
 
 			$hits_api = wp_remote_request( $get_url );
+
 			if ( ! is_wp_error( $hits_api ) )
 			{
 				$hits_api = wp_remote_retrieve_body( $hits_api );
@@ -519,7 +484,7 @@ class GO_Content_Stats
 				wp_cache_set( $cachekey, $hits_api[0]->postviews, 'go-content-stats-hits-bulk', 1800 );
 			}// end if
 		}// end if
-	} // END prime_pv_cache
+	} // END prime_pv_cache_chunk
 
 	/**
 	 * print a list of items to get stats on
@@ -527,6 +492,8 @@ class GO_Content_Stats
 	 * @param  array $list items to list
 	 * @param  string $type the item type
 	 * @return null outputs unordered list
+	 *
+	 * @todo : this is ready to be deleted, kept for reference on mustache growing
 	 */
 	public function do_list( $list, $type = 'author' )
 	{
@@ -570,8 +537,7 @@ class GO_Content_Stats
 			foreach ( $author_ids as $author_id )
 			{
 				$name = get_the_author_meta( 'display_name', $author_id->post_author );
-				$return[ $author_id->post_author ] = (object) array(
-
+				$return[ $author_id->post_author ] = array(
 					'key' => $author_id->post_author,
 					'name' => $name ? $name : 'No author name',
 					'hits' => $author_id->hits,
@@ -611,8 +577,8 @@ class GO_Content_Stats
 		$return = array();
 		foreach ( $terms as $term )
 		{
-			$return[ $term->term_id ] = (object) array(
-
+			$return[ $term->slug ] = array(
+				'id' => $term->term_id,
 				'key' => $term->slug,
 				'name' => $term->name,
 				'hits' => $term->count,
@@ -622,37 +588,226 @@ class GO_Content_Stats
 		return $return;
 	} // END get_terms_list
 
-	public function pick_month()
+	public function fetch_ajax()
 	{
-		$months = array();
-		$months[] = '<option value="' . date( 'Y-m', strtotime( '-31 days' ) ) . '">Last 30 days</option>';
-		$starting_month = (int) date( 'n' );
-		for ( $year = (int) date( 'Y' ); $year >= 2001; $year-- )
+		if ( ! current_user_can( 'edit_posts' ) )
 		{
-			for ( $month = $starting_month; $month >= 1; $month-- )
+			wp_send_json_error( 'you do not have permission' );
+		}// end if
+
+		$which = isset( $_GET['which'] ) ? $_GET['which'] : 'stats';
+		$valid_which = array(
+			'stats',
+			'pv_stats',
+			'taxonomies',
+		);
+
+		if ( ! in_array( $which, $valid_which ) )
+		{
+			wp_send_json_error( 'nice try. beat it.' );
+		}// end if
+
+		// set the upper limit of posts
+		if ( isset( $_GET['date_greater'] ) && strtotime( urldecode( $_GET['date_greater'] ) ) )
+		{
+			$this->date_greater_stamp = strtotime( urldecode( $_GET['date_greater'] ) );
+			$this->date_greater = date( 'Y-m-d', $this->date_greater_stamp );
+		}// end if
+		else
+		{
+			$this->date_greater_stamp = time();
+			$this->date_greater = date( 'Y-m-d', $this->date_greater_stamp );
+		}// end else
+
+		// set the lower limit of posts
+		if ( isset( $_GET['date_lesser'] ) && strtotime( urldecode( $_GET['date_lesser'] ) ) )
+		{
+			$this->date_lesser_stamp = strtotime( urldecode( $_GET['date_lesser'] ) );
+			$this->date_lesser = date( 'Y-m-d', $this->date_lesser_stamp );
+		}// end if
+		else
+		{
+			$this->date_lesser_stamp = strtotime( '-31 days' );
+			$this->date_lesser = date( 'Y-m-d', $this->date_lesser_stamp );
+		}// end else
+
+		$args = array(
+			'type' => isset( $_GET['type'] ) ? $_GET['type'] : 'general',
+			'key' => isset( $_GET['key'] ) ? $_GET['key'] : NULL,
+		);
+
+		$function = "fetch_$which";
+		$stats = $this->$function( $args );
+
+		if ( ! $stats )
+		{
+			wp_send_json_error( 'failed to load stats.' );
+		}// end if
+
+		wp_send_json_success( $stats );
+	}// end fetch_ajax
+
+	private function fetch_stats( $args )
+	{
+		$posts = $this->fetch_stat_posts( $args );
+		if ( ! is_array( $posts ) )
+		{
+			return FALSE;
+		}// end if
+
+		$stats = $this->initialize_stats();
+
+		// iterate through the posts, aggregate their stats, and assign those into the stat array
+		foreach ( $posts as $post )
+		{
+			$post_date = date( 'Y-m-d', strtotime( $post->post_date ) );
+			$stats[ $post_date ]->day = $post_date;
+			$stats[ $post_date ]->posts++;
+
+			$stats[ $post_date ]->comments += $post->comment_count;
+			foreach ( $this->config['content_matches'] as $key => $match )
 			{
-				$temp_time = strtotime( $year . '-' . $month . '-1' );
-				$months[] = '<option value="' . date( 'Y-m', $temp_time ) . '" ' . selected( date( 'Y-m', $this->date_lesser_stamp ), date( 'Y-m', $temp_time ), FALSE ) . '>' . date( 'M Y', $temp_time ) . '</option>';
-			}// end for
+				if ( preg_match( $match['regex'], $post->post_content ) )
+				{
+					$stats[ $post_date ]->$key++;
+				}// end if
+			}// end foreach
+		}// end foreach
 
-			$starting_month = 12;
-		}// end for
+		// iterate through and generate the summary stats (yes, this means I'm iterating extra)
+		$summary = $this->pieces();
+		foreach ( $stats as $day )
+		{
+			$summary->day++;
+			$summary->posts += $day->posts;
+			$summary->comments += $day->comments;
+			foreach ( $this->config['content_matches'] as $key => $match )
+			{
+				$summary->$key += $day->$key;
+			}// end foreach
+		}// end foreach
 
-		?>
-		<select onchange="window.location = window.location.href.split('?')[0] + '?page=go-content-stats&date_lesser=' + this.value + '-1' + '&date_greater=' + this.value + '-31'">
-			<?php echo implode( $months ); ?>
-		</select>
-		<?php
-	} // END pick_month
+		return array(
+			'stats' => $stats,
+			'summary' => $summary,
+		);
+	}// end fetch_stats
+
+	private function fetch_pv_stats( $args )
+	{
+		$posts = $this->fetch_stat_posts( $args );
+		if ( ! is_array( $posts ) )
+		{
+			return FALSE;
+		}// end if
+
+		$this->prime_pv_cache( wp_list_pluck( $posts, 'ID' ) );
+
+		$stats = $this->initialize_stats();
+		foreach ( $posts as $post )
+		{
+			$post_date = date( 'Y-m-d', strtotime( $post->post_date ) );
+
+			$stats[ $post_date ]->pvs += $this->get_pvs( $post->ID );
+		}// end foreach
+
+		// summary!
+		$summary = $this->pieces();
+		foreach ( $stats as $day )
+		{
+			$summary->pvs += $day->pvs;
+		}//end foreach
+
+		return array(
+			'stats' => $stats,
+			'summary' => $summary,
+		);
+	}//end fetch_pv_stats
+
+	private function initialize_stats()
+	{
+		$stats = array();
+		$temp_time = $this->date_lesser_stamp;
+		do
+		{
+			$temp_date = date( 'Y-m-d', $temp_time );
+			$stats[ $temp_date ] = clone $this->pieces;
+			$stats[ $temp_date ]->day = $temp_date;
+			$temp_time += 86400;
+		}// end do
+		while ( $temp_time < $this->date_greater_stamp );
+
+		return array_reverse( $stats );
+	}// end initialize_stats
+
+	private function fetch_stat_posts( $args )
+	{
+		// run the stats
+		if ( 'author' == $args['type'] && ( $author = get_user_by( 'id', $args['key'] ) ) )
+		{
+			$posts = $this->get_author_stats( $args['key'] );
+		}// end if
+		elseif ( taxonomy_exists( $args['type'] ) && term_exists( $args['key'], $args['type'] ) )
+		{
+			$posts = $this->get_taxonomy_stats( $args['type'], $args['key'] );
+		}// end elseif
+		else
+		{
+			$posts = $this->get_general_stats();
+		}// end else
+
+		return $posts;
+	}// end fetch_stat_posts
+
+	private function fetch_taxonomies( $unused_args )
+	{
+		// print lists of items people can get stats on
+		// authors here
+		$authors = $this->get_authors_list();
+
+		// all configured taxonomies here
+		foreach ( $this->config['taxonomies'] as $tax )
+		{
+			$terms = $this->get_terms_list( $tax );
+			$taxonomies[ $tax ] = $terms ?: array();
+		}// end foreach
+
+		return array(
+			'authors' => $authors,
+			'taxonomies' => $taxonomies,
+		);
+	}//end fetch_taxonomies
+
+	/**
+	 * utility function to consistently get field names
+	 *
+	 * @param string name of the field
+	 * @return string formatted like idbase[field_name]
+	 */
+	private function get_field_name( $field_name )
+	{
+		return "{$this->id_base}[{$field_name}]";
+	}//end get_field_name
+
+	/**
+	 * utility function to consistently get field
+	 *
+	 * @param string name of the field
+	 * @return string formatted like idbase-field_name
+	 */
+	private function get_field_id( $field_name )
+	{
+		return "{$this->id_base}-{$field_name}";
+	}//end get_field_id
 }// END GO_Content_Stats
 
-function go_content_stats( $config )
+function go_content_stats()
 {
 	global $go_content_stats;
 
 	if ( ! is_object( $go_content_stats ) )
 	{
-		$go_content_stats = new GO_Content_Stats( $config );
+		$go_content_stats = new GO_Content_Stats();
 	}
 
 	return $go_content_stats;

@@ -9,21 +9,4 @@
  */
 
 require_once __DIR__ .'/components/class-go-content-stats.php';
-go_content_stats( array(
-	'taxonomies' => array(
-		'primary_channel',
-		'post_tag',
-		'company',
-		'technology',
-	),
-	'content_matches' => array(
-		'pro' => array(
-			'regex' => '/(pro|research)\.gigaom\.com/',
-			'label' => 'w/Research links',
-		),
-		'events' => array(
-			'regex' => '/event(s?)\.gigaom\.com/',
-			'label' => 'w/Events links',
-		),
-	),
-));
+go_content_stats();
