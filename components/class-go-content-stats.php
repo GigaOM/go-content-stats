@@ -30,10 +30,12 @@ class GO_Content_Stats
 
 	public function init()
 	{
-		if ( is_admin() )
+		if ( ! is_admin() )
 		{
-			wp_enqueue_style( 'go-content-stats', plugins_url( 'css/go-content-stats.css', __FILE__ ), array(), '1' );
-		}
+			return;
+		}// end if
+
+		wp_enqueue_style( 'go-content-stats', plugins_url( 'css/go-content-stats.css', __FILE__ ), array(), '1' );
 	} // END init
 
 	// the stats page/admin menu
@@ -44,6 +46,7 @@ class GO_Content_Stats
 		{
 			$this->config['taxonomies'] = array();
 		}
+
 		if ( ! isset( $this->config['content_matches'] ) )
 		{
 			$this->config['content_matches'] = array();
@@ -57,7 +60,7 @@ class GO_Content_Stats
 		}
 
 		echo '<div class="wrap">';
-		screen_icon('index');
+		screen_icon( 'index' );
 
 		// set the upper limit of posts
 		if ( isset( $_GET['date_greater'] ) && strtotime( urldecode( $_GET['date_greater'] ) ) )
@@ -103,8 +106,8 @@ class GO_Content_Stats
 			$this->calendar[ $temp_date ] = clone $this->pieces;
 			$this->calendar[ $temp_date ]->day = $temp_date;
 			$temp_time += 86400;
-		}
-		while( $temp_time < $this->date_greater_stamp );
+		}// end do
+		while ( $temp_time < $this->date_greater_stamp );
 		$this->calendar = array_reverse( $this->calendar );
 
 		// run the stats
@@ -112,18 +115,17 @@ class GO_Content_Stats
 		{
 				echo '<h2>Gigaom Content Stats for ' . esc_html( $author->display_name ) . '</h2>';
 				$this->get_author_stats( $_GET['key'] );
-
-		}
-		elseif ( taxonomy_exists( $_GET['type'] ) && term_exists( $_GET['key'] , $_GET['type'] ) )
+		}// end if
+		elseif ( taxonomy_exists( $_GET['type'] ) && term_exists( $_GET['key'], $_GET['type'] ) )
 		{
 				echo '<h2>Gigaom Content Stats for ' . sanitize_title_with_dashes( $_GET['type'] ) . ':' .  sanitize_title_with_dashes( $_GET['key'] ) . '</h2>';
-				$this->get_taxonomy_stats( $_GET['type'] , $_GET['key'] );
-		}
+				$this->get_taxonomy_stats( $_GET['type'], $_GET['key'] );
+		}// end elseif
 		else
 		{
 			echo '<h2>Gigaom Content Stats</h2>';
 			$this->get_general_stats();
-		}
+		}// end else
 
 		echo '<h2>Select a knife to slice through the stats</h2>';
 
@@ -141,15 +143,15 @@ class GO_Content_Stats
 		}
 
 		// all configured taxonomies here
-		foreach( $this->config['taxonomies'] as $tax )
+		foreach ( $this->config['taxonomies'] as $tax )
 		{
 			$terms = $this->get_terms_list( $tax );
 			if ( is_array( $terms ) )
 			{
-				echo '<h3>'. $tax .'</h3>';
-				$this->do_list( $terms , $tax );
-			}
-		}
+				echo '<h3>' . esc_html( $tax ) . '</h3>';
+				$this->do_list( $terms, $tax );
+			}// end if
+		}// end foreach
 
 		// show the api key to help debugging
 		if ( empty( $this->wpcom_api_key ) )
@@ -203,7 +205,7 @@ class GO_Content_Stats
 	} // END get_author_stats
 
 	// get a list of posts by taxonomy to display
-	public function get_taxonomy_stats( $taxonomy , $term )
+	public function get_taxonomy_stats( $taxonomy, $term )
 	{
 		add_filter( 'posts_where', array( $this, 'posts_where' ) );
 		$query = new WP_Query( array(
@@ -232,27 +234,27 @@ class GO_Content_Stats
 		do_action( 'go-content-stats-posts', wp_list_pluck( $posts, 'ID' ) );
 
 		// iterate through the posts, aggregate their stats, and assign those into the calendar
-		foreach( $posts as $post )
+		foreach ( $posts as $post )
 		{
 			$post_date = date( 'Y-m-d', strtotime( $post->post_date ) );
 			$this->calendar[ $post_date ]->day = $post_date;
 			$this->calendar[ $post_date ]->posts++;
 			$this->calendar[ $post_date ]->pvs += $this->get_pvs( $post->ID );
 			$this->calendar[ $post_date ]->comments += $post->comment_count;
-			foreach( $this->config['content_matches'] as $key => $match )
+			foreach ( $this->config['content_matches'] as $key => $match )
 			{
 				if ( preg_match( $match['regex'], $post->post_content ) )
 				{
 					$this->calendar[ $post_date ]->$key++;
 				}
-			}
-		}
+			}// end foreach
+		}// end foreach
 
 		// create a sub-list of content match table headers
 		$content_match_th = '';
 		if ( is_array( $this->config['content_matches'] ) )
 		{
-			foreach( $this->config['content_matches'] as $match )
+			foreach ( $this->config['content_matches'] as $match )
 			{
 				$content_match_th .= '<th>' . $match['label'] . '</th>';
 			}
@@ -275,24 +277,24 @@ class GO_Content_Stats
 
 		// iterate through and generate the summary stats (yes, this means I'm iterating extra)
 		$summary = clone $this->pieces;
-		foreach( $this->calendar as $day )
+		foreach ( $this->calendar as $day )
 		{
 			$summary->day++;
 			$summary->posts += $day->posts;
 			$summary->pvs += $day->pvs;
 			$summary->comments += $day->comments;
-			foreach( $this->config['content_matches'] as $key => $match )
+			foreach ( $this->config['content_matches'] as $key => $match )
 			{
 				$summary->$key += $day->$key;
 			}
-		}
+		}// end foreach
 
 		// iterate the content matches for the summary
 		$content_match_summary_values = '';
-		foreach( $this->config['content_matches'] as $key => $match )
+		foreach ( $this->config['content_matches'] as $key => $match )
 		{
 			$content_match_summary_values .= '<td>' . ( $summary->$key ? $summary->$key : 0 ) . '</td>';
-		}
+		}// end foreach
 
 		// print the summary row for all these stats
 		printf( '
@@ -316,11 +318,11 @@ class GO_Content_Stats
 		);
 
 		// iterate through the calendar (includes empty days), print stats for each day
-		foreach( $this->calendar as $day )
+		foreach ( $this->calendar as $day )
 		{
 			// iterate the content matches for each row
 			$content_match_row_values = '';
-			foreach( $this->config['content_matches'] as $key => $match )
+			foreach ( $this->config['content_matches'] as $key => $match )
 			{
 				$content_match_row_values .= '<td>' . ( $day->$key ? $day->$key : '&nbsp;' ) . '</td>';
 			}
@@ -344,8 +346,7 @@ class GO_Content_Stats
 				$day->posts ? number_format( ( $day->comments / $day->posts ), 1 ) : '&nbsp;',
 				$content_match_row_values
 			);
-
-		}
+		}// end foreach
 
 		// print the summary row for all these stats
 		printf( '
@@ -373,7 +374,6 @@ class GO_Content_Stats
 
 	public function get_wpcom_api_key()
 	{
-
 		$api_key = FALSE;
 
 		// a locally set API key overrides everything
@@ -391,15 +391,14 @@ class GO_Content_Stats
 		}
 
 		return $api_key;
-	}
+	}//end get_wpcom_api_key
 
 	// get pageviews for the given post ID from Automattic's stats API
 	public function get_pvs( $post_id )
 	{
-
 		// test the cache like a good API user
 		// if the prime_pv_cache() cache method earlier is working, this should always return a cached result
-		if ( ! $hits = wp_cache_get( $post_id , 'go-content-stats-hits' ) )
+		if ( ! $hits = wp_cache_get( $post_id, 'go-content-stats-hits' ) )
 		{
 			// attempt to get the API key
 			if ( ! $api_key = $this->get_wpcom_api_key() )
@@ -432,8 +431,8 @@ class GO_Content_Stats
 				}
 
 				wp_cache_set( $post_id, $hits, 'go-content-stats-hits', 1800 );
-			}
-		}
+			}// end if
+		}// end if
 
 		return $hits;
 	} // END get_pvs
@@ -441,15 +440,13 @@ class GO_Content_Stats
 	// prime the pageview stats cache by doing a bulk query of all posts, rather than individual queries
 	public function prime_pv_cache( $post_ids )
 	{
-
 		// caching this, but the result doesn't really matter so much as the fact that
 		// we've already run it on a specific set of posts recently
 		$cachekey = md5( serialize( $post_ids ) );
 
 		// test the cache like a good API user
-		if ( ! $hits = wp_cache_get( $cachekey , 'go-content-stats-hits-bulk' ) )
+		if ( ! $hits = wp_cache_get( $cachekey, 'go-content-stats-hits-bulk' ) )
 		{
-
 			// attempt to get the API key
 			if ( ! $api_key = $this->get_wpcom_api_key() )
 			{
@@ -487,9 +484,9 @@ class GO_Content_Stats
 				}
 
 				wp_cache_set( $cachekey, $hits_api[0]->postviews, 'go-content-stats-hits-bulk', 1800 );
-			}
-		}
-	} // END get_pvs
+			}// end if
+		}// end if
+	} // END prime_pv_cache
 
 	// print a list of items to get stats on
 	public function do_list( $list, $type = 'author' )
@@ -500,7 +497,7 @@ class GO_Content_Stats
 		}
 
 		echo '<ul>';
-		foreach( $list as $item )
+		foreach ( $list as $item )
 		{
 			printf( '<li><a href="%1$s&type=%2$s&key=%3$s">%4$s (%5$d)</a></li>',
 				$this->menu_url,
@@ -517,8 +514,7 @@ class GO_Content_Stats
 	// cached for a full day
 	public function get_authors_list()
 	{
-
-		if ( ! $return = wp_cache_get( 'authors' , 'go-content-stats' ) )
+		if ( ! $return = wp_cache_get( 'authors', 'go-content-stats' ) )
 		{
 			global $wpdb;
 
@@ -530,7 +526,7 @@ class GO_Content_Stats
 			}
 
 			$return = array();
-			foreach( $author_ids as $author_id )
+			foreach ( $author_ids as $author_id )
 			{
 				$name = get_the_author_meta( 'display_name', $author_id->post_author );
 				$return[ $author_id->post_author ] = (object) array(
@@ -542,7 +538,7 @@ class GO_Content_Stats
 			}
 
 			wp_cache_set( 'authors', $return, 'go-content-stats', 86413 ); // 86413 is a prime number slightly longer than 24 hours
-		}
+		}// end if
 
 		return $return;
 	} // END get_authors_list
@@ -567,7 +563,7 @@ class GO_Content_Stats
 		}
 
 		$return = array();
-		foreach( $terms as $term )
+		foreach ( $terms as $term )
 		{
 			$return[ $term->term_id ] = (object) array(
 
@@ -575,7 +571,7 @@ class GO_Content_Stats
 				'name' => $term->name,
 				'hits' => $term->count,
 			);
-		}
+		}// end foreach
 
 		return $return;
 	} // END get_terms_list
@@ -585,16 +581,16 @@ class GO_Content_Stats
 		$months = array();
 		$months[] = '<option value="' . date( 'Y-m', strtotime( '-31 days' ) ) . '">Last 30 days</option>';
 		$starting_month = (int) date( 'n' );
-		for( $year = (int) date( 'Y' ); $year >= 2001; $year-- )
+		for ( $year = (int) date( 'Y' ); $year >= 2001; $year-- )
 		{
-			for( $month = $starting_month; $month >= 1; $month-- )
+			for ( $month = $starting_month; $month >= 1; $month-- )
 			{
-				$temp_time = strtotime( $year . '-' . $month . '-' . '1' );
+				$temp_time = strtotime( $year . '-' . $month . '-1' );
 				$months[] = '<option value="' . date( 'Y-m', $temp_time ) . '" ' . selected( date( 'Y-m', $this->date_lesser_stamp ), date( 'Y-m', $temp_time ), FALSE ) . '>' . date( 'M Y', $temp_time ) . '</option>';
-			}
+			}// end for
 
 			$starting_month = 12;
-		}
+		}// end for
 
 		?>
 		<select onchange="window.location = window.location.href.split('?')[0] + '?page=go-content-stats&date_lesser=' + this.value + '-1' + '&date_greater=' + this.value + '-31'">
@@ -602,7 +598,7 @@ class GO_Content_Stats
 		</select>
 		<?php
 	} // END pick_month
-} // END Go_Content_Stats
+}// END GO_Content_Stats
 
 function go_content_stats( $config )
 {
