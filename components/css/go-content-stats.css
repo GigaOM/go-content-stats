@@ -1,4 +1,4 @@
-/* @override 
+/* @override
 	http://localhost/wp-content/plugins/go-content-stats/components/css/go-content-stats.css?ver=1 */
 
 #stat-data table {
@@ -16,7 +16,7 @@
 }
 
 #stat-data th {
-	text-align: left;
+	text-align: center;
 	background-color: #464646;
 	color: #eeeeee;
 }
@@ -33,21 +33,21 @@
 	border: none;
 }
 
+#stat-data td {
+	text-align: right;
+}
+
+#stat-data .stat-summary .day,
+#stat-data .stat-summary .posts,
 #stat-data .day,
 #stat-data .posts {
 	text-align: center;
 }
 
-#stat-data .pvs,
-#stat-data .pvs-per-post,
-#stat-data .comments,
-#stat-data .comments-per-posts {
-	text-align: right;
-}
-
 #stat-data .stat-summary th {
 	background-color: #7f7f7f;
 	color: white;
+	text-align: right;
 }
 
 .stat-row[data-num-posts="0"] .posts a,

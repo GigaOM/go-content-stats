@@ -7,13 +7,15 @@
 		// create a sub-list of content match table headers
 		$content_match_th = '';
 		$content_summary = '';
+		$content_row = '';
 		if ( is_array( $this->config['content_matches'] ) )
 		{
-			foreach ( $this->config['content_matches'] as $match )
+			foreach ( $this->config['content_matches'] as $key => $match )
 			{
-				$content_match_th .= '<th>' . esc_attr( $match['label'] ) . '</th>';
-				$content_summary .= '<td class="' . sanitize_title_with_dashes( $match['label'] ) . '"></td>';
-			}
+				$content_match_th .= '<th class="' . esc_attr( $key ) . '">' . esc_attr( $match['label'] ) . '</th>';
+				$content_summary .= '<th class="' . esc_attr( $key ) . '"></th>';
+				$content_row .= '<td class="' . esc_attr( $key ) . '">{{number_format ' . esc_html( $key ) . '}}</td>';
+			}// end foreach
 		}// end if
 		?>
 
@@ -26,12 +28,12 @@
 			<table>
 				<thead>
 					<tr>
-						<th>Day</th>
-						<th>Posts</th>
-						<th>PVs</th>
-						<th>PVs/post</th>
-						<th>Comments</th>
-						<th>Comments/post</th>
+						<th class="day">Day</th>
+						<th class="posts">Posts</th>
+						<th class="pvs">PVs</th>
+						<th class="pvs-per-post">PVs/post</th>
+						<th class="comments">Comments</th>
+						<th class="comments-per-posts">Comments/post</th>
 						<?php echo $content_match_th; ?>
 					</tr>
 					<tr class="stat-summary" data-num-posts="{{summary.posts}}">
@@ -53,7 +55,7 @@
 						<td class="pvs-per-post">{{pvs_per_post}}</td>
 						<td class="comments">{{number_format comments}}</td>
 						<td class="comments-per-posts">{{number_format comments_per_posts}}</td>
-						<?php echo $content_summary; ?>
+						<?php echo $content_row; ?>
 					</tr>
 					{{/each}}
 				</tbody>
@@ -68,12 +70,12 @@
 						<?php echo $content_summary; ?>
 					</tr>
 					<tr>
-						<th>Day</th>
-						<th>Posts</th>
-						<th>PVs</th>
-						<th>PVs/post</th>
-						<th>Comments</th>
-						<th>Comments/post</th>
+						<th class="day">Day</th>
+						<th class="posts">Posts</th>
+						<th class="pvs">PVs</th>
+						<th class="pvs-per-post">PVs/post</th>
+						<th class="comments">Comments</th>
+						<th class="comments-per-posts">Comments/post</th>
 						<?php echo $content_match_th; ?>
 					</tr>
 				</tfoot>

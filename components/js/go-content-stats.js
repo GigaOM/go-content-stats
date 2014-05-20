@@ -11,6 +11,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 
 	go_content_stats.init = function() {
 		this.$period = $( '#go-content-stats-period' );
+		this.period = this.get_period();
 		this.$stat_data = $( '#stat-data' );
 		this.$taxonomy_data = $( '#taxonomy-data' );
 
@@ -19,10 +20,31 @@ if ( 'undefined' == typeof go_content_stats ) {
 		this.load_stats();
 
 		$( document ).on( 'change', this.$period, this.event.select_period );
+		$( window ).on( 'popstate', this.event.change_state );
 
 		// this registers a handlebars helper so we can output formatted numbers
 		// rounded to 1 decimal
 		Handlebars.registerHelper( 'number_format', this.number_format );
+	};
+
+	/**
+	 * push a state change
+	 */
+	go_content_stats.push_state = function () {
+		// @TODO: prevent the overriding of data if another ajax event is fired off before the results of any
+		//        of the items below
+		var period = this.get_period();
+
+		history.pushState( period, '', 'index.php?page=go-content-stats&period=' + period.period );
+		this.change_state( period );
+	};
+
+	/**
+	 *
+	 */
+	go_content_stats.change_state = function ( period ) {
+		this.period = period;
+		this.load_stats( period );
 	};
 
 	/**
@@ -31,11 +53,10 @@ if ( 'undefined' == typeof go_content_stats ) {
 	 * NOTE: we are using $.proxy when handling the promise objects so the callback's
 	 *       context will be go_content_stats
 	 */
-	go_content_stats.load_stats = function () {
-		// @TODO: prevent the overriding of data if another ajax event is fired off before the results of any
-		//        of the items below
-		var period = this.get_period();
-
+	go_content_stats.load_stats = function ( period ) {
+		if ( 'undefined' == typeof period || ! period ) {
+			period = this.get_period();
+		}
 		console.groupCollapsed( 'stat load ' + period.start + ' to ' + period.end );
 
 		this.$stat_data.block();
@@ -48,6 +69,9 @@ if ( 'undefined' == typeof go_content_stats ) {
 		general_promise.done( $.proxy( function( response ) {
 			console.info( 'general' );
 			console.dir( response.data );
+			if ( response.data.period.period !== this.period.period ) {
+				return;
+			}
 			this.render_general_stats( response.data );
 
 			var pv_promise = this.fetch_stats( 'pv_stats' );
@@ -56,6 +80,9 @@ if ( 'undefined' == typeof go_content_stats ) {
 			pv_promise.done( $.proxy( function( response ) {
 				console.info( 'pv' );
 				console.dir( response.data );
+				if ( response.data.period.period !== this.period.period ) {
+					return;
+				}
 				this.render_pv_stats( response.data );
 				console.groupEnd();
 			}, this ) );
@@ -67,6 +94,9 @@ if ( 'undefined' == typeof go_content_stats ) {
 		taxonomies_promise.done( $.proxy( function( response ) {
 			console.info( 'taxonomies' );
 			console.dir( response.data );
+			if ( response.data.period.period !== this.period.period ) {
+				return;
+			}
 			this.render_taxonomies( response.data );
 		}, this ) );
 	};
@@ -86,7 +116,8 @@ if ( 'undefined' == typeof go_content_stats ) {
 
 		return {
 			start: start,
-			end: end
+			end: end,
+			period: period
 		};
 	};
 
@@ -184,7 +215,18 @@ if ( 'undefined' == typeof go_content_stats ) {
 	 */
 	go_content_stats.event.select_period = function ( e ) {
 		e.preventDefault();
-		go_content_stats.load_stats();
+		go_content_stats.push_state();
+	};
+
+	/**
+	 * handle the state change
+	 */
+	go_content_stats.event.change_state = function ( e ) {
+		e.preventDefault();
+
+		if ( 'undefined' != typeof e.originalEvent.state.period ){
+			go_content_stats.change_state( e.originalEvent.state );
+		}
 	};
 } )( jQuery );
 

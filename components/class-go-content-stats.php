@@ -117,6 +117,16 @@ class GO_Content_Stats
 			TRUE
 		);
 
+		/* note: we'll need to include this if we plan to open source, else delete.
+		wp_register_script(
+			'jquery-blockui',
+			plugins_url( 'js/external/jquery.blockUI.js', __FILE__ ),
+			array( 'jquery' ),
+			$script_config['version'],
+			TRUE
+		);
+		*/
+
 		wp_register_script(
 			'go-content-stats',
 			plugins_url( 'js/go-content-stats.js', __FILE__ ),
@@ -664,6 +674,12 @@ class GO_Content_Stats
 		{
 			wp_send_json_error( 'failed to load stats.' );
 		}// end if
+
+		$stats['period'] = array(
+			'start' => $this->date_lesser,
+			'end' => $this->date_greater,
+			'period' => date( 'Y-m', $this->date_lesser_stamp ),
+		);
 
 		wp_send_json_success( $stats );
 	}// end fetch_ajax
