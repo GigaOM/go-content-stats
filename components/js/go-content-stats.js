@@ -10,14 +10,21 @@ go_content_stats.event = {};
 ( function ( $ ) {
 	go_content_stats.init = function() {
 		this.$period = $( '#go-content-stats-period' );
+		this.$stat_data = $( '#stat-data' );
+		this.$taxonomy_data = $( '#taxonomy-data' );
 		this.load_stats();
 		$( document ).on( 'change', this.$period, this.event.select_period );
+
+		Handlebars.registerHelper( 'number_format', this.number_format );
 	};
 
 	/**
 	 * loads stats and dumps them onto the page
 	 */
 	go_content_stats.load_stats = function () {
+		this.$stat_data.block();
+		this.$taxonomy_data.block();
+
 		var general_promise = this.fetch_stats( 'stats' );
 
 		general_promise.done( $.proxy( function( response ) {
@@ -26,14 +33,14 @@ go_content_stats.event = {};
 			var pv_promise = this.fetch_stats( 'pv_stats' );
 
 			pv_promise.done( $.proxy( function( response ) {
-				console.log( response.data );
+				this.render_pv_stats( response.data );
 			}, this ) );
 		}, this ) );
 
 		var taxonomies_promise = this.fetch_stats( 'taxonomies' );
 
 		taxonomies_promise.done( $.proxy( function( response ) {
-			console.log( response.data );
+			this.render_taxonomies( response.data );
 		}, this ) );
 	};
 
@@ -78,21 +85,68 @@ go_content_stats.event = {};
 		return $.getJSON( this.endpoint, args );
 	};
 
+	/**
+	 * renders the general stats via a Handlebars template
+	 */
 	go_content_stats.render_general_stats = function ( data ) {
 		// z: using handlebars: http://handlebarsjs.com/
-		console.log( data );
 		var source = $( '#stat-row-template' ).html();
 		var template = Handlebars.compile( source );
 
-		$( '#content-stats tbody' ).html( template( data ) );
+		$( '#stat-data' ).html( template( data ) );
 	};
 
-	go_content_stats.render_pv_stats = function () {
-		// update this shits.
+	/**
+	 * render the pv stats on the stats that have already been populated via
+	 * the this.render_general_stats function
+	 */
+	go_content_stats.render_pv_stats = function ( data ) {
+		var num_posts = 0;
+		var pvs = 0;
+
+		// populate the pcs columns in the stat rows
+		for ( var i in data.stats ) {
+			if ( ! data.stats[ i ].pvs ) {
+				continue;
+			}//end if
+
+			var $row = $( '#row-' + i );
+
+			num_posts = parseInt( $row.data( 'num-posts' ), 10 );
+			pvs = parseInt( data.stats[ i ].pvs, 10 );
+
+			$row.find( '.pvs' ).html( this.number_format( pvs ) );
+			$row.find( '.pvs-per-post' ).html( this.number_format( pvs / num_posts ) );
+		}//end for
+
+		// populate the summary stat info
+		var $summary = $( '.stat-summary' );
+		num_posts = parseInt( $( '#stat-data thead .stat-summary' ).data( 'num-posts' ), 10 );
+		pvs = parseInt( data.summary.pvs, 10 );
+
+		$summary.find( '.pvs' ).html( this.number_format( pvs ) );
+		$summary.find( '.pvs-per-post' ).html( this.number_format( pvs / num_posts ) );
 	};
 
-	go_content_stats.render_taxonomies = function () {
-		// update this shits.
+	go_content_stats.render_taxonomies = function ( data ) {
+		var source = $( '#taxonomy-criteria-template' ).html();
+		var template = Handlebars.compile( source );
+
+		$( '#taxonomy-data' ).html( template( data ) );
+	};
+
+	/**
+	 * output number with commas
+	 */
+	go_content_stats.number_format = function( num ) {
+		if ( ! num || 'undefined' == typeof num ) {
+			return 0;
+		}//end if
+
+		// round to 1 decimal
+		num = parseFloat( parseInt( num, 10 ).toFixed( 2 ), 10 );
+
+		return num.toString().replace( /\B(?=(\d{3})+(?!\d))/g, ',' );
 	};
 
 	/**
@@ -101,8 +155,6 @@ go_content_stats.event = {};
 	go_content_stats.event.select_period = function ( e ) {
 		go_content_stats.load_stats();
 	};
-
-
 } )( jQuery );
 
 jQuery( function( $ ) {
