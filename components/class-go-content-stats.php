@@ -120,7 +120,7 @@ class GO_Content_Stats
 		wp_register_script(
 			'go-content-stats',
 			plugins_url( 'js/go-content-stats.js', __FILE__ ),
-			array( 'handlebars' ),
+			array( 'handlebars', 'jquery-blockui' ),
 			$script_config['version'],
 			TRUE
 		);

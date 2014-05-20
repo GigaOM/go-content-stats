@@ -1,11 +1,7 @@
 /* @override 
 	http://localhost/wp-content/plugins/go-content-stats/components/css/go-content-stats.css?ver=1 */
 
-.dashboard_page_go-content-stats {
-	
-}
-
-.dashboard_page_go-content-stats table {
+#stat-data table {
 	width: 100%;
 	background: #ececec;
 	border-top: 1px solid #ddd;
@@ -14,31 +10,47 @@
 	padding: 0;
 }
 
-.dashboard_page_go-content-stats table tr th,
-.dashboard_page_go-content-stats table tr td {
+#stat-data th,
+#stat-data td {
 	padding: 0.5em;
 }
 
-.dashboard_page_go-content-stats table tr th {
+#stat-data th {
 	text-align: left;
 	background-color: #464646;
 	color: #eeeeee;
 }
 
-.dashboard_page_go-content-stats table tr td {
+#stat-data td {
 	border-top: 1px solid #ddd;
 }
 
-.dashboard_page_go-content-stats table tr:nth-child(even) td {
+#stat-data tbody tr:nth-child(even) td {
 	background-color: white;
 }
 
-.dashboard_page_go-content-stats table tr.summary td,
-.dashboard_page_go-content-stats table tr.summary-footer td {
+#stat-data .stat-summary td {
+	border: none;
+}
+
+#stat-data .day,
+#stat-data .posts {
+	text-align: center;
+}
+
+#stat-data .pvs,
+#stat-data .pvs-per-post,
+#stat-data .comments,
+#stat-data .comments-per-posts {
+	text-align: right;
+}
+
+#stat-data .stat-summary th {
 	background-color: #7f7f7f;
 	color: white;
 }
 
-.dashboard_page_go-content-stats table tr.summary td {
-	border: none;
+.stat-row[data-num-posts="0"] .posts a,
+.stat-row[data-num-posts=""] .posts a {
+	display: none;
 }
