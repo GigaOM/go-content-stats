@@ -659,9 +659,9 @@ class GO_Content_Stats
 		}//end if
 
 		// set the upper limit of posts
-		if ( isset( $_GET['date_greater'] ) && strtotime( urldecode( $_GET['date_greater'] ) ) )
+		if ( isset( $_GET['date_start'] ) && strtotime( urldecode( $_GET['date_start'] ) ) )
 		{
-			$this->date_greater_stamp = strtotime( urldecode( $_GET['date_greater'] ) );
+			$this->date_greater_stamp = strtotime( urldecode( $_GET['date_start'] ) );
 			$this->date_greater = date( 'Y-m-d', $this->date_greater_stamp );
 		}// end if
 		else
@@ -671,9 +671,9 @@ class GO_Content_Stats
 		}// end else
 
 		// set the lower limit of posts
-		if ( isset( $_GET['date_lesser'] ) && strtotime( urldecode( $_GET['date_lesser'] ) ) )
+		if ( isset( $_GET['date_end'] ) && strtotime( urldecode( $_GET['date_end'] ) ) )
 		{
-			$this->date_lesser_stamp = strtotime( urldecode( $_GET['date_lesser'] ) );
+			$this->date_lesser_stamp = strtotime( urldecode( $_GET['date_end'] ) );
 			$this->date_lesser = date( 'Y-m-d', $this->date_lesser_stamp );
 		}// end if
 		else
@@ -696,10 +696,11 @@ class GO_Content_Stats
 		}// end if
 
 		$stats['period'] = array(
-			'start' => $this->date_lesser,
-			'end' => $this->date_greater,
-			'period' => date( 'Y-m', $this->date_lesser_stamp ),
+			'start' => $this->days[ 0 ],
+			'end' => $this->days[ count( $this->days ) - 1 ],
 		);
+
+		do_action( 'debug_robot', print_r( $stats, TRUE ) );
 
 		wp_send_json_success( $stats );
 	}// end fetch_ajax
@@ -731,23 +732,9 @@ class GO_Content_Stats
 			}// end foreach
 		}// end foreach
 
-		// iterate through and generate the summary stats (yes, this means I'm iterating extra)
-		$summary = $this->pieces();
-		foreach ( $stats as $day )
-		{
-			$summary->day++;
-			$summary->posts += $day->posts;
-			$summary->comments += $day->comments;
-			foreach ( $this->config['content_matches'] as $key => $match )
-			{
-				$summary->$key += $day->$key;
-			}// end foreach
-		}// end foreach
-
 		return array(
 			'type' => 'general',
 			'stats' => $stats,
-			'summary' => $summary,
 		);
 	}// end fetch_general
 
@@ -769,17 +756,9 @@ class GO_Content_Stats
 			$stats[ $post_date ]->pvs += $this->get_pvs( $post->ID );
 		}// end foreach
 
-		// summary!
-		$summary = $this->pieces();
-		foreach ( $stats as $day )
-		{
-			$summary->pvs += $day->pvs;
-		}//end foreach
-
 		return array(
 			'type' => 'pvs',
 			'stats' => $stats,
-			'summary' => $summary,
 		);
 	}//end fetch_pv_stats
 

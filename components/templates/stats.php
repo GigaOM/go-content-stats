@@ -19,6 +19,38 @@
 		}// end if
 		?>
 
+		<?php
+		$start = isset( $_GET['start'] ) ? preg_replace( '/[^0-9\-]/', '', $_GET['start'] ) : '';
+		$end = isset( $_GET['end'] ) ? preg_replace( '/[^0-9\-]/', '', $_GET['end'] ) : '';
+
+		if ( ! $start || ! $end )
+		{
+			$start = date( 'Y-m-d' );
+			$end = date( 'Y-m-d', strtotime( '-30 days' ) );
+		}//end if
+
+		$months = array();
+		$months[] = '<option value="' . date( 'Y-m', strtotime( '-31 days' ) ) . '">Last 30 days</option>';
+		$starting_month = (int) date( 'n' );
+		for ( $year = (int) date( 'Y' ); $year >= 2001; $year-- )
+		{
+			for ( $month = $starting_month; $month >= 1; $month-- )
+			{
+				$temp_time = strtotime( $year . '-' . $month . '-1' );
+				$year_month = date( 'Y-m', $temp_time );
+				$months[] = '<option value="' . $year_month . '" ' . selected( $period, $year_month, FALSE ) . '>' . date( 'M Y', $temp_time ) . '</option>';
+			}// end for
+
+			$starting_month = 12;
+		}// end for
+		?>
+		<div class="period">
+			<label for="<?php echo $this->get_field_id( 'start' ); ?>">From</label>
+			<input type="text" id="<?php echo $this->get_field_id( 'start' ); ?>" name="<?php echo $this->get_field_name( 'start' ); ?>" value="<?php echo esc_attr( $start ); ?>"/>
+			<label for="<?php echo $this->get_field_id( 'end' ); ?>">to</label>
+			<input type="text" id="<?php echo $this->get_field_id( 'end' ); ?>" name="<?php echo $this->get_field_name( 'end' ); ?>" value="<?php echo esc_attr( $end ); ?>"/>
+		</div>
+
 		<h3>Post performance by date published</h3>
 		<button id="<?php echo $this->get_field_id( 'clear-cache' ); ?>">Clear local cache</button>
 		<div id="stat-data">
@@ -107,30 +139,6 @@
 
 	<section id="criteria">
 		<header>Select a knife to slice through the stats</header>
-
-		<label for="<?php echo $this->get_field_id( 'period' ); ?>">Time period</label>
-		<?php
-		$period = isset( $_GET['period'] ) ? preg_replace( '/[^0-9\-]/', '', $_GET['period'] ) : '';
-
-		$months = array();
-		$months[] = '<option value="' . date( 'Y-m', strtotime( '-31 days' ) ) . '">Last 30 days</option>';
-		$starting_month = (int) date( 'n' );
-		for ( $year = (int) date( 'Y' ); $year >= 2001; $year-- )
-		{
-			for ( $month = $starting_month; $month >= 1; $month-- )
-			{
-				$temp_time = strtotime( $year . '-' . $month . '-1' );
-				$year_month = date( 'Y-m', $temp_time );
-				$months[] = '<option value="' . $year_month . '" ' . selected( $period, $year_month, FALSE ) . '>' . date( 'M Y', $temp_time ) . '</option>';
-			}// end for
-
-			$starting_month = 12;
-		}// end for
-		?>
-		<select name="<?php echo $this->get_field_name( 'period' ); ?>" id="<?php echo $this->get_field_id( 'period' ); ?>">
-			<?php echo implode( $months ); ?>
-		</select>
-
 		<div id="taxonomy-data"></div>
 	</section>
 
