@@ -24,9 +24,30 @@ if ( 'undefined' == typeof go_content_stats ) {
 	};
 
 	go_content_stats.init = function() {
-		this.$period = $( '#go-content-stats-period' );
+		this.$start = $( '#go-content-stats-start' );
+		this.$end = $( '#go-content-stats-end' );
 		this.$stat_data = $( '#stat-data' );
 		this.$taxonomy_data = $( '#taxonomy-data' );
+
+		this.$start.datepicker( {
+			dateFormat: 'yyyy-mm-dd',
+			defaultDate: '-30d',
+			changeMonth: true,
+			numberOfMonths: 3,
+			onClose: function( selected ) {
+				go_content_stats.$end.datepicker( 'option', 'minDate', selected );
+			}
+		} );
+
+		this.$end.datepicker( {
+			dateFormat: 'yyyy-mm-dd',
+			defaultDate: '-1d',
+			changeMonth: true,
+			numberOfMonths: 3,
+			onClose: function( selected ) {
+				go_content_stats.$start.datepicker( 'option', 'maxDate', selected );
+			}
+		} );
 
 		this.period = this.get_period();
 		this.context = this.get_context();
@@ -52,7 +73,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 	go_content_stats.push_state = function () {
 		period = this.get_period();
 
-		history.pushState( period, '', 'index.php?page=go-content-stats&period=' + period.period );
+		history.pushState( period, '', 'index.php?page=go-content-stats&start=' + period.start + '&end=' + period.end );
 		this.change_state( period );
 	};
 
@@ -221,7 +242,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 		console.dir( response.data );
 
 		// @TODO: check context (needs to be added to response)
-		if ( response.data.period.period !== this.period.period ) {
+		if ( response.data.period.start !== this.period.start ) {
 			return;
 		}//end if
 
@@ -232,7 +253,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 		console.info( 'taxonomies' );
 		console.dir( response.data );
 		// @TODO: check context (needs to be added to response)
-		if ( response.data.period.period !== this.period.period ) {
+		if ( response.data.period.start !== this.period.start ) {
 			return;
 		}
 		this.render_taxonomies( response.data );
@@ -242,19 +263,9 @@ if ( 'undefined' == typeof go_content_stats ) {
 	 * gets the currently selected period and parses it into a start and end value
 	 */
 	go_content_stats.get_period = function () {
-		var period = this.$period.val();
-		var year = parseInt( period.substr( 0, 4 ), 10 );
-		var month = parseInt( period.substr( 5, 2 ), 10 );
-
-		var start = period + '-01';
-
-		// providing 0 gives the last day of the month
-		var end = period + '-' + ( new Date( year, month, 0 ) ).getDate();
-
 		return {
-			start: start,
-			end: end,
-			period: period
+			start: this.$start.val(),
+			end: this.$end.val()
 		};
 	};
 
@@ -276,8 +287,8 @@ if ( 'undefined' == typeof go_content_stats ) {
 		var period = this.get_period();
 
 		var defaults = {
-			date_lesser: period.start,
-			date_greater: period.end,
+			date_start: period.start,
+			date_end: period.end,
 			key: null,
 			type: 'general',
 			which: which,
@@ -425,7 +436,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 	go_content_stats.event.change_state = function ( e ) {
 		e.preventDefault();
 
-		if ( 'undefined' != typeof e.originalEvent.state.period ){
+		if ( 'undefined' != typeof e.originalEvent.state.start ){
 			go_content_stats.change_state( e.originalEvent.state );
 		}
 	};
