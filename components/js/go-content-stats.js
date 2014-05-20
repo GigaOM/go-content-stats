@@ -32,7 +32,10 @@ if ( 'undefined' == typeof go_content_stats ) {
 	 *       context will be go_content_stats
 	 */
 	go_content_stats.load_stats = function () {
+		// @TODO: prevent the overriding of data if another ajax event is fired off before the results of any
+		//        of the items below
 		var period = this.get_period();
+
 		console.groupCollapsed( 'stat load ' + period.start + ' to ' + period.end );
 
 		this.$stat_data.block();
