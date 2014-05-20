@@ -9,6 +9,7 @@ class GO_Content_Stats
 	public $date_lesser_stamp;
 	public $date_lesser;
 	public $calendar;
+	private $days = array();
 	private $pieces;
 	private $id_base = 'go-content-stats';
 
@@ -148,6 +149,18 @@ class GO_Content_Stats
 	 */
 	public function posts_where( $where = '' )
 	{
+		if ( $this->days )
+		{
+			foreach ( $this->days as &$day )
+			{
+				$day = preg_replace( '/[^0-9\-]/', '', $day );
+			}//end foreach
+
+			$where .= " AND DATE_FORMAT( post_date, '%Y-%m-%d' ) IN ( '" . implode( "', '", $this->days ) . "' )";
+
+			return $where;
+		}//end if
+
 		$where .= " AND post_date BETWEEN '{$this->date_lesser}' AND '{$this->date_greater}'";
 		return $where;
 	} // END posts_where
@@ -628,15 +641,22 @@ class GO_Content_Stats
 
 		$which = isset( $_GET['which'] ) ? $_GET['which'] : 'stats';
 		$valid_which = array(
-			'stats',
+			'general',
 			'pv_stats',
 			'taxonomies',
 		);
 
 		if ( ! in_array( $which, $valid_which ) )
 		{
-			wp_send_json_error( 'nice try. beat it.' );
+			wp_send_json_error( 'Nice try. Beat it.' );
 		}// end if
+
+		$this->days = isset( $_GET['days'] ) ? $_GET['days'] : array();
+
+		if ( ! is_array( $this->days ) || empty( $this->days ) )
+		{
+			wp_send_json_error( 'Nice try. Days are invalid.' );
+		}//end if
 
 		// set the upper limit of posts
 		if ( isset( $_GET['date_greater'] ) && strtotime( urldecode( $_GET['date_greater'] ) ) )
@@ -684,7 +704,7 @@ class GO_Content_Stats
 		wp_send_json_success( $stats );
 	}// end fetch_ajax
 
-	private function fetch_stats( $args )
+	private function fetch_general( $args )
 	{
 		$posts = $this->fetch_stat_posts( $args );
 		if ( ! is_array( $posts ) )
@@ -725,10 +745,11 @@ class GO_Content_Stats
 		}// end foreach
 
 		return array(
+			'type' => 'general',
 			'stats' => $stats,
 			'summary' => $summary,
 		);
-	}// end fetch_stats
+	}// end fetch_general
 
 	private function fetch_pv_stats( $args )
 	{
@@ -756,6 +777,7 @@ class GO_Content_Stats
 		}//end foreach
 
 		return array(
+			'type' => 'pvs',
 			'stats' => $stats,
 			'summary' => $summary,
 		);
@@ -764,23 +786,20 @@ class GO_Content_Stats
 	private function initialize_stats( $pieces = TRUE )
 	{
 		$stats = array();
-		$temp_time = $this->date_lesser_stamp;
-		do
+		foreach ( $this->days as $date )
 		{
-			$temp_date = date( 'Y-m-d', $temp_time );
 			if ( $pieces )
 			{
-				$stats[ $temp_date ] = $this->pieces();
+				$stats[ $date ] = $this->pieces();
 			}// end if
 			else
 			{
-				$stats[ $temp_date ] = new stdClass;
-				$stats[ $temp_date ]->pvs = 0;
+				$stats[ $date ] = new stdClass;
+				$stats[ $date ]->pvs = 0;
 			}// end else
-			$stats[ $temp_date ]->day = $temp_date;
-			$temp_time += 86400;
-		}// end do
-		while ( $temp_time < $this->date_greater_stamp );
+
+			$stats[ $date ]->day = $date;
+		}// end foreach
 
 		return array_reverse( $stats );
 	}// end initialize_stats
@@ -818,6 +837,7 @@ class GO_Content_Stats
 		}// end foreach
 
 		return array(
+			'type' => 'taxonomies',
 			'authors' => $authors,
 			'taxonomies' => $taxonomies,
 		);

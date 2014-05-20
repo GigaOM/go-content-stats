@@ -20,6 +20,7 @@
 		?>
 
 		<h3>Post performance by date published</h3>
+		<button id="<?php echo $this->get_field_id( 'clear-cache' ); ?>">Clear local cache</button>
 		<div id="stat-data">
 			Loading data, please sit tight... [include a throbber or something]
 		</div>
@@ -37,12 +38,12 @@
 						<?php echo $content_match_th; ?>
 					</tr>
 					<tr class="stat-summary" data-num-posts="{{summary.posts}}">
-						<th class="day">{{summary.day}} days</th>
-						<th class="posts">{{number_format summary.posts}}</th>
-						<th class="pvs">loading...</th>
+						<th class="day">{{summary.days}} days</th>
+						<th class="posts">{{summary.posts}}</th>
+						<th class="pvs">{{summary.pvs}}</th>
 						<th class="pvs-per-post">loading...</th>
-						<th class="comments">{{number_format summary.comments}}</th>
-						<th class="comments-per-posts">{{number_format summary.comments_per_posts}}</th>
+						<th class="comments">{{summary.comments}}</th>
+						<th class="comments-per-post"></th>
 						<?php echo $content_summary; ?>
 					</tr>
 				</thead>
@@ -61,12 +62,12 @@
 				</tbody>
 				<tfoot>
 					<tr class="stat-summary" data-num-posts="{{summary.posts}}">
-						<th class="day">{{summary.day}} days</th>
-						<th class="posts">{{number_format summary.posts}}</th>
+						<th class="day">{{summary.days}} days</th>
+						<th class="posts">{{summary.posts}}</th>
 						<th class="pvs">{{summary.pvs}}</th>
-						<th class="pvs-per-post">{{summary.pvs_per_post}}</th>
-						<th class="comments">{{number_format summary.comments}}</th>
-						<th class="comments-per-posts">{{number_format summary.comments_per_posts}}</th>
+						<th class="pvs-per-post">loading...</th>
+						<th class="comments">{{summary.comments}}</th>
+						<th class="comments-per-post"></th>
 						<?php echo $content_summary; ?>
 					</tr>
 					<tr>
