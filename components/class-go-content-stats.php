@@ -740,7 +740,7 @@ class GO_Content_Stats
 
 		$this->prime_pv_cache( wp_list_pluck( $posts, 'ID' ) );
 
-		$stats = $this->initialize_stats();
+		$stats = $this->initialize_stats( FALSE );
 		foreach ( $posts as $post )
 		{
 			$post_date = date( 'Y-m-d', strtotime( $post->post_date ) );
@@ -761,14 +761,22 @@ class GO_Content_Stats
 		);
 	}//end fetch_pv_stats
 
-	private function initialize_stats()
+	private function initialize_stats( $pieces = TRUE )
 	{
 		$stats = array();
 		$temp_time = $this->date_lesser_stamp;
 		do
 		{
 			$temp_date = date( 'Y-m-d', $temp_time );
-			$stats[ $temp_date ] = $this->pieces();
+			if ( $pieces )
+			{
+				$stats[ $temp_date ] = $this->pieces();
+			}// end if
+			else
+			{
+				$stats[ $temp_date ] = new stdClass;
+				$stats[ $temp_date ]->pvs = 0;
+			}// end else
 			$stats[ $temp_date ]->day = $temp_date;
 			$temp_time += 86400;
 		}// end do

@@ -8,6 +8,10 @@ if ( 'undefined' == typeof go_content_stats ) {
 ( function ( $ ) {
 	// initialize the event object
 	go_content_stats.event = {};
+	// initialize the store object
+	go_content_stats.store = {
+		ttl: 24 * 60 * 60 * 100
+	};
 
 	go_content_stats.init = function() {
 		this.$period = $( '#go-content-stats-period' );
@@ -62,6 +66,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 		this.$stat_data.block();
 		this.$taxonomy_data.block();
 
+		this.context = 'general'; // @TODO: handle the context somehow
 		var general_promise = this.fetch_stats( 'stats' );
 
 		// when the general stats have come back, render them and then fire off
@@ -69,10 +74,12 @@ if ( 'undefined' == typeof go_content_stats ) {
 		general_promise.done( $.proxy( function( response ) {
 			console.info( 'general' );
 			console.dir( response.data );
+			// @TODO: check context (needs to be added to response)
 			if ( response.data.period.period !== this.period.period ) {
 				return;
 			}
 			this.render_general_stats( response.data );
+			this.store.insert( response.data, this.context );
 
 			var pv_promise = this.fetch_stats( 'pv_stats' );
 
@@ -80,10 +87,12 @@ if ( 'undefined' == typeof go_content_stats ) {
 			pv_promise.done( $.proxy( function( response ) {
 				console.info( 'pv' );
 				console.dir( response.data );
+				// @TODO: check context (needs to be added to response)
 				if ( response.data.period.period !== this.period.period ) {
 					return;
 				}
 				this.render_pv_stats( response.data );
+				this.store.update( response.data, this.context );
 				console.groupEnd();
 			}, this ) );
 		}, this ) );
@@ -94,6 +103,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 		taxonomies_promise.done( $.proxy( function( response ) {
 			console.info( 'taxonomies' );
 			console.dir( response.data );
+			// @TODO: check context (needs to be added to response)
 			if ( response.data.period.period !== this.period.period ) {
 				return;
 			}
@@ -227,6 +237,76 @@ if ( 'undefined' == typeof go_content_stats ) {
 		if ( 'undefined' != typeof e.originalEvent.state.period ){
 			go_content_stats.change_state( e.originalEvent.state );
 		}
+	};
+
+	/**
+	 * insert multiple dates into the store
+	 *
+	 * @param  array data data elements to insert, indexed by date
+	 * @param  string context 'general', 'author', or 'taxonomy'
+	 * @return null
+	 */
+	go_content_stats.store.insert = function ( data, context ) {
+		for ( var i in data.stats ) {
+			data.stats[ i ].inserted_timestamp = new Date().getTime();
+			this.set( context + '-' + i, data.stats[ i ] );
+		}
+		// trigger
+	};
+
+	/**
+	 * update multiple dates data in the store
+	 *
+	 * @param  array data the data elements to update, indexed by date
+	 * @param  string context 'general', 'author', or 'taxonomy'
+	 * @return null
+	 */
+	go_content_stats.store.update = function ( data, context ) {
+		var record;
+		var key;
+		for ( var i in data.stats ) {
+			key = context + '-' + i;
+			record = this.get( key );
+			$.extend( record, data.stats[ i ] );
+			this.set( key, record );
+		}
+		// trigger
+	};
+
+	/**
+	 * get stats for a key
+	 *
+	 * @param  string key the key to fetch, ex. 2014-12-23
+	 * @return object the stats for the key
+	 */
+	go_content_stats.store.get = function ( key ) {
+		var record = JSON.parse( localStorage.getItem( 'go-content-stats-' + key ) );
+		var now = new Date().getTime();
+
+		if ( record.inserted_timestamp + this.ttl < now ) {
+			this.delete( key );
+			return null;
+		}
+		return record;
+	};
+
+	/**
+	 * set stats for a key
+	 * @param string key the key to set, ex. 2014-12-23
+	 * @param object stats the stats for the key
+	 * @return null
+	 */
+	go_content_stats.store.set = function ( key, stats ) {
+		localStorage.setItem( 'go-content-stats-' + key, JSON.stringify( stats ) );
+	};
+
+	/**
+	 * delete stats for a key
+	 * @param string key the key to delete, ex. 2014-12-23
+	 * @return null
+	 */
+	go_content_stats.store.delete = function ( key ) {
+		localStorage.removeItem( 'go-content-stats-' + key );
 	};
 } )( jQuery );
 
