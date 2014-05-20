@@ -5,41 +5,65 @@ if ( 'undefined' == typeof go_content_stats ) {
 	};
 }//end if
 
-go_content_stats.event = {};
-
 ( function ( $ ) {
+	// initialize the event object
+	go_content_stats.event = {};
+
 	go_content_stats.init = function() {
 		this.$period = $( '#go-content-stats-period' );
 		this.$stat_data = $( '#stat-data' );
 		this.$taxonomy_data = $( '#taxonomy-data' );
+
+		// load stats for the current page
+		// @TODO: we need push state URLs on change of the select box. To test, I place &period=2013-01 in the URL
 		this.load_stats();
+
 		$( document ).on( 'change', this.$period, this.event.select_period );
 
+		// this registers a handlebars helper so we can output formatted numbers
+		// rounded to 1 decimal
 		Handlebars.registerHelper( 'number_format', this.number_format );
 	};
 
 	/**
 	 * loads stats and dumps them onto the page
+	 *
+	 * NOTE: we are using $.proxy when handling the promise objects so the callback's
+	 *       context will be go_content_stats
 	 */
 	go_content_stats.load_stats = function () {
+		var period = this.get_period();
+		console.groupCollapsed( 'stat load ' + period.start + ' to ' + period.end );
+
 		this.$stat_data.block();
 		this.$taxonomy_data.block();
 
 		var general_promise = this.fetch_stats( 'stats' );
 
+		// when the general stats have come back, render them and then fire off
+		// a request for page view (pv) stats
 		general_promise.done( $.proxy( function( response ) {
+			console.info( 'general' );
+			console.dir( response.data );
 			this.render_general_stats( response.data );
 
 			var pv_promise = this.fetch_stats( 'pv_stats' );
 
+			// when the pv stats have come back, render them
 			pv_promise.done( $.proxy( function( response ) {
+				console.info( 'pv' );
+				console.dir( response.data );
 				this.render_pv_stats( response.data );
+				console.groupEnd();
 			}, this ) );
 		}, this ) );
 
 		var taxonomies_promise = this.fetch_stats( 'taxonomies' );
 
+		// when the taxonomy data has come back, render it
 		taxonomies_promise.done( $.proxy( function( response ) {
+			console.info( 'taxonomies' );
+			console.dir( response.data );
 			this.render_taxonomies( response.data );
 		}, this ) );
 	};
@@ -128,6 +152,9 @@ go_content_stats.event = {};
 		$summary.find( '.pvs-per-post' ).html( this.number_format( pvs / num_posts ) );
 	};
 
+	/**
+	 * renders the taxonomy data via a Handlebars template
+	 */
 	go_content_stats.render_taxonomies = function ( data ) {
 		var source = $( '#taxonomy-criteria-template' ).html();
 		var template = Handlebars.compile( source );
@@ -153,6 +180,7 @@ go_content_stats.event = {};
 	 * handle the selection of a new period
 	 */
 	go_content_stats.event.select_period = function ( e ) {
+		e.preventDefault();
 		go_content_stats.load_stats();
 	};
 } )( jQuery );
