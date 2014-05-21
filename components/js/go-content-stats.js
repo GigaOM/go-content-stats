@@ -30,7 +30,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 		this.$taxonomy_data = $( '#taxonomy-data' );
 
 		this.$start.datepicker( {
-			dateFormat: 'yyyy-mm-dd',
+			dateFormat: 'yy-mm-dd',
 			defaultDate: '-30d',
 			changeMonth: true,
 			numberOfMonths: 3,
@@ -40,7 +40,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 		} );
 
 		this.$end.datepicker( {
-			dateFormat: 'yyyy-mm-dd',
+			dateFormat: 'yy-mm-dd',
 			defaultDate: '-1d',
 			changeMonth: true,
 			numberOfMonths: 3,
