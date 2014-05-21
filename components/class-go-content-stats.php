@@ -138,9 +138,18 @@ class GO_Content_Stats
 		);
 
 		wp_register_script(
-			'momentjs',
+			'moment',
 			plugins_url( 'js/external/moment.min.js', __FILE__ ),
 			array(),
+			$script_config['version'],
+			TRUE
+		);
+
+		// fiscal quarter momentjs plugin
+		wp_register_script(
+			'moment-fquarter',
+			plugins_url( 'js/external/moment-fquarter.min.js', __FILE__ ),
+			array( 'moment' ),
 			$script_config['version'],
 			TRUE
 		);
@@ -149,7 +158,7 @@ class GO_Content_Stats
 		wp_register_script(
 			'bootstrap-daterangepicker',
 			plugins_url( 'js/external/bootstrap-daterangepicker/daterangepicker.js', __FILE__ ),
-			array( 'jquery', 'momentjs' ),
+			array( 'jquery', 'moment-fquarter' ),
 			$script_config['version'],
 			TRUE
 		);
