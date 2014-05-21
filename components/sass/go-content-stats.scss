@@ -1,0 +1,158 @@
+#content-stats {
+	#stat-data {
+		table {
+			width: 100%;
+			background: #ececec;
+			border-top: 1px solid #ddd;
+			border-bottom: 1px solid #ddd;
+			margin-bottom: 1em;
+			padding: 0;
+		}
+
+		th,
+		td {
+			padding: 0.5em;
+		}
+
+		th {
+			text-align: center;
+			background-color: #464646;
+			color: #eeeeee;
+		}
+
+		td {
+			border-top: 1px solid #ddd;
+			text-align: right;
+		}
+
+		tbody {
+			tr:nth-child(even) td {
+				background-color: white;
+			}
+		}
+
+		.stat-summary .day,
+		.stat-summary .posts,
+		.day,
+		.posts {
+			text-align: center;
+		}
+
+		.stat-summary {
+			td {
+				border: none;
+			}
+
+			th {
+				background-color: #7f7f7f;
+				color: white;
+				text-align: right;
+			}
+		}
+
+		.stat-row {
+			&[data-num-posts="0"],
+			&[data-num-posts=""] {
+				.posts a {
+					display: none;
+				}
+			}
+		}
+	}
+
+	#date-range {
+		background: white;
+		border: 1px solid #ddd;
+		display: inline-block;
+		float: right;
+		padding: .5rem;
+
+		&:hover {
+			cursor: pointer;
+		}
+
+		&.active {
+			background: #fafafa;
+		}
+
+		& > .fa-calendar {
+			margin-right: .5rem;
+		}
+
+		& > .fa-angle-down {
+			margin-left: .5rem;
+		}
+	}
+}
+
+.daterangepicker {
+	display: none;
+
+	&.opensright {
+		&:before {
+			top: -6px;
+		}
+		&:after {
+			top: -5px;
+		}
+	}
+
+	.ranges {
+		width: 180px;
+
+		.input-mini {
+			width: 84px;
+		}
+	}
+
+	.btn {
+		background-image: none;
+		border-radius: 4px;
+		border: 1px solid transparent;
+		cursor: pointer;
+		display: inline-block;
+		font-size: 14px;
+		font-weight: normal;
+		line-height: 1.428571429;
+		margin-bottom: 0;
+		padding: 6px 12px;
+		text-align: center;
+		vertical-align: middle;
+		white-space: nowrap;
+		-webkit-user-select: none;
+		-moz-user-select: none;
+		-ms-user-select: none;
+		-o-user-select: none;
+		user-select: none;
+
+		&.btn-success {
+			color: #fff;
+			background-color: #5cb85c;
+			border-color: #4cae4c;
+
+			&:hover,
+			&:focus,
+			&:active,
+			&.active {
+				color: #fff;
+				background-color: #47a447;
+				border-color: #398439;
+			}
+		}
+
+		&.btn-default {
+			color: #333;
+			background-color: #fff;
+			border-color: #ccc;
+
+			&:hover,
+			&:focus,
+			&:active,
+			&.active {
+				color: #333;
+				background-color: #ebebeb;
+				border-color: #adadad;
+			}
+		}
+	}
+}

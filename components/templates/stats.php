@@ -41,11 +41,12 @@ for ( $year = (int) date( 'Y' ); $year >= 2001; $year-- )
 <div class="wrap" id="go-content-stats">
 	<h2>Gigaom Content Stats</h2>
 	<section id="content-stats">
-		<div class="period">
-			<label for="<?php echo $this->get_field_id( 'start' ); ?>">From</label>
-			<input type="text" id="<?php echo $this->get_field_id( 'start' ); ?>" name="<?php echo $this->get_field_name( 'start' ); ?>" value="<?php echo esc_attr( $start ); ?>"/>
-			<label for="<?php echo $this->get_field_id( 'end' ); ?>">to</label>
-			<input type="text" id="<?php echo $this->get_field_id( 'end' ); ?>" name="<?php echo $this->get_field_name( 'end' ); ?>" value="<?php echo esc_attr( $end ); ?>"/>
+		<div id="date-range" class="pull-right">
+			<i class="fa fa-calendar fa-lg"></i>
+			<span><?php echo date( 'F j, Y', strtotime( '-30 day' ) ); ?> - <?php echo date( 'F j, Y' ); ?></span>
+			<b class="fa fa-angle-down"></b>
+			<input type="hidden" id="<?php echo $this->get_field_id( 'start' ); ?>" name="<?php echo $this->get_field_name( 'start' ); ?>" value="<?php echo esc_attr( $start ); ?>"/>
+			<input type="hidden" id="<?php echo $this->get_field_id( 'end' ); ?>" name="<?php echo $this->get_field_name( 'end' ); ?>" value="<?php echo esc_attr( $end ); ?>"/>
 		</div>
 
 		<h3>Post performance by date published</h3>
