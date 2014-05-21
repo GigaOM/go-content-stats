@@ -92,7 +92,9 @@ if ( ! $start || ! $end )
 
 		<div id="stat-data">
 			<!-- stat-row-template template will render here -->
-			<div class="data-placeholder"></div>
+			<div class="data-placeholder">
+				<i class="fa fa-spinner fa-spin"></i>
+			</div>
 		</div>
 	</section>
 
