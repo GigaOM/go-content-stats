@@ -25,6 +25,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 
 	go_content_stats.init = function() {
 		this.$date_range = $( '#date-range' );
+		this.$filters = $( '#content-stats .filters' );
 		this.$start = $( '#go-content-stats-start' );
 		this.$end = $( '#go-content-stats-end' );
 		this.$stat_data = $( '#stat-data' );
@@ -62,20 +63,41 @@ if ( 'undefined' == typeof go_content_stats ) {
 
 		$( document ).on( 'click', '#go-content-stats-clear-cache', this.event.clear_cache );
 		$( document ).on( 'click', '#criteria a', this.event.select_criteria );
+		$( document ).on( 'click', '#content-stats .filters .remove', this.event.remove_criteria );
 		$( document ).on( 'go-content-stats-insert', this.event.mind_the_gap );
 		$( document ).on( 'go-content-stats-update', this.event.mind_the_gap );
 		$( window ).on( 'popstate', this.event.change_state );
 	};
 
-	go_content_stats.select_criteria = function ( type, key ) {
+	go_content_stats.remove_criteria = function () {
+		$( '#go-content-stats-type' ).val( '' );
+		$( '#go-content-stats-key' ).val( '' );
+		$( '#content-stats .filters' ).html( '' );
+
 		this.context = {
-			type: type,
-			key: key
+			type: '',
+			key: ''
 		};
+
+		this.push_state();
+	};
+
+	go_content_stats.select_criteria = function ( criteria ) {
+		this.context = criteria;
 
 		$( '#go-content-stats-type' ).val( this.context.type );
 		$( '#go-content-stats-key' ).val( this.context.key );
+
 		this.push_state();
+
+		var source = $( '#filter-template' ).html();
+		var template = Handlebars.compile( source );
+
+		this.$filters.html( template( criteria ) );
+
+		$( 'html, body' ).animate( {
+			scrollTop: 0
+		}, 300 );
 	};
 
 	/**
@@ -363,15 +385,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 
 		$( '#stat-data' ).html( template( template_data ) );
 
-		// populate the summary stat info
-		var $summary = $( '.stat-summary' );
-		num_posts = parseInt( $( '#stat-data thead .stat-summary' ).data( 'num-posts' ), 10 );
-
-		if ( ! num_posts ) {
-			return;
-		}//end if
-
-		$summary.find( '.comments-per-post' ).html( this.number_format( this.summary.comments / num_posts ) );
+		this.render_summary();
 	};
 
 	/**
@@ -398,20 +412,34 @@ if ( 'undefined' == typeof go_content_stats ) {
 			this.summary.pvs += pvs;
 
 			$row.find( '.pvs' ).html( this.number_format( pvs ) );
+			$row.find( '.pvs' ).data( 'num-pvs', pvs );
 			$row.find( '.pvs-per-post' ).html( this.number_format( pvs / num_posts ) );
 		}//end for
 
-		// populate the summary stat info
+		this.render_summary();
+	};
+
+	/**
+	 * calculate and render summary data
+	 */
+	go_content_stats.render_summary = function() {
 		var $summary = $( '.stat-summary' );
-		num_posts = parseInt( $( '#stat-data thead .stat-summary' ).data( 'num-posts' ), 10 );
 
 		$summary.find( '.pvs' ).html( this.number_format( this.summary.pvs ) );
 
-		if ( ! num_posts ) {
+		if ( ! this.summary.posts ) {
+			$summary.find( '.comments-per-post' ).html( 0 );
+			$summary.find( '.pvs-per-post' ).html( 0 );
 			return;
 		}//end if
 
-		$summary.find( '.pvs-per-post' ).html( this.number_format( this.summary.pvs / num_posts ) );
+		$summary.find( '.comments-per-post' ).html( this.number_format( this.summary.comments / this.summary.posts ) );
+
+		if ( this.summary.pvs ) {
+			$summary.find( '.pvs-per-post' ).html( this.number_format( this.summary.pvs / this.summary.posts ) );
+		} else {
+			$summary.find( '.pvs-per-post' ).html( 0 );
+		}//end else
 	};
 
 	/**
@@ -469,9 +497,21 @@ if ( 'undefined' == typeof go_content_stats ) {
 	go_content_stats.event.select_criteria = function ( e ) {
 		e.preventDefault();
 
-		var type = $( this ).data( 'type' );
-		var key = $( this ).data( 'key' );
-		go_content_stats.select_criteria( type, key );
+		var criteria = {
+			type: $( this ).data( 'type' ),
+			type_pretty: $( this ).data( 'type' ).replace( '_', ' ' ),
+			key: $( this ).data( 'key' ),
+			name: $( this ).html()
+		};
+
+		go_content_stats.select_criteria( criteria );
+	};
+
+	/**
+	 * handle the removal of criteria
+	 */
+	go_content_stats.event.remove_criteria = function ( e ) {
+		go_content_stats.remove_criteria();
 	};
 
 	/**
@@ -489,6 +529,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 	 * handles clearing local storage cache
 	 */
 	go_content_stats.event.clear_cache = function( e ) {
+		e.preventDefault();
 		go_content_stats.store.clear();
 		go_content_stats.push_state();
 	};
@@ -588,12 +629,13 @@ if ( 'undefined' == typeof go_content_stats ) {
 	 * @return string           the key
 	 */
 	go_content_stats.store.key = function ( index, context ) {
-		var context_key = context.type
+		var context_key = context.type;
+
 		if ( 'general' !== context.type ) {
 			context_key += '-' + context.key;
 		}// end if
 
-		return 'go-content-stats-' + context_key + '-' + index
+		return 'go-content-stats-' + context_key + '-' + index;
 	};
 } )( jQuery );
 
