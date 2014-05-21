@@ -73,6 +73,14 @@ $global-radius: 4px;
 	}
 
 	#stat-data {
+		a {
+			text-decoration: none;
+
+			&:hover {
+				text-decoration: underline;
+			}
+		}
+
 		table {
 			width: 100%;
 			background: #ececec;

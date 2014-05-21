@@ -201,7 +201,7 @@ if ( ! $start || ! $end )
 		<tbody>
 			{{#each posts}}
 			<tr id="post-{{id}}" class="post-row" data-num-posts="{{posts}}">
-				<td class="title">{{{title}}}</td>
+				<td class="title"><a href="{{{permalink}}}" target="_blank">{{{title}}}</a></td>
 				<td class="pvs">{{number_format pvs}}</td>
 				<td class="comments">{{number_format comments}}</td>
 				<?php echo $posts_content_row; ?>

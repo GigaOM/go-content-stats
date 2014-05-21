@@ -804,25 +804,42 @@ do_action( 'debug_robot', 'ZZZ: ' . print_r( $_GET, true ) );
 		$post_data = array();
 		foreach ( $posts as $post )
 		{
-			$post_data[ $post->ID ]->id = $post->ID;
-			$post_data[ $post->ID ]->title = get_the_title( $post->ID );
-			$post_data[ $post->ID ]->day = date( 'Y-m-d', strtotime( $post->post_date ) );
-			$post_data[ $post->ID ]->pvs = $this->get_pvs( $post->ID );
-			$post_data[ $post->ID ]->comments = $post->comment_count;
+			$data = new stdclass;
+
+			$data->id = $post->ID;
+			$data->title = get_the_title( $post->ID );
+			$data->permalink = get_permalink( $post->ID );
+			$data->day = date( 'Y-m-d', strtotime( $post->post_date ) );
+			$data->pvs = $this->get_pvs( $post->ID );
+			$data->comments = $post->comment_count;
 
 			foreach ( $this->config['content_matches'] as $key => $match )
 			{
 				if ( preg_match( $match['regex'], $post->post_content ) )
 				{
-					$post_data[ $post->ID ]->$key = 'yes';
+					$data->$key = 'yes';
 				}// end if
 			}// end foreach
+
+			$post_data[] = clone $data;
 		}// end foreach
+
+		usort( $post_data, array( $this, 'fetch_posts_sort' ) );
 
 		return array(
 			'posts' => $post_data,
 		);
 	}//end fetch_posts
+
+	public function fetch_posts_sort( $a, $b )
+	{
+		if ( $a->pvs == $b->pvs )
+		{
+			return 0;
+		}// end if
+
+		return ( $a->pvs > $b->pvs ) ? -1 : 1;
+	}
 
 	private function initialize_stats( $pieces = TRUE )
 	{
