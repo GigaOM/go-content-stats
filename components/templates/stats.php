@@ -13,6 +13,9 @@ if ( is_array( $this->config['content_matches'] ) )
 	}// end foreach
 }// end if
 
+$type = isset( $_GET['type'] ) ? $_GET['type'] : 'general';
+$key = isset( $_GET['key'] ) ? $_GET['key']: '';
+
 $start = isset( $_GET['start'] ) ? preg_replace( '/[^0-9\-]/', '', $_GET['start'] ) : '';
 $end = isset( $_GET['end'] ) ? preg_replace( '/[^0-9\-]/', '', $_GET['end'] ) : '';
 
@@ -39,6 +42,9 @@ for ( $year = (int) date( 'Y' ); $year >= 2001; $year-- )
 ?>
 
 <div class="wrap" id="go-content-stats">
+	<input type="hidden" id="<?php echo $this->get_field_id( 'type' ); ?>" name="<?php echo $this->get_field_name( 'type' ); ?>" value="<?php echo esc_attr( $type ); ?>"/>
+	<input type="hidden" id="<?php echo $this->get_field_id( 'key' ); ?>" name="<?php echo $this->get_field_name( 'key' ); ?>" value="<?php echo esc_attr( $key ); ?>"/>
+
 	<h2>Gigaom Content Stats</h2>
 	<section id="content-stats">
 		<div class="period">
@@ -51,10 +57,9 @@ for ( $year = (int) date( 'Y' ); $year >= 2001; $year-- )
 		<h3>Post performance by date published</h3>
 		<button id="<?php echo $this->get_field_id( 'clear-cache' ); ?>">Clear local cache</button>
 		<div id="stat-data">
+			<!-- stat-row-template template will render here -->
 			Loading data, please sit tight... [include a throbber or something]
 		</div>
-
-		<!-- stat-row-template template will render below here -->
 	</section>
 
 	<section id="criteria">
@@ -62,12 +67,7 @@ for ( $year = (int) date( 'Y' ); $year >= 2001; $year-- )
 		<div id="taxonomy-data"><!-- taxonomy-criteria-template template will render here --></div>
 	</section>
 
-	<?php
-	if ( empty( $this->wpcom_api_key ) )
-	{
-		echo '<p>WPCom stats using API Key '. $this->get_wpcom_api_key() .'</p>';
-	}// end if
-	?>
+	<p>WPCom stats using API Key <?php echo esc_html( $this->get_wpcom_api_key() ); ?></p>
 </div>
 
 <script type="text/x-handlebars-template" id="taxonomy-criteria-template">

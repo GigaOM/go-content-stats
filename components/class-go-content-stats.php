@@ -640,7 +640,7 @@ class GO_Content_Stats
 			wp_send_json_error( 'you do not have permission' );
 		}// end if
 
-		$which = isset( $_GET['which'] ) ? $_GET['which'] : 'stats';
+		$which = isset( $_GET['which'] ) ? $_GET['which'] : 'general';
 		$valid_which = array(
 			'general',
 			'pvs',
@@ -649,14 +649,14 @@ class GO_Content_Stats
 
 		if ( ! in_array( $which, $valid_which ) )
 		{
-			wp_send_json_error( 'Nice try. Beat it.' );
+			wp_send_json_error( 'Nice try. Beat it.' . print_r( $_GET, true ) );
 		}// end if
 
 		$this->days = isset( $_GET['days'] ) ? $_GET['days'] : array();
 
 		if ( ! is_array( $this->days ) || empty( $this->days ) )
 		{
-			wp_send_json_error( 'Nice try. Days are invalid.' );
+			wp_send_json_error( 'Nice try. Days are invalid.' . print_r( $_GET, true ) );
 		}//end if
 
 		// set the upper limit of posts

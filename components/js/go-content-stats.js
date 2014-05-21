@@ -51,6 +51,8 @@ if ( 'undefined' == typeof go_content_stats ) {
 
 		this.period = this.get_period();
 		this.context = this.get_context();
+		console.info( 'context' );
+		console.log( this.context );
 
 		// this registers a handlebars helper so we can output formatted numbers
 		// rounded to 1 decimal
@@ -61,19 +63,32 @@ if ( 'undefined' == typeof go_content_stats ) {
 		this.prep_stats();
 
 		$( document ).on( 'click', '#go-content-stats-clear-cache', this.event.clear_cache );
+		$( document ).on( 'click', '#criteria a', this.event.select_criteria );
 		$( document ).on( 'change', this.$period, this.event.select_period );
 		$( document ).on( 'go-content-stats-insert', this.event.mind_the_gap );
 		$( document ).on( 'go-content-stats-update', this.event.mind_the_gap );
 		$( window ).on( 'popstate', this.event.change_state );
 	};
 
+	go_content_stats.select_criteria = function ( type, key ) {
+		this.context = {
+			type: type,
+			key: key
+		};
+
+		$( '#go-content-stats-type' ).val( this.context.type );
+		$( '#go-content-stats-key' ).val( this.context.key );
+		this.push_state();
+	};
+
 	/**
 	 * push a state change
 	 */
 	go_content_stats.push_state = function () {
-		period = this.get_period();
+		var period = this.get_period();
+		var context = this.get_context();
 
-		history.pushState( period, '', 'index.php?page=go-content-stats&start=' + period.start + '&end=' + period.end );
+		history.pushState( period, '', 'index.php?page=go-content-stats&type=' + context.type + '&key=' + context.key + '&start=' + period.start + '&end=' + period.end );
 		this.change_state( period );
 	};
 
@@ -133,8 +148,9 @@ if ( 'undefined' == typeof go_content_stats ) {
 			'comments': 0,
 		};
 
+		var context = this.get_context();
 		for ( var i in days ) {
-			day = this.store.get( days[ i ], this.get_context() );
+			day = this.store.get( days[ i ], context );
 
 			this.stats[ days[ i ] ] = day;
 
@@ -228,7 +244,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 			return;
 		}// end if
 
-		console.info( type );
+		console.info( 'receive: ' + type );
 		console.dir( response.data );
 
 		// @TODO: check context (needs to be added to response)
@@ -239,19 +255,39 @@ if ( 'undefined' == typeof go_content_stats ) {
 		go_content_stats[ 'receive_' + type ]( response, args );
 	};
 
+	/**
+	 * receive general stats
+	 *
+	 * @param  object response the response from the request
+	 * @return null
+	 */
 	go_content_stats.receive_general = function( response, args ) {
-		this.store.insert( response.data, this.get_context() );
+		var context = this.get_context();
+		this.store.insert( response.data, context );
 
 		// when the pv stats have come back, render them
-		var pv_promise = this.fetch_stats( 'pv_stats', args );
+		var pv_promise = this.fetch_stats( 'pvs', args );
 
 		pv_promise.done( $.proxy( this.receive_pvs, this ) );
 	};
 
+	/**
+	 * receive page view data to supplement general stats
+	 *
+	 * @param  object response the response from the request
+	 * @return null
+	 */
 	go_content_stats.receive_pvs = function( response ) {
-		this.store.update( response.data, this.get_context() );
+		var context = this.get_context();
+		this.store.update( response.data, context );
 	};
 
+	/**
+	 * receive list of taxonomies for displaying criteria
+	 *
+	 * @param  object response the response from the request
+	 * @return null
+	 */
 	go_content_stats.receive_taxonomy = function( response ) {
 		this.render_taxonomies( response.data );
 	};
@@ -270,31 +306,38 @@ if ( 'undefined' == typeof go_content_stats ) {
 	 * gets the current selected context
 	 */
 	go_content_stats.get_context = function () {
-		// @TODO: handle authors and taxonomy contexts
-		return 'general';
+		if ( 'undefined' === typeof this.context ) {
+			return {
+				type: $( '#go-content-stats-type' ).val(),
+				key: $( '#go-content-stats-key' ).val()
+			};
+		}// end if
+
+		return this.context;
 	};
 
 	/**
 	 * fetches stats from the endpoint
 	 *
-	 * @param string which Type of stats to retrieve from the endpoint (stats|pv_stats|taxonomies)
+	 * @param string which Type of stats to retrieve from the endpoint (general|pvs|taxonomies)
 	 * @return jqXHR
 	 */
 	go_content_stats.fetch_stats = function ( which, args ) {
 		var period = this.get_period();
+		var context = this.get_context();
 
 		var defaults = {
 			date_start: period.start,
 			date_end: period.end,
-			key: null,
-			type: 'general',
 			which: which,
+			type: context.type,
+			key: context.key,
 			days: []
 		};
 
 		args = $.extend( defaults, args );
 
-		console.info( which );
+		console.info( 'fetch: ' + which );
 		console.dir( args );
 
 		return $.getJSON( this.endpoint, args );
@@ -374,7 +417,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 	go_content_stats.render_taxonomies = function ( data ) {
 		var source = $( '#taxonomy-criteria-template' ).html();
 		var template = Handlebars.compile( source );
-console.log( data );
+
 		$( '#taxonomy-data' ).html( template( data ) );
 	};
 
@@ -413,18 +456,29 @@ console.log( data );
 		this[ 'render_' + data.type + '_stats' ]();
 	};
 
-	go_content_stats.event.mind_the_gap = function( e, response ) {
-		go_content_stats.mind_the_gap( response.data );
+	go_content_stats.event.mind_the_gap = function( e, data ) {
+		go_content_stats.mind_the_gap( data );
 	};
 
 	/**
 	 * handle the selection of a new period
 	 */
 	go_content_stats.event.select_period = function ( e ) {
-		console.error( 'IN EVENT' );
 		console.log( e );
 		e.preventDefault();
 		go_content_stats.push_state();
+	};
+
+	/**
+	 * handle the selection of new criteria
+	 */
+	go_content_stats.event.select_criteria = function ( e ) {
+		console.log( e );
+		e.preventDefault();
+
+		var type = $( this ).data( 'type' );
+		var key = $( this ).data( 'key' );
+		go_content_stats.select_criteria( type, key );
 	};
 
 	/**
@@ -458,7 +512,7 @@ console.log( data );
 	 * insert multiple dates into the store
 	 *
 	 * @param  array data data elements to insert, indexed by date
-	 * @param  string context 'general', 'author', or 'taxonomy'
+	 * @param  object context includes 'type' and optionally 'key'
 	 * @return null
 	 */
 	go_content_stats.store.insert = function ( data, context ) {
@@ -467,14 +521,14 @@ console.log( data );
 			this.set( i, context, data.stats[ i ] );
 		}
 
-		$( document ).trigger( 'go-content-stats-insert', { data: data } );
+		$( document ).trigger( 'go-content-stats-insert', data );
 	};
 
 	/**
 	 * update multiple dates data in the store
 	 *
 	 * @param  array data the data elements to update, indexed by date
-	 * @param  string context 'general', 'author', or 'taxonomy'
+	 * @param  object context includes 'type' and optionally 'key'
 	 * @return null
 	 */
 	go_content_stats.store.update = function ( data, context ) {
@@ -485,17 +539,18 @@ console.log( data );
 			this.set( i, context, record );
 		}
 
-		$( document ).trigger( 'go-content-stats-update', { data: data } );
+		$( document ).trigger( 'go-content-stats-update', data );
 	};
 
 	/**
-	 * get stats for a key
+	 * get stats for an index
 	 *
-	 * @param  string key the key to fetch, ex. 2014-12-23
-	 * @return object the stats for the key
+	 * @param  string index the index to fetch, ex. 2014-12-23
+	 * @param  object context includes 'type' and optionally 'key'
+	 * @return object the stats for the index
 	 */
-	go_content_stats.store.get = function ( key, context ) {
-		var record = JSON.parse( localStorage.getItem( 'go-content-stats-' + context + '-' + key ) );
+	go_content_stats.store.get = function ( index, context ) {
+		var record = JSON.parse( localStorage.getItem( this.key( index, context ) ) );
 		var now = new Date().getTime();
 
 		if ( ! record ) {
@@ -503,7 +558,7 @@ console.log( data );
 		}//end if
 
 		if ( record.inserted_timestamp + this.ttl < now ) {
-			this.delete( key, context );
+			this.delete( index, context );
 			return null;
 		}//end if
 
@@ -511,22 +566,41 @@ console.log( data );
 	};
 
 	/**
-	 * set stats for a key
-	 * @param string key the key to set, ex. 2014-12-23
-	 * @param object stats the stats for the key
+	 * set stats for an index
+	 *
+	 * @param string index the index to set, ex. 2014-12-23
+	 * @param  object context includes 'type' and optionally 'key'
+	 * @param object stats the stats for the index
 	 * @return null
 	 */
-	go_content_stats.store.set = function ( key, context, stats ) {
-		localStorage.setItem( 'go-content-stats-' + context + '-' + key, JSON.stringify( stats ) );
+	go_content_stats.store.set = function ( index, context, stats ) {
+		localStorage.setItem( this.key( index, context ), JSON.stringify( stats ) );
 	};
 
 	/**
-	 * delete stats for a key
-	 * @param string key the key to delete, ex. 2014-12-23
+	 * delete stats for an index
+	 *
+	 * @param string index the index to delete, ex. 2014-12-23
+	 * @param  object context includes 'type' and optionally 'key'
 	 * @return null
 	 */
-	go_content_stats.store.delete = function ( key, context ) {
-		localStorage.removeItem( 'go-content-stats-' + context + '-' + key );
+	go_content_stats.store.delete = function ( index, context ) {
+		localStorage.removeItem( this.key( index, context ) );
+	};
+
+	/**
+	 * get a key string for a given index and context
+	 * @param  string  index    the index
+	 * @param  object  context  includes 'type' and optionally 'key'
+	 * @return string           the key
+	 */
+	go_content_stats.store.key = function ( index, context ) {
+		var context_key = context.type
+		if ( 'general' !== context.type ) {
+			context_key += '-' + context.key;
+		}// end if
+
+		return 'go-content-stats-' + context_key + '-' + index
 	};
 } )( jQuery );
 
