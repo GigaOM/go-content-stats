@@ -1,6 +1,4 @@
 <div class="wrap" id="go-content-stats">
-
-	<?php screen_icon( 'index' ); ?>
 	<h2>Gigaom Content Stats</h2>
 	<section id="content-stats">
 		<?php
