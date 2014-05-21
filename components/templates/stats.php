@@ -24,21 +24,6 @@ if ( ! $start || ! $end )
 	$start = date( 'Y-m-d', strtotime( '-30 days' ) );
 	$end = date( 'Y-m-d' );
 }//end if
-
-$months = array();
-$months[] = '<option value="' . date( 'Y-m', strtotime( '-31 days' ) ) . '">Last 30 days</option>';
-$starting_month = (int) date( 'n' );
-for ( $year = (int) date( 'Y' ); $year >= 2001; $year-- )
-{
-	for ( $month = $starting_month; $month >= 1; $month-- )
-	{
-		$temp_time = strtotime( $year . '-' . $month . '-1' );
-		$year_month = date( 'Y-m', $temp_time );
-		$months[] = '<option value="' . $year_month . '" ' . selected( $period, $year_month, FALSE ) . '>' . date( 'M Y', $temp_time ) . '</option>';
-	}// end for
-
-	$starting_month = 12;
-}// end for
 ?>
 
 <div class="wrap" id="go-content-stats">
@@ -47,11 +32,12 @@ for ( $year = (int) date( 'Y' ); $year >= 2001; $year-- )
 
 	<h2>Gigaom Content Stats</h2>
 	<section id="content-stats">
-		<div class="period">
-			<label for="<?php echo $this->get_field_id( 'start' ); ?>">From</label>
-			<input type="text" id="<?php echo $this->get_field_id( 'start' ); ?>" name="<?php echo $this->get_field_name( 'start' ); ?>" value="<?php echo esc_attr( $start ); ?>"/>
-			<label for="<?php echo $this->get_field_id( 'end' ); ?>">to</label>
-			<input type="text" id="<?php echo $this->get_field_id( 'end' ); ?>" name="<?php echo $this->get_field_name( 'end' ); ?>" value="<?php echo esc_attr( $end ); ?>"/>
+		<div id="date-range" class="pull-right">
+			<i class="fa fa-calendar fa-lg"></i>
+			<span><?php echo date( 'F j, Y', strtotime( $start ) ); ?> - <?php echo date( 'F j, Y', strtotime( $end ) ); ?></span>
+			<b class="fa fa-angle-down"></b>
+			<input type="hidden" id="<?php echo $this->get_field_id( 'start' ); ?>" name="<?php echo $this->get_field_name( 'start' ); ?>" value="<?php echo esc_attr( $start ); ?>"/>
+			<input type="hidden" id="<?php echo $this->get_field_id( 'end' ); ?>" name="<?php echo $this->get_field_name( 'end' ); ?>" value="<?php echo esc_attr( $end ); ?>"/>
 		</div>
 
 		<h3>Post performance by date published</h3>

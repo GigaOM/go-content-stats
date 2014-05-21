@@ -24,29 +24,27 @@ if ( 'undefined' == typeof go_content_stats ) {
 	};
 
 	go_content_stats.init = function() {
+		this.$date_range = $( '#date-range' );
 		this.$start = $( '#go-content-stats-start' );
 		this.$end = $( '#go-content-stats-end' );
 		this.$stat_data = $( '#stat-data' );
 		this.$taxonomy_data = $( '#taxonomy-data' );
 
-		this.$start.datepicker( {
-			dateFormat: 'yy-mm-dd',
-			defaultDate: '-30d',
-			changeMonth: true,
-			numberOfMonths: 3,
-			onClose: function( selected ) {
-				go_content_stats.$end.datepicker( 'option', 'minDate', selected );
+		this.$date_range.daterangepicker( {
+			ranges: {
+				'Last 7 days': [ moment().subtract( 'days', 6 ), moment() ],
+				'Last 30 days': [ moment().subtract( 'days', 29 ), moment() ],
+				'This week': [ moment().startOf( 'week' ), moment() ],
+				'Last week': [ moment().subtract( 'week', 1 ).startOf( 'week' ), moment().subtract( 'week', 1 ).endOf( 'week' ) ],
+				'This month': [ moment().startOf( 'month' ), moment().endOf( 'month' ) ],
+				'Last month': [ moment().subtract( 'month', 1 ).startOf( 'month' ), moment().subtract( 'month', 1 ).endOf( 'month' ) ]
 			}
-		} );
-
-		this.$end.datepicker( {
-			dateFormat: 'yy-mm-dd',
-			defaultDate: '-1d',
-			changeMonth: true,
-			numberOfMonths: 3,
-			onClose: function( selected ) {
-				go_content_stats.$start.datepicker( 'option', 'maxDate', selected );
-			}
+		},
+		function( start, end ) {
+			go_content_stats.$date_range.find( 'span' ).html( start.format( 'MMMM D, YYYY' ) + ' - ' + end.format( 'MMMM D, YYYY' ) );
+			go_content_stats.$start.val( start.format( 'YYYY-MM-DD' ) );
+			go_content_stats.$end.val( end.format( 'YYYY-MM-DD' ) );
+			go_content_stats.push_state();
 		} );
 
 		this.period = this.get_period();
@@ -64,7 +62,6 @@ if ( 'undefined' == typeof go_content_stats ) {
 
 		$( document ).on( 'click', '#go-content-stats-clear-cache', this.event.clear_cache );
 		$( document ).on( 'click', '#criteria a', this.event.select_criteria );
-		$( document ).on( 'change', this.$period, this.event.select_period );
 		$( document ).on( 'go-content-stats-insert', this.event.mind_the_gap );
 		$( document ).on( 'go-content-stats-update', this.event.mind_the_gap );
 		$( window ).on( 'popstate', this.event.change_state );
@@ -383,7 +380,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 
 		// populate the pvs columns in the stat rows
 		for ( var i in this.stats ) {
-			if ( null == this.stats[ i ].pvs ) {
+			if ( null === this.stats[ i ].pvs ) {
 				continue;
 			}//end if
 
@@ -458,15 +455,6 @@ if ( 'undefined' == typeof go_content_stats ) {
 
 	go_content_stats.event.mind_the_gap = function( e, data ) {
 		go_content_stats.mind_the_gap( data );
-	};
-
-	/**
-	 * handle the selection of a new period
-	 */
-	go_content_stats.event.select_period = function ( e ) {
-		console.log( e );
-		e.preventDefault();
-		go_content_stats.push_state();
 	};
 
 	/**

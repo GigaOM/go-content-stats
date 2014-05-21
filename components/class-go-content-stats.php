@@ -104,7 +104,26 @@ class GO_Content_Stats
 	{
 		$script_config = apply_filters( 'go-config', array( 'version' => 1 ), 'go-script-version' );
 
-		wp_enqueue_style( 'go-content-stats', plugins_url( 'css/go-content-stats.css', __FILE__ ), array(), $script_config['version'] );
+		wp_register_style(
+			'fontawesome',
+			plugins_url( 'css/font-awesome.css', __FILE__ ),
+			array(),
+			$script_config['version']
+		);
+
+		wp_register_style(
+			'bootstrap-daterangepicker',
+			plugins_url( 'js/external/bootstrap-daterangepicker/daterangepicker-bs3.css', __FILE__ ),
+			array(),
+			$script_config['version']
+		);
+
+		wp_enqueue_style(
+			'go-content-stats',
+			plugins_url( 'css/go-content-stats.css', __FILE__ ),
+			array( 'fontawesome', 'bootstrap-daterangepicker' ),
+			$script_config['version']
+		);
 
 		$data = array(
 			'endpoint' => admin_url( 'admin-ajax.php?action=go_content_stats_fetch' ),
@@ -114,6 +133,23 @@ class GO_Content_Stats
 			'handlebars',
 			plugins_url( 'js/external/handlebars.js', __FILE__ ),
 			array( 'jquery' ),
+			$script_config['version'],
+			TRUE
+		);
+
+		wp_register_script(
+			'momentjs',
+			plugins_url( 'js/external/moment.min.js', __FILE__ ),
+			array(),
+			$script_config['version'],
+			TRUE
+		);
+
+		// from https://github.com/dangrossman/bootstrap-daterangepicker
+		wp_register_script(
+			'bootstrap-daterangepicker',
+			plugins_url( 'js/external/bootstrap-daterangepicker/daterangepicker.js', __FILE__ ),
+			array( 'jquery', 'momentjs' ),
 			$script_config['version'],
 			TRUE
 		);
@@ -131,7 +167,7 @@ class GO_Content_Stats
 		wp_register_script(
 			'go-content-stats',
 			plugins_url( 'js/go-content-stats.js', __FILE__ ),
-			array( 'handlebars', 'jquery-blockui' ),
+			array( 'handlebars', 'jquery-blockui', 'bootstrap-daterangepicker' ),
 			$script_config['version'],
 			TRUE
 		);
