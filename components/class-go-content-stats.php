@@ -649,7 +649,7 @@ class GO_Content_Stats
 
 		if ( ! in_array( $which, $valid_which ) )
 		{
-			wp_send_json_error( 'Nice try. Beat it. ' . print_r( $_GET, true ) );
+			wp_send_json_error( 'Nice try. Beat it.' );
 		}// end if
 
 		$this->days = isset( $_GET['days'] ) ? $_GET['days'] : array();
@@ -700,8 +700,6 @@ class GO_Content_Stats
 			'start' => $this->days[ 0 ],
 			'end' => $this->days[ count( $this->days ) - 1 ],
 		);
-
-		do_action( 'debug_robot', print_r( $stats, TRUE ) );
 
 		wp_send_json_success( $stats );
 	}// end fetch_ajax
