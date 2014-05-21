@@ -254,7 +254,7 @@ class GO_Content_Stats
 		add_filter( 'posts_where', array( $this, 'posts_where' ) );
 		$query = new WP_Query( array(
 			'taxonomy' => $taxonomy,
-			'terms' => $terms,
+			'term' => $terms,
 			'posts_per_page' => -1,
 		) );
 		remove_filter( 'posts_where', array( $this, 'posts_where' ) );
@@ -768,7 +768,7 @@ class GO_Content_Stats
 		}// end foreach
 
 		return array(
-			'type' => 'general',
+			'which' => 'general',
 			'stats' => $stats,
 		);
 	}// end fetch_general
@@ -792,10 +792,30 @@ class GO_Content_Stats
 		}// end foreach
 
 		return array(
-			'type' => 'pvs',
+			'which' => 'pvs',
 			'stats' => $stats,
 		);
 	}//end fetch_pvs
+
+	private function fetch_taxonomies( $unused_args )
+	{
+		// print lists of items people can get stats on
+		// authors here
+		$authors = $this->get_authors_list();
+
+		// all configured taxonomies here
+		foreach ( $this->config['taxonomies'] as $tax )
+		{
+			$terms = $this->get_terms_list( $tax );
+			$taxonomies[ $tax ] = $terms ?: array();
+		}// end foreach
+
+		return array(
+			'which' => 'taxonomies',
+			'authors' => $authors,
+			'taxonomies' => $taxonomies,
+		);
+	}//end fetch_taxonomies
 
 	private function initialize_stats( $pieces = TRUE )
 	{
@@ -827,6 +847,7 @@ class GO_Content_Stats
 		}// end if
 		elseif ( taxonomy_exists( $args['type'] ) && term_exists( $args['key'], $args['type'] ) )
 		{
+			do_action( 'debug_robot', "getting taxonomy stats" );
 			$posts = $this->get_taxonomy_stats( $args['type'], $args['key'] );
 		}// end elseif
 		else
@@ -836,26 +857,6 @@ class GO_Content_Stats
 
 		return $posts;
 	}// end fetch_stat_posts
-
-	private function fetch_taxonomies( $unused_args )
-	{
-		// print lists of items people can get stats on
-		// authors here
-		$authors = $this->get_authors_list();
-
-		// all configured taxonomies here
-		foreach ( $this->config['taxonomies'] as $tax )
-		{
-			$terms = $this->get_terms_list( $tax );
-			$taxonomies[ $tax ] = $terms ?: array();
-		}// end foreach
-
-		return array(
-			'type' => 'taxonomies',
-			'authors' => $authors,
-			'taxonomies' => $taxonomies,
-		);
-	}//end fetch_taxonomies
 
 	/**
 	 * utility function to consistently get field names

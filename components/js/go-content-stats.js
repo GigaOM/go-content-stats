@@ -171,8 +171,8 @@ if ( 'undefined' == typeof go_content_stats ) {
 	go_content_stats.prep_stats = function () {
 		this.load_stats();
 		this.fill_gaps();
-		this.mind_the_gap( { stats: [], type: 'general' } );
-		this.mind_the_gap( { stats: [], type: 'pvs' } );
+		this.mind_the_gap( { stats: [], which: 'general' } );
+		this.mind_the_gap( { stats: [], which: 'pvs' } );
 	};
 
 	go_content_stats.fill_gaps = function() {
@@ -211,11 +211,11 @@ if ( 'undefined' == typeof go_content_stats ) {
 
 		// when the taxonomy data has come back, render it
 		taxonomies_promise.done( $.proxy( function( response ) {
-			this.receive( 'taxonomy', response );
+			this.receive( response );
 		}, this ) );
 	};
 
-	go_content_stats.fetch_in_chunks = function( type, gaps ) {
+	go_content_stats.fetch_in_chunks = function( which, gaps ) {
 		while ( gaps.length > 0 ) {
 			var args = {
 				days: []
@@ -225,23 +225,23 @@ if ( 'undefined' == typeof go_content_stats ) {
 				args.days.push( gaps.shift() );
 			}//end for
 
-			var promise = this.fetch_stats( type, args );
+			var promise = this.fetch_stats( which, args );
 
 			// when the general stats have come back, render them and then fire off
 			// a request for page view (pv) stats
 			promise.done( $.proxy( function( response ) {
-				this.receive( type, response, args );
+				this.receive( response, args );
 			}, this ) );
 		}//end while
 	};
 
-	go_content_stats.receive = function( type, response, args ) {
+	go_content_stats.receive = function( response, args ) {
 		if ( ! response.success ) {
 			console.warn( 'bad response: ' + response.data );
 			return;
 		}// end if
 
-		console.info( 'receive: ' + type );
+		console.info( 'receive: ' + response.data.which );
 		console.dir( response.data );
 
 		// @TODO: check context (needs to be added to response)
@@ -249,7 +249,11 @@ if ( 'undefined' == typeof go_content_stats ) {
 			return;
 		}//end if
 
-		go_content_stats[ 'receive_' + type ]( response, args );
+		if ( response.data.period.period !== this.period.period ) {
+			return;
+		}//end if
+
+		go_content_stats[ 'receive_' + response.data.which ]( response, args );
 	};
 
 	/**
@@ -265,7 +269,9 @@ if ( 'undefined' == typeof go_content_stats ) {
 		// when the pv stats have come back, render them
 		var pv_promise = this.fetch_stats( 'pvs', args );
 
-		pv_promise.done( $.proxy( this.receive_pvs, this ) );
+		pv_promise.done( $.proxy( function( response ) {
+			this.receive( response );
+		}, this ) );
 	};
 
 	/**
@@ -285,7 +291,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 	 * @param  object response the response from the request
 	 * @return null
 	 */
-	go_content_stats.receive_taxonomy = function( response ) {
+	go_content_stats.receive_taxonomies = function( response ) {
 		this.render_taxonomies( response.data );
 	};
 
@@ -316,7 +322,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 	/**
 	 * fetches stats from the endpoint
 	 *
-	 * @param string which Type of stats to retrieve from the endpoint (general|pvs|taxonomies)
+	 * @param string which stats to retrieve from the endpoint (general|pvs|taxonomies)
 	 * @return jqXHR
 	 */
 	go_content_stats.fetch_stats = function ( which, args ) {
@@ -434,23 +440,23 @@ if ( 'undefined' == typeof go_content_stats ) {
 
 	go_content_stats.mind_the_gap = function( data ) {
 		for ( var i in data.stats ) {
-			var index = this.gaps[ data.type ].indexOf( i );
+			var index = this.gaps[ data.which ].indexOf( i );
 
 			if ( -1 !== index ) {
-				this.gaps[ data.type ].splice( index, 1 );
+				this.gaps[ data.which ].splice( index, 1 );
 			}//end if
 		}//end for
 
-		if ( this.gaps[ data.type ].length > 0 ) {
+		if ( this.gaps[ data.which ].length > 0 ) {
 			return;
 		}//end if
 
 		// we only want to render the pvs data if the general data has all been loaded
-		if ( 'pvs' == data.type && this.gaps.general.length > 0 ) {
+		if ( 'pvs' == data.which && this.gaps.general.length > 0 ) {
 			return;
 		}//end if
 
-		this[ 'render_' + data.type + '_stats' ]();
+		this[ 'render_' + data.which + '_stats' ]();
 	};
 
 	go_content_stats.event.mind_the_gap = function( e, data ) {
