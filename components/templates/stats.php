@@ -41,7 +41,51 @@ if ( ! $start || ! $end )
 			<input type="hidden" id="<?php echo $this->get_field_id( 'end' ); ?>" name="<?php echo $this->get_field_name( 'end' ); ?>" value="<?php echo esc_attr( $end ); ?>"/>
 		</div>
 		<header>Post performance</header>
-		<ul class="filters"></ul>
+		<?php ob_start(); ?>
+		<li data-type="{{type}}" data-key="{{key}}">
+			<span class="type">{{type_pretty}}</span>
+			<span class="value">{{name}}</span>
+			<span class="remove">
+				<i class="fa fa-times"></i>
+			</span>
+		</li>
+		<?php
+		$filter_template = ob_get_clean();
+
+		$item = '';
+
+		if ( ! empty( $_GET['type'] ) )
+		{
+			$type = preg_replace( '/[^a-zA-Z0-9_\-]/', '', $_GET['type'] );
+			$key = preg_replace( '/[^a-zA-Z0-9_\-]/', '', $_GET['key'] );
+
+			if ( 'author' == $type )
+			{
+				$filter_object = get_user_by( 'id', $key );
+			}//end if
+			else
+			{
+				$filter_object = get_term_by( 'slug', $key, $type );
+			}//end else
+
+			if ( is_wp_error( $filter_object ) )
+			{
+				break;
+			}//end if
+
+			$name = ! empty( $filter_object->name ) ? $filter_object->name : $filter_object->display_name;
+
+			$item = $filter_template;
+			$item = str_replace( '{{type}}', esc_attr( $type ), $item );
+			$item = str_replace( '{{type_pretty}}', esc_attr( str_replace( '_', ' ', $type ) ), $item );
+			$item = str_replace( '{{key}}', esc_attr( $key ), $item );
+			$item = str_replace( '{{name}}', esc_html( $name ), $item );
+		}//end if
+		?>
+		<ul class="filters"><?php echo $item; ?></ul>
+		<script type="text/x-handlebars-template" id="filter-template">
+			<?php echo $filter_template; ?>
+		</script>
 
 		<div id="stat-data">
 			<!-- stat-row-template template will render here -->
@@ -62,7 +106,7 @@ if ( ! $start || ! $end )
 	<ul>
 		{{#each authors}}
 			<li>
-				<a href="#" data-type="author" data-key="{{key}}">{{name}} ({{number_format hits}})</a>
+				<a href="#" data-type="author" data-key="{{key}}">{{name}}</a> ({{number_format hits}})
 			</li>
 		{{/each}}
 	</ul>
@@ -72,7 +116,7 @@ if ( ! $start || ! $end )
 		<ul>
 			{{#each this}}
 				<li>
-					<a href="#" data-type="{{taxonomy}}" data-key="{{key}}">{{name}} ({{number_format hits}})</a>
+					<a href="#" data-type="{{taxonomy}}" data-key="{{key}}">{{name}}</a> ({{number_format hits}})
 				</li>
 			{{/each}}
 		</ul>
@@ -94,7 +138,7 @@ if ( ! $start || ! $end )
 			<tr class="stat-summary" data-num-posts="{{summary.posts}}">
 				<th class="day">{{summary.days}} days</th>
 				<th class="posts">{{summary.posts}}</th>
-				<th class="pvs">{{summary.pvs}}</th>
+				<th class="pvs" data-num-pvs="{{summary.pvs}}">{{summary.pvs}}</th>
 				<th class="pvs-per-post">loading...</th>
 				<th class="comments">{{summary.comments}}</th>
 				<th class="comments-per-post"></th>
@@ -118,7 +162,7 @@ if ( ! $start || ! $end )
 			<tr class="stat-summary" data-num-posts="{{summary.posts}}">
 				<th class="day">{{summary.days}} days</th>
 				<th class="posts">{{summary.posts}}</th>
-				<th class="pvs">{{summary.pvs}}</th>
+				<th class="pvs" data-num-pvs="{{summary.pvs}}">{{summary.pvs}}</th>
 				<th class="pvs-per-post">loading...</th>
 				<th class="comments">{{summary.comments}}</th>
 				<th class="comments-per-post"></th>
