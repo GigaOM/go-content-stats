@@ -221,6 +221,10 @@ if ( 'undefined' == typeof go_content_stats ) {
 	};
 
 	go_content_stats.receive_general = function( response, args ) {
+		if ( ! response.success ) {
+			console.warn( 'bad response: ' + response.data );
+			return;
+		}// end if
 		console.info( 'general' );
 		console.dir( response.data );
 
@@ -238,6 +242,10 @@ if ( 'undefined' == typeof go_content_stats ) {
 	};
 
 	go_content_stats.receive_pvs = function( response ) {
+		if ( ! response.success ) {
+			console.warn( 'bad response: ' + response.data );
+			return;
+		}// end if
 		console.info( 'pv' );
 		console.dir( response.data );
 
@@ -250,6 +258,10 @@ if ( 'undefined' == typeof go_content_stats ) {
 	};
 
 	go_content_stats.receive_taxonomy = function( response ) {
+		if ( ! response.success ) {
+			console.warn( 'bad response: ' + response.data );
+			return;
+		}// end if
 		console.info( 'taxonomies' );
 		console.dir( response.data );
 		// @TODO: check context (needs to be added to response)

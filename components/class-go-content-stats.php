@@ -642,13 +642,13 @@ class GO_Content_Stats
 		$which = isset( $_GET['which'] ) ? $_GET['which'] : 'stats';
 		$valid_which = array(
 			'general',
-			'pv_stats',
+			'pvs',
 			'taxonomies',
 		);
 
 		if ( ! in_array( $which, $valid_which ) )
 		{
-			wp_send_json_error( 'Nice try. Beat it.' );
+			wp_send_json_error( 'Nice try. Beat it. ' . print_r( $_GET, true ) );
 		}// end if
 
 		$this->days = isset( $_GET['days'] ) ? $_GET['days'] : array();
@@ -738,7 +738,7 @@ class GO_Content_Stats
 		);
 	}// end fetch_general
 
-	private function fetch_pv_stats( $args )
+	private function fetch_pvs( $args )
 	{
 		$posts = $this->fetch_stat_posts( $args );
 		if ( ! is_array( $posts ) )
@@ -760,7 +760,7 @@ class GO_Content_Stats
 			'type' => 'pvs',
 			'stats' => $stats,
 		);
-	}//end fetch_pv_stats
+	}//end fetch_pvs
 
 	private function initialize_stats( $pieces = TRUE )
 	{
