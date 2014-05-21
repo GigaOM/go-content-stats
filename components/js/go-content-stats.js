@@ -24,6 +24,14 @@ if ( 'undefined' == typeof go_content_stats ) {
 	};
 
 	go_content_stats.init = function() {
+		this.blockui_args = {
+			message: '<i class="fa fa-spinner fa-spin"></i>',
+			css: {
+				background: 'transparent',
+				border: '0',
+				top: '10%'
+			}
+		};
 		this.$date_range = $( '#date-range' );
 		this.$filters = $( '#content-stats .filters' );
 		this.$start = $( '#go-content-stats-start' );
@@ -50,15 +58,12 @@ if ( 'undefined' == typeof go_content_stats ) {
 
 		this.period = this.get_period();
 		this.context = this.get_context();
-		console.info( 'context' );
-		console.log( this.context );
 
 		// this registers a handlebars helper so we can output formatted numbers
 		// rounded to 1 decimal
 		Handlebars.registerHelper( 'number_format', this.number_format );
 
 		// load stats for the current page
-		// @TODO: we need push state URLs on change of the select box. To test, I place &period=2013-01 in the URL
 		this.prep_stats();
 
 		$( document ).on( 'click', '#go-content-stats-clear-cache', this.event.clear_cache );
@@ -222,17 +227,8 @@ if ( 'undefined' == typeof go_content_stats ) {
 
 		console.log( this.gaps );
 
-		var blockui_args = {
-			message: '<i class="fa fa-spinner fa-spin"></i>',
-			css: {
-				background: 'transparent',
-				border: '0',
-				top: '10%'
-			}
-		};
-
-		this.$stat_data.block( blockui_args );
-		this.$taxonomy_data.block( blockui_args );
+		this.$stat_data.block( this.blockui_args );
+		this.$taxonomy_data.block( this.blockui_args );
 
 		this.fetch_in_chunks( 'general', this.gaps.general.slice( 0 ) );
 		this.fetch_in_chunks( 'pvs', this.gaps.pvs.slice( 0 ) );
