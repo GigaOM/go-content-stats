@@ -244,12 +244,12 @@ if ( 'undefined' == typeof go_content_stats ) {
 		console.info( 'receive: ' + response.data.which );
 		console.dir( response.data );
 
-		// @TODO: check context (needs to be added to response)
 		if ( response.data.period.period !== this.period.period ) {
 			return;
 		}//end if
 
-		if ( response.data.period.period !== this.period.period ) {
+		var context = this.get_context();
+		if ( response.data.type !== context.type && response.data.key !== context.key ) {
 			return;
 		}//end if
 
@@ -467,7 +467,6 @@ if ( 'undefined' == typeof go_content_stats ) {
 	 * handle the selection of new criteria
 	 */
 	go_content_stats.event.select_criteria = function ( e ) {
-		console.log( e );
 		e.preventDefault();
 
 		var type = $( this ).data( 'type' );

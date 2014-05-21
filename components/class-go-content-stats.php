@@ -719,9 +719,11 @@ class GO_Content_Stats
 			$this->date_lesser = date( 'Y-m-d', $this->date_lesser_stamp );
 		}// end else
 
+		$type = isset( $_GET['type'] ) ? $_GET['type'] : 'general';
+		$key = isset( $_GET['key'] ) ? $_GET['key'] : NULL;
 		$args = array(
-			'type' => isset( $_GET['type'] ) ? $_GET['type'] : 'general',
-			'key' => isset( $_GET['key'] ) ? $_GET['key'] : NULL,
+			'type' => $type,
+			'key' => $key,
 		);
 
 		$function = "fetch_$which";
@@ -736,6 +738,10 @@ class GO_Content_Stats
 			'start' => $this->days[ 0 ],
 			'end' => $this->days[ count( $this->days ) - 1 ],
 		);
+
+		$stats['which'] = $which;
+		$stats['type'] = $type;
+		$stats['key'] = $key;
 
 		wp_send_json_success( $stats );
 	}// end fetch_ajax
@@ -768,7 +774,6 @@ class GO_Content_Stats
 		}// end foreach
 
 		return array(
-			'which' => 'general',
 			'stats' => $stats,
 		);
 	}// end fetch_general
@@ -792,7 +797,6 @@ class GO_Content_Stats
 		}// end foreach
 
 		return array(
-			'which' => 'pvs',
 			'stats' => $stats,
 		);
 	}//end fetch_pvs
@@ -811,7 +815,6 @@ class GO_Content_Stats
 		}// end foreach
 
 		return array(
-			'which' => 'taxonomies',
 			'authors' => $authors,
 			'taxonomies' => $taxonomies,
 		);
@@ -847,7 +850,6 @@ class GO_Content_Stats
 		}// end if
 		elseif ( taxonomy_exists( $args['type'] ) && term_exists( $args['key'], $args['type'] ) )
 		{
-			do_action( 'debug_robot', "getting taxonomy stats" );
 			$posts = $this->get_taxonomy_stats( $args['type'], $args['key'] );
 		}// end elseif
 		else
