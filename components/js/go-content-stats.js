@@ -44,6 +44,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 			go_content_stats.$date_range.find( 'span' ).html( start.format( 'MMMM D, YYYY' ) + ' - ' + end.format( 'MMMM D, YYYY' ) );
 			go_content_stats.$start.val( start.format( 'YYYY-MM-DD' ) );
 			go_content_stats.$end.val( end.format( 'YYYY-MM-DD' ) );
+			go_content_stats.push_state();
 		} );
 
 		this.period = this.get_period();
@@ -58,7 +59,6 @@ if ( 'undefined' == typeof go_content_stats ) {
 		this.prep_stats();
 
 		$( document ).on( 'click', '#go-content-stats-clear-cache', this.event.clear_cache );
-		$( document ).on( 'change', '#date-range input', this.event.select_period );
 		$( document ).on( 'go-content-stats-insert', this.event.mind_the_gap );
 		$( document ).on( 'go-content-stats-update', this.event.mind_the_gap );
 		$( window ).on( 'popstate', this.event.change_state );
@@ -412,14 +412,6 @@ console.log( data );
 
 	go_content_stats.event.mind_the_gap = function( e, response ) {
 		go_content_stats.mind_the_gap( response.data );
-	};
-
-	/**
-	 * handle the selection of a new period
-	 */
-	go_content_stats.event.select_period = function ( e ) {
-		e.preventDefault();
-		go_content_stats.push_state();
 	};
 
 	/**
