@@ -239,7 +239,6 @@ if ( 'undefined' == typeof go_content_stats ) {
 		go_content_stats[ 'receive_' + type ]( response, args );
 	};
 
-
 	go_content_stats.receive_general = function( response, args ) {
 		this.store.insert( response.data, this.get_context() );
 
