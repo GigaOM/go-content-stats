@@ -1,10 +1,19 @@
+$global-radius: 4px;
+
+.blockMsg {
+	.fa {
+		color: #fff;
+		font-size: 5rem;
+	}
+}
+
 #content-stats {
 	#stat-data {
 		table {
 			width: 100%;
 			background: #ececec;
-			border-top: 1px solid #ddd;
-			border-bottom: 1px solid #ddd;
+			border-collapse: collapse;
+			border: 1px solid #ddd;
 			margin-bottom: 1em;
 			padding: 0;
 		}
@@ -18,16 +27,53 @@
 			text-align: center;
 			background-color: #464646;
 			color: #eeeeee;
+
 		}
 
 		td {
-			border-top: 1px solid #ddd;
+			border: 1px solid #ddd;
 			text-align: right;
 		}
 
 		tbody {
-			tr:nth-child(even) td {
+			td {
+				background-color: #f5f5f5;
+			}
+
+			tr:nth-child( 4n + 1 ):not(.stat-row-posts) td,
+			tr:nth-child( 4n + 2 ):not(.stat-row-posts) td {
 				background-color: white;
+			}
+
+			.stat-row-posts {
+				display: none;
+
+				&.loaded {
+					display: table-row;
+				}
+
+				table {
+					border-width: 2px;
+					margin: 0;
+				}
+
+				& > td {
+					background-color: #eee;
+					background: linear-gradient( #e5e5e5 20px, #eee );
+
+					tr:nth-child( even ) td {
+						background-color: white;
+					}
+
+					tr:nth-child( odd ) td {
+						background-color: #f5f5f5;
+					}
+				}
+
+				.matches {
+					text-align: center;
+					text-transform: capitalize;
+				}
 			}
 		}
 
@@ -36,6 +82,24 @@
 		.day,
 		.posts {
 			text-align: center;
+		}
+
+		.title {
+			text-align: left;
+		}
+
+		.posts {
+			a {
+				position: relative;
+				display: block;
+			}
+
+			i {
+				margin-left: .5rem;
+				position: absolute;
+				right: 0;
+				top: .25em;
+			}
 		}
 
 		.stat-summary {

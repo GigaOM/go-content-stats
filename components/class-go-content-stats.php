@@ -567,36 +567,6 @@ class GO_Content_Stats
 	} // END prime_pv_cache_chunk
 
 	/**
-	 * print a list of items to get stats on
-	 *
-	 * @param  array $list items to list
-	 * @param  string $type the item type
-	 * @return null outputs unordered list
-	 *
-	 * @todo : this is ready to be deleted, kept for reference on mustache growing
-	 */
-	public function do_list( $list, $type = 'author' )
-	{
-		if ( ! is_array( $list ) )
-		{
-			return FALSE;
-		}
-
-		echo '<ul>';
-		foreach ( $list as $item )
-		{
-			printf( '<li><a href="%1$s&type=%2$s&key=%3$s">%4$s (%5$d)</a></li>',
-				$this->menu_url,
-				$type,
-				$item->key,
-				$item->name,
-				$item->hits
-			);
-		}
-		echo '</ul>';
-	} // END do_list
-
-	/**
 	 * get a list of authors from actual posts (rather than just authors on the blog)
 	 * cached for a full day
 	 */
@@ -681,7 +651,9 @@ class GO_Content_Stats
 			'general',
 			'pvs',
 			'taxonomies',
+			'posts',
 		);
+do_action( 'debug_robot', 'ZZZ: ' . print_r( $_GET, true ) );
 
 		if ( ! in_array( $which, $valid_which ) )
 		{
@@ -819,6 +791,38 @@ class GO_Content_Stats
 			'taxonomies' => $taxonomies,
 		);
 	}//end fetch_taxonomies
+
+	private function fetch_posts( $args )
+	{
+		$posts = $this->fetch_stat_posts( $args );
+
+		if ( ! is_array( $posts ) )
+		{
+			return FALSE;
+		}// end if
+
+		$post_data = array();
+		foreach ( $posts as $post )
+		{
+			$post_data[ $post->ID ]->id = $post->ID;
+			$post_data[ $post->ID ]->title = get_the_title( $post->ID );
+			$post_data[ $post->ID ]->day = date( 'Y-m-d', strtotime( $post->post_date ) );
+			$post_data[ $post->ID ]->pvs = $this->get_pvs( $post->ID );
+			$post_data[ $post->ID ]->comments = $post->comment_count;
+
+			foreach ( $this->config['content_matches'] as $key => $match )
+			{
+				if ( preg_match( $match['regex'], $post->post_content ) )
+				{
+					$post_data[ $post->ID ]->$key = 'yes';
+				}// end if
+			}// end foreach
+		}// end foreach
+
+		return array(
+			'posts' => $post_data,
+		);
+	}//end fetch_posts
 
 	private function initialize_stats( $pieces = TRUE )
 	{

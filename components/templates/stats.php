@@ -3,13 +3,16 @@
 $content_match_th = '';
 $content_summary = '';
 $content_row = '';
+$columns = 6;
 if ( is_array( $this->config['content_matches'] ) )
 {
 	foreach ( $this->config['content_matches'] as $key => $match )
 	{
 		$content_match_th .= '<th class="' . esc_attr( $key ) . '">' . esc_attr( $match['label'] ) . '</th>';
 		$content_summary .= '<th class="' . esc_attr( $key ) . '"></th>';
-		$content_row .= '<td class="' . esc_attr( $key ) . '">{{number_format ' . esc_html( $key ) . '}}</td>';
+		$content_row .= '<td class="matches ' . esc_attr( $key ) . '">{{number_format ' . esc_html( $key ) . '}}</td>';
+		$posts_content_row .= '<td class="matches ' . esc_attr( $key ) . '">{{' . esc_html( $key ) . '}}</td>';
+		$columns++;
 	}// end foreach
 }// end if
 
@@ -104,12 +107,16 @@ if ( ! $start || ! $end )
 			{{#each stats}}
 			<tr id="row-{{@key}}" class="stat-row" data-num-posts="{{posts}}">
 				<td class="day">{{day}}</td>
-				<td class="posts"><a href="<?php echo admin_url( '/edit.php?m=' ); ?>{{day}}">{{number_format posts}}</a></td>
+				<td class="posts"><a href="<?php echo admin_url( '/edit.php?m=' ); ?>{{day}}">{{number_format posts}} <i class="fa fa-angle-down"></i></a></td>
 				<td class="pvs">{{pvs}}</td>
 				<td class="pvs-per-post">{{pvs_per_post}}</td>
 				<td class="comments">{{number_format comments}}</td>
 				<td class="comments-per-posts">{{number_format comments_per_posts}}</td>
 				<?php echo $content_row; ?>
+			</tr>
+			<tr class="stat-row-posts">
+				<td colspan="<?php echo absint( $columns ); ?>">
+				</td>
 			</tr>
 			{{/each}}
 		</tbody>
@@ -135,3 +142,37 @@ if ( ! $start || ! $end )
 		</tfoot>
 	</table>
 </script>
+
+<script type="text/x-handlebars-template" id="post-row-template">
+	<table>
+		<thead>
+			<tr>
+				<th class="title">Title</th>
+				<th class="pvs">PVs</th>
+				<th class="comments">Comments</th>
+				<?php echo $content_match_th; ?>
+			</tr>
+		</thead>
+		<tbody>
+			{{#each posts}}
+			<tr id="post-{{id}}" class="post-row" data-num-posts="{{posts}}">
+				<td class="title">{{{title}}}</td>
+				<td class="pvs">{{number_format pvs}}</td>
+				<td class="comments">{{number_format comments}}</td>
+				<?php echo $posts_content_row; ?>
+			</tr>
+			{{/each}}
+		</tbody>
+	</table>
+</script>
+
+
+
+
+
+
+
+
+
+
+

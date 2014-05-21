@@ -62,6 +62,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 
 		$( document ).on( 'click', '#go-content-stats-clear-cache', this.event.clear_cache );
 		$( document ).on( 'click', '#criteria a', this.event.select_criteria );
+		$( document ).on( 'click', '.stat-row a', this.event.fetch_posts );
 		$( document ).on( 'go-content-stats-insert', this.event.mind_the_gap );
 		$( document ).on( 'go-content-stats-update', this.event.mind_the_gap );
 		$( window ).on( 'popstate', this.event.change_state );
@@ -199,8 +200,17 @@ if ( 'undefined' == typeof go_content_stats ) {
 
 		console.log( this.gaps );
 
-		this.$stat_data.block();
-		this.$taxonomy_data.block();
+		var blockui_args = {
+			message: '<i class="fa fa-spinner fa-spin"></i>',
+			css: {
+				background: 'transparent',
+				border: '0',
+				top: '10%'
+			}
+		};
+
+		this.$stat_data.block( blockui_args );
+		this.$taxonomy_data.block( blockui_args );
 
 		this.fetch_in_chunks( 'general', this.gaps.general.slice( 0 ) );
 		this.fetch_in_chunks( 'pvs', this.gaps.pvs.slice( 0 ) );
@@ -296,6 +306,16 @@ if ( 'undefined' == typeof go_content_stats ) {
 	};
 
 	/**
+	 * receive list of posts for displaying criteria
+	 *
+	 * @param  object response the response from the request
+	 * @return null
+	 */
+	go_content_stats.receive_posts = function( response ) {
+		this.render_posts( response.data );
+	};
+
+	/**
 	 * gets the currently selected period and parses it into a start and end value
 	 */
 	go_content_stats.get_period = function () {
@@ -344,6 +364,20 @@ if ( 'undefined' == typeof go_content_stats ) {
 		console.dir( args );
 
 		return $.getJSON( this.endpoint, args );
+	};
+
+	go_content_stats.fetch_posts = function ( $row ) {
+		// @TODO: this will need to change when we are doing more than a single day per row
+		var post_date = $row.attr( 'id' ).replace( 'row-', '' );
+		var args = {
+			days: [ post_date ]
+		};
+
+		var posts_promise = this.fetch_stats( 'posts', args );
+
+		posts_promise.done( $.proxy( function( response ) {
+			this.receive( response );
+		}, this ) );
 	};
 
 	/**
@@ -412,6 +446,24 @@ if ( 'undefined' == typeof go_content_stats ) {
 		}//end if
 
 		$summary.find( '.pvs-per-post' ).html( this.number_format( this.summary.pvs / num_posts ) );
+	};
+
+	/**
+	 * renders the post data via a Handlebars template
+	 */
+	go_content_stats.render_posts = function ( data ) {
+		var source = $( '#post-row-template' ).html();
+		var template = Handlebars.compile( source );
+
+		var $row = $( '#row-' + data.period.start );
+		$row.find( '.posts i' ).attr( 'class', '' ).addClass( 'fa fa-angle-up' );
+		$next = $row.next();
+		$next.find( 'td' ).html( template( data ) );
+		$next.removeClass( 'loading' ).addClass( 'loaded' );
+
+		console.log('render!');
+		// @TODO: figure out how/where to append
+		//$( '#taxonomy-data' ).html( template( data ) );
 	};
 
 	/**
@@ -485,14 +537,49 @@ if ( 'undefined' == typeof go_content_stats ) {
 		}
 	};
 
+	go_content_stats.event.fetch_posts = function ( e ) {
+		e.preventDefault();
+
+		var $row = $( this ).closest( '.stat-row' );
+		var $icon = $row.find( '.posts i' );
+
+		var $next = $row.next();
+		if ( $next.is( '.loaded' ) ) {
+			if ( $next.is( ':visible' ) ) {
+				$icon.attr( 'class', '' ).addClass( 'fa fa-angle-down' );
+				$next.hide();
+			}// end if
+			else {
+				$icon.attr( 'class', '' ).addClass( 'fa fa-angle-up' );
+				$next.show();
+			}// end if
+		}// end if
+		else {
+			$icon.attr( 'class', '' ).addClass( 'fa fa-spinner fa-spin' );
+			if ( $next.is( 'loading' ) ) {
+				return;
+			}// end if
+
+			go_content_stats.fetch_posts( $row );
+			$next.addClass( 'loading' );
+		}// end else
+	};
+
 	/**
 	 * handles clearing local storage cache
+	 *
+	 * @return null
 	 */
 	go_content_stats.event.clear_cache = function( e ) {
 		go_content_stats.store.clear();
 		go_content_stats.push_state();
 	};
 
+	/**
+	 * clear go-content-stats entries from local storage
+	 *
+	 * @return null
+	 */
 	go_content_stats.store.clear = function() {
 		for ( var i in localStorage ) {
 			if ( i.match( /^go-content-stats-/ ) ) {
