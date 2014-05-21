@@ -1,4 +1,48 @@
+#go-content-stats-clear-cache {
+	display: inline-block;
+	float: right;
+	margin-top: .5rem;
+	opacity: 0.3;
+
+	&:hover {
+		opacity: 1;
+	}
+}
+
 #content-stats {
+	& > header {
+		color: #222;
+		font-size: 1.1rem;
+		font-weight: bold;
+		margin: 0;
+		padding: .75rem 0;
+	}
+
+	.data-placeholder {
+		background: #ccc;
+		min-height: 300px;
+	}
+
+	.filters {
+		margin: 0;
+		padding: .5rem 0;
+
+		li {
+			background: #fff;
+			display: inline-block;
+			padding: 0.25rem;
+
+			.type {
+			}
+
+			.key {
+			}
+
+			.remove {
+			}
+		}
+	}
+
 	#stat-data {
 		table {
 			width: 100%;

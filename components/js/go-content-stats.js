@@ -490,6 +490,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 	 * handles clearing local storage cache
 	 */
 	go_content_stats.event.clear_cache = function( e ) {
+		e.preventDefault();
 		go_content_stats.store.clear();
 		go_content_stats.push_state();
 	};

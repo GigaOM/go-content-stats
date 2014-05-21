@@ -30,6 +30,7 @@ if ( ! $start || ! $end )
 	<input type="hidden" id="<?php echo $this->get_field_id( 'type' ); ?>" name="<?php echo $this->get_field_name( 'type' ); ?>" value="<?php echo esc_attr( $type ); ?>"/>
 	<input type="hidden" id="<?php echo $this->get_field_id( 'key' ); ?>" name="<?php echo $this->get_field_name( 'key' ); ?>" value="<?php echo esc_attr( $key ); ?>"/>
 
+	<a href="#" id="<?php echo $this->get_field_id( 'clear-cache' ); ?>">Clear local cache</a>
 	<h2>Gigaom Content Stats</h2>
 	<section id="content-stats">
 		<div id="date-range" class="pull-right">
@@ -39,12 +40,12 @@ if ( ! $start || ! $end )
 			<input type="hidden" id="<?php echo $this->get_field_id( 'start' ); ?>" name="<?php echo $this->get_field_name( 'start' ); ?>" value="<?php echo esc_attr( $start ); ?>"/>
 			<input type="hidden" id="<?php echo $this->get_field_id( 'end' ); ?>" name="<?php echo $this->get_field_name( 'end' ); ?>" value="<?php echo esc_attr( $end ); ?>"/>
 		</div>
+		<header>Post performance</header>
+		<ul class="filters"></ul>
 
-		<h3>Post performance by date published</h3>
-		<button id="<?php echo $this->get_field_id( 'clear-cache' ); ?>">Clear local cache</button>
 		<div id="stat-data">
 			<!-- stat-row-template template will render here -->
-			Loading data, please sit tight... [include a throbber or something]
+			<div class="data-placeholder"></div>
 		</div>
 	</section>
 
