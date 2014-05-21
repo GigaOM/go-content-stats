@@ -40,6 +40,8 @@ if ( 'undefined' == typeof go_content_stats ) {
 		this.$taxonomy_data = $( '#taxonomy-data' );
 
 		this.$date_range.daterangepicker( {
+			startDate: moment( this.$start.val() ),
+			endDate: moment( this.$end.val() ),
 			ranges: {
 				'Last 7 days': [ moment().subtract( 'days', 6 ), moment() ],
 				'Last 30 days': [ moment().subtract( 'days', 29 ), moment() ],
