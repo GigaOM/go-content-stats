@@ -197,7 +197,9 @@ if ( 'undefined' == typeof go_content_stats ) {
 		} );
 
 		// when the taxonomy data has come back, render it
-		taxonomies_promise.done( $.proxy( this.receive_taxonomy, this ) );
+		taxonomies_promise.done( $.proxy( function( response ) {
+			this.receive( 'taxonomy', response );
+		}, this ) );
 	};
 
 	go_content_stats.fetch_in_chunks = function( type, gaps ) {
@@ -215,17 +217,18 @@ if ( 'undefined' == typeof go_content_stats ) {
 			// when the general stats have come back, render them and then fire off
 			// a request for page view (pv) stats
 			promise.done( $.proxy( function( response ) {
-				go_content_stats[ 'receive_' + type ]( response, args );
+				this.receive( type, response, args );
 			}, this ) );
 		}//end while
 	};
 
-	go_content_stats.receive_general = function( response, args ) {
+	go_content_stats.receive = function( type, response, args ) {
 		if ( ! response.success ) {
 			console.warn( 'bad response: ' + response.data );
 			return;
 		}// end if
-		console.info( 'general' );
+
+		console.info( type );
 		console.dir( response.data );
 
 		// @TODO: check context (needs to be added to response)
@@ -233,6 +236,11 @@ if ( 'undefined' == typeof go_content_stats ) {
 			return;
 		}//end if
 
+		go_content_stats[ 'receive_' + type ]( response, args );
+	};
+
+
+	go_content_stats.receive_general = function( response, args ) {
 		this.store.insert( response.data, this.get_context() );
 
 		// when the pv stats have come back, render them
@@ -242,32 +250,10 @@ if ( 'undefined' == typeof go_content_stats ) {
 	};
 
 	go_content_stats.receive_pvs = function( response ) {
-		if ( ! response.success ) {
-			console.warn( 'bad response: ' + response.data );
-			return;
-		}// end if
-		console.info( 'pv' );
-		console.dir( response.data );
-
-		// @TODO: check context (needs to be added to response)
-		if ( response.data.period.start !== this.period.start ) {
-			return;
-		}//end if
-
 		this.store.update( response.data, this.get_context() );
 	};
 
 	go_content_stats.receive_taxonomy = function( response ) {
-		if ( ! response.success ) {
-			console.warn( 'bad response: ' + response.data );
-			return;
-		}// end if
-		console.info( 'taxonomies' );
-		console.dir( response.data );
-		// @TODO: check context (needs to be added to response)
-		if ( response.data.period.start !== this.period.start ) {
-			return;
-		}
 		this.render_taxonomies( response.data );
 	};
 
@@ -389,7 +375,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 	go_content_stats.render_taxonomies = function ( data ) {
 		var source = $( '#taxonomy-criteria-template' ).html();
 		var template = Handlebars.compile( source );
-
+console.log( data );
 		$( '#taxonomy-data' ).html( template( data ) );
 	};
 

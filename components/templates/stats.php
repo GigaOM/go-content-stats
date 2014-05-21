@@ -118,16 +118,17 @@
 			<ul>
 			{{#each authors}}
 				<li>
-					<a href="<?php echo esc_url( $this->menu_url ); ?>&type={{type}}&key={{key}}">{{name}} ({{number_format hits}})</a>
+					<a href="<?php echo esc_url( $this->menu_url ); ?>&type=author&key={{key}}">{{name}} ({{number_format hits}})</a>
 				</li>
 			{{/each}}
 			</ul>
 
-			{{#each taxonomy}}
+			{{#each taxonomies}}
+				<h3>{{@key}}</h3>
 				<ul>
-					{{#each terms}}
+					{{#each this}}
 						<li>
-							<a href="<?php echo esc_url( $this->menu_url ); ?>&type={{type}}&key={{key}}">{{name}} ({{number_format hits}})</a>
+							<a href="<?php echo esc_url( $this->menu_url ); ?>&type={{taxonomy}}&key={{key}}">{{name}} ({{number_format hits}})</a>
 						</li>
 					{{/each}}
 				</ul>

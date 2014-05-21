@@ -626,6 +626,7 @@ class GO_Content_Stats
 				'key' => $term->slug,
 				'name' => $term->name,
 				'hits' => $term->count,
+				'taxonomy' => $taxonomy,
 			);
 		}// end foreach
 
