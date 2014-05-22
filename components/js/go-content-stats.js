@@ -210,11 +210,11 @@ if ( 'undefined' == typeof go_content_stats ) {
 
 		// clear the stats object so we start fresh
 		this.stats = {};
-		var stats_to_build = {};
+		var tmp_stats = {};
 		var zoom = this.get_zoom();
 
 		if ( 'day' === zoom ) {
-			stats_to_build = this.day_stats;
+			tmp_stats = this.day_stats;
 		}// end if
 		else {
 			var item;
@@ -226,16 +226,31 @@ if ( 'undefined' == typeof go_content_stats ) {
 
 				if ( 'week' == zoom ) {
 					item = 'Week ' + moment( date, 'YYYY-MM-DD' ).format( 'W, GGGG' );
+					xaxis = moment( date, 'YYYY-MM-DD' ).day( 0 ).format( 'YYYY-MM-DD' );
 				}//end if
 				else if ( 'month' == zoom ) {
 					item = moment( date, 'YYYY-MM-DD' ).format( 'MMMM YY' );
+					xaxis = moment( date, 'YYYY-MM-DD' ).startOf( 'month' ).format( 'YYYY-MM-DD' );
 				}//end else if
 				else if ( 'quarter' == zoom ) {
 					item = moment( date, 'YYYY-MM-DD' ).fquarter( 1 ).toString();
+					if ( 0 === item.lastIndexOf( 'Q1', 0 ) ) {
+						xaxis = moment( date, 'YYY-MM-DD' ).format( 'YYYY-01-01' );
+					}// end if
+					else if( 0 === item.lastIndexOf( 'Q2', 0 ) ) {
+						xaxis = moment( date, 'YYY-MM-DD' ).format( 'YYYY-04-01' );
+					}//end else if
+					else if( 0 === item.lastIndexOf( 'Q3', 0 ) ) {
+						xaxis = moment( date, 'YYY-MM-DD' ).format( 'YYYY-07-01' );
+					}//end else if
+					else if( 0 === item.lastIndexOf( 'Q4', 0 ) ) {
+						xaxis = moment( date, 'YYY-MM-DD' ).format( 'YYYY-10-01' );
+					}//end else if
 				}//end else if
 
-				if ( 'undefined' == typeof stats_to_build[ item ] || ! stats_to_build[ item ] ) {
-					stats_to_build[ item ] = {
+				if ( 'undefined' == typeof tmp_stats[ item ] || ! tmp_stats[ item ] ) {
+					tmp_stats[ item ] = {
+						xaxis: xaxis,
 						posts: 0,
 						comments: 0,
 						match_pro: 0,
@@ -244,33 +259,41 @@ if ( 'undefined' == typeof go_content_stats ) {
 					};
 				}// end if
 
-				stats_to_build[ item ].posts += this.day_stats[ date ].posts;
-				stats_to_build[ item ].comments += this.day_stats[ date ].comments;
+				tmp_stats[ item ].posts += this.day_stats[ date ].posts;
+				tmp_stats[ item ].comments += this.day_stats[ date ].comments;
 
 				if ( this.day_stats[ date ].pvs ) {
-					stats_to_build[ item ].pvs += this.day_stats[ date ].pvs;
+					tmp_stats[ item ].pvs += this.day_stats[ date ].pvs;
 				}// end if
 
 				// @TODO: these need to be done conditionally, or dynamically, or something...
-				stats_to_build[ item ].match_pro += this.day_stats[ date ].match_pro;
-				stats_to_build[ item ].match_events += this.day_stats[ date ].match_events;
+				tmp_stats[ item ].match_pro += this.day_stats[ date ].match_pro;
+				tmp_stats[ item ].match_events += this.day_stats[ date ].match_events;
 			}// end for
 		} // end else
 
 		// this.stats should be numerically indexed, so lets coerce it into that
 		var i = 0;
-		for ( var key in stats_to_build ) {
-			if ( ! stats_to_build[ key ] ) {
+		for ( var key in tmp_stats ) {
+			if ( ! tmp_stats[ key ] ) {
 				// gaps, not ready...
 				return;
 			}// end if
 
-			this.stats[ i ] = stats_to_build[ key ];
+			this.stats[ i ] = tmp_stats[ key ];
 
 			this.stats[ i ].item = key;
-			if ( this.stats[ i ].posts > 0 )
-			{
+
+			if ( ! this.stats[ i ].xaxis ) {
+				this.stats[ i ].xaxis = key;
+			}// end if
+
+			if ( this.stats[ i ].posts > 0 ) {
 				this.stats[ i ].comments_per_post = this.stats[ i ].comments / this.stats[ i ].posts
+
+				if ( this.stats[ i ].pvs ) {
+					this.stats[ i ].pvs_per_post = this.stats[ i ].pvs / this.stats[ i ].posts;
+				}
 			}//end if
 
 			i++;
@@ -540,7 +563,8 @@ if ( 'undefined' == typeof go_content_stats ) {
 	 */
 	go_content_stats.render_pvs_stats = function () {
 		this.load_stats();
-
+console.info( 'render pvs' );
+/*
 		var num_posts = 0;
 		var pvs = 0;
 
@@ -564,6 +588,21 @@ if ( 'undefined' == typeof go_content_stats ) {
 		}//end for
 
 		this.render_summary();
+		*/
+
+console.log( this.stats );
+		// z: using handlebars: http://handlebarsjs.com/
+		var source = $( '#stat-row-template' ).html();
+		var template = Handlebars.compile( source );
+
+		var template_data = {
+			stats: this.stats,
+			summary: this.summary
+		};
+
+		$( '#stat-data' ).html( template( template_data ) );
+
+		this.render_summary();
 	};
 
 	/**
@@ -572,21 +611,17 @@ if ( 'undefined' == typeof go_content_stats ) {
 	go_content_stats.render_summary = function() {
 		var $summary = $( '.stat-summary' );
 
-		$summary.find( '.pvs' ).html( this.number_format( this.summary.pvs ) );
-
 		if ( ! this.summary.posts ) {
 			$summary.find( '.comments-per-post' ).html( '0.00' );
-			$summary.find( '.pvs-per-post' ).html( '0.00' );
 			return;
 		}//end if
 
 		$summary.find( '.comments-per-post' ).html( this.decimal_format( this.summary.comments / this.summary.posts ) );
 
 		if ( this.summary.pvs ) {
+			$summary.find( '.pvs' ).html( this.number_format( this.summary.pvs ) );
 			$summary.find( '.pvs-per-post' ).html( this.decimal_format( this.summary.pvs / this.summary.posts ) );
-		} else {
-			$summary.find( '.pvs-per-post' ).html( '0.00' );
-		}//end else
+		}
 
 		this.graph.render_top_graph();
 	};

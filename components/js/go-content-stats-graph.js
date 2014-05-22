@@ -19,7 +19,7 @@
 		for ( var i in go_content_stats.stats ) {
 			var item = go_content_stats.stats[ i ];
 
-			item.item = parse_date( item.item );
+			item.xaxis = parse_date( item.xaxis );
 
 			graph_data.push( item );
 		}//end for
@@ -33,7 +33,7 @@
 			.nice( d3.time.year )
 			.domain(
 				d3.extent( graph_data, function( d ) {
-					return d.item;
+					return d.xaxis;
 				} )
 			);
 
@@ -55,19 +55,19 @@
 
 		var pvs_line = d3.svg.line()
 			.x( function( d ) {
-				return x_scale( d.item );
+				return x_scale( d.xaxis );
 			} )
 			.y( function( d ) {
-				console.log( 'plotting y value for pvs data point: ' + d.item + ' to be at our y_scale_left: ' + y_scale_left( d.posts && d.pvs ? d.pvs / d.posts : 0 ) );
+				console.log( 'plotting y value for pvs data point: ' + d.xaxis + ' to be at our y_scale_left: ' + y_scale_left( d.posts && d.pvs ? d.pvs / d.posts : 0 ) );
 				return y_scale_left( d.posts && d.pvs ? d.pvs / d.posts : 0 );
 			} );
 
 		var comments_line = d3.svg.line()
 			.x( function( d ) {
-				return x_scale( d.item );
+				return x_scale( d.xaxis );
 			} )
 			.y( function( d ) {
-				console.log( 'plotting y value for comments data point: ' + d.item + ' to be at our y_scale_right: ' + y_scale_right( d.comments_per_post ? d.comments_per_post : 0 ) );
+				console.log( 'plotting y value for comments data point: ' + d.xaxis + ' to be at our y_scale_right: ' + y_scale_right( d.comments_per_post ? d.comments_per_post : 0 ) );
 				return y_scale_right( d.comments_per_post ? d.comments_per_post : 0 );
 			} );
 
