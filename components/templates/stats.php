@@ -85,7 +85,15 @@ if ( ! $start || ! $end )
 			$item = str_replace( '{{name}}', esc_html( $name ), $item );
 		}//end if
 		?>
-		<ul class="filters"><?php echo $item; ?></ul>
+		<div class="options">
+			<div id="zoom-levels" class="pull-right">
+				<button type="button" data-zoom-level="day" class="active">Day</button>
+				<button type="button" data-zoom-level="week">Week</button>
+				<button type="button" data-zoom-level="month">Month</button>
+				<button type="button" data-zoom-level="quarter">Quarter</button>
+			</div>
+			<ul class="filters"><?php echo $item; ?></ul>
+		</div>
 		<script type="text/x-handlebars-template" id="filter-template">
 			<?php echo $filter_template; ?>
 		</script>
