@@ -19,7 +19,7 @@
 		for ( var i in go_content_stats.stats ) {
 			var item = go_content_stats.stats[ i ];
 
-			item.item = parse_date( item.item );
+			item.xaxis = parse_date( item.xaxis );
 
 			graph_data.push( item );
 		}//end for
@@ -36,12 +36,12 @@
 
 		var comments_line = d3.svg.line()
 			.interpolate( 'basis' )
-			.x( function( d ) { return x_scale( d.item ); } )
+			.x( function( d ) { return x_scale( d.xaxis ); } )
 			.y( function( d ) { return y_scale( d.comments ); } );
 
 		var pvs_line = d3.svg.line()
 			.interpolate( 'basis' )
-			.x( function( d ) { return x_scale( d.item ); } )
+			.x( function( d ) { return x_scale( d.xaxis ); } )
 			.y( function( d ) { return y_scale( d.pvs ); } );
 
 		var graph = d3.select( '#top-graph' ).append( 'svg' )
@@ -52,7 +52,7 @@
 
 		x_scale.domain(
 			d3.extent( graph_data, function( d ) {
-				return d.item;
+				return d.xaxis;
 			} )
 		);
 

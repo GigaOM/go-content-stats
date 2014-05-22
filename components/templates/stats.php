@@ -168,8 +168,8 @@ if ( ! $start || ! $end )
 			<tr class="stat-summary" data-num-posts="{{summary.posts}}">
 				<th class="item">{{summary.items}} items</th>
 				<th class="posts">{{summary.posts}}</th>
-				<th class="pvs" data-num-pvs="{{summary.pvs}}">{{summary.pvs}}</th>
-				<th class="pvs-per-post">loading...</th>
+				<th class="pvs" data-num-pvs="{{summary.pvs}}"><i class="fa fa-spinner fa-spin"></i></th>
+				<th class="pvs-per-post"><i class="fa fa-spinner fa-spin"></i></th>
 				<th class="comments">{{number_format summary.comments}}</th>
 				<th class="comments-per-post"></th>
 				<?php echo $content_summary; ?>
@@ -180,8 +180,8 @@ if ( ! $start || ! $end )
 			<tr id="row-{{@key}}" class="stat-row" data-num-posts="{{posts}}">
 				<td class="item">{{item}}</td>
 				<td class="posts"><a href="#">{{number_format posts}} <i class="fa fa-angle-down"></i></a></td>
-				<td class="pvs">{{pvs}}</td>
-				<td class="pvs-per-post">{{pvs_per_post}}</td>
+				<td class="pvs">{{number_format pvs}}</td>
+				<td class="pvs-per-post">{{decimal_format pvs_per_post}}</td>
 				<td class="comments">{{number_format comments}}</td>
 				<td class="comments-per-posts">{{decimal_format comments_per_post}}</td>
 				<?php echo $content_row; ?>
@@ -196,8 +196,8 @@ if ( ! $start || ! $end )
 			<tr class="stat-summary" data-num-posts="{{summary.posts}}">
 				<th class="item">{{summary.items}} items</th>
 				<th class="posts">{{summary.posts}}</th>
-				<th class="pvs" data-num-pvs="{{summary.pvs}}">{{summary.pvs}}</th>
-				<th class="pvs-per-post">loading...</th>
+				<th class="pvs" data-num-pvs="{{summary.pvs}}"><i class="fa fa-spinner fa-spin"></i></th>
+				<th class="pvs-per-post"><i class="fa fa-spinner fa-spin"></i></th>
 				<th class="comments">{{number_format summary.comments}}</th>
 				<th class="comments-per-post"></th>
 				<?php echo $content_summary; ?>
