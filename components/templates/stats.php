@@ -132,7 +132,7 @@ if ( ! $start || ! $end )
 	<table>
 		<thead>
 			<tr>
-				<th class="day">Day</th>
+				<th class="day">Item</th>
 				<th class="posts">Posts</th>
 				<th class="pvs">PVs</th>
 				<th class="pvs-per-post">PVs/post</th>
@@ -141,7 +141,7 @@ if ( ! $start || ! $end )
 				<?php echo $content_match_th; ?>
 			</tr>
 			<tr class="stat-summary" data-num-posts="{{summary.posts}}">
-				<th class="day">{{summary.days}} days</th>
+				<th class="item">{{summary.items}} items</th>
 				<th class="posts">{{summary.posts}}</th>
 				<th class="pvs" data-num-pvs="{{summary.pvs}}">{{summary.pvs}}</th>
 				<th class="pvs-per-post">loading...</th>
@@ -153,8 +153,8 @@ if ( ! $start || ! $end )
 		<tbody>
 			{{#each stats}}
 			<tr id="row-{{@key}}" class="stat-row" data-num-posts="{{posts}}">
-				<td class="day">{{day}}</td>
-				<td class="posts"><a href="<?php echo admin_url( '/edit.php?m=' ); ?>{{day}}">{{number_format posts}} <i class="fa fa-angle-down"></i></a></td>
+				<td class="item">{{item}}</td>
+				<td class="posts"><a href="#">{{number_format posts}} <i class="fa fa-angle-down"></i></a></td>
 				<td class="pvs">{{pvs}}</td>
 				<td class="pvs-per-post">{{pvs_per_post}}</td>
 				<td class="comments">{{number_format comments}}</td>
@@ -169,7 +169,7 @@ if ( ! $start || ! $end )
 		</tbody>
 		<tfoot>
 			<tr class="stat-summary" data-num-posts="{{summary.posts}}">
-				<th class="day">{{summary.days}} days</th>
+				<th class="item">{{summary.items}} items</th>
 				<th class="posts">{{summary.posts}}</th>
 				<th class="pvs" data-num-pvs="{{summary.pvs}}">{{summary.pvs}}</th>
 				<th class="pvs-per-post">loading...</th>
@@ -178,7 +178,7 @@ if ( ! $start || ! $end )
 				<?php echo $content_summary; ?>
 			</tr>
 			<tr>
-				<th class="day">Day</th>
+				<th class="item">Item</th>
 				<th class="posts">Posts</th>
 				<th class="pvs">PVs</th>
 				<th class="pvs-per-post">PVs/post</th>

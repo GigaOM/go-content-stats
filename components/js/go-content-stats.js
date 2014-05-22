@@ -169,13 +169,6 @@ if ( 'undefined' == typeof go_content_stats ) {
 		// clear the day stats object so we start fresh
 		this.day_stats = {};
 
-		this.summary = {
-			'days': 0,
-			'posts': 0,
-			'pvs': 0,
-			'comments': 0,
-		};
-
 		var context = this.get_context();
 		var days = this.get_range();
 
@@ -195,26 +188,54 @@ if ( 'undefined' == typeof go_content_stats ) {
 		this.stats = {};
 
 		if ( 'day' === this.get_zoom() ) {
-			var k = 0;
-			for ( var i in this.day_stats ) {
-				this.stats[ k ] = this.day_stats[ i ];
-				k++;
+			for ( var date in this.day_stats ) {
+				this.stats[ date ] = this.day_stats[ date ];
+				this.stats[ date ].item = date;
 			}// end for
 		}// end if
-		else if ( 'week' == this.get_zoom() ) {
+		else {
+			for ( var date in this.day_stats ) {
+				if ( 'week' == this.get_zoom() ) {
+					var item = 'Week ' + moment( date, 'YYYY-MM-DD' ).format( 'W, GGGG' );
+				}//end if
+				else if ( 'month' == this.get_zoom() ) {
+					var item = moment( date, 'YYYY-MM-DD' ).format( 'MMMM YY' );
+				}//end if
+				else if ( 'quarter' == this.get_zoom() ) {
+					var item = moment( date, 'YYYY-MM-DD' ).fquarter();
+				}//end if
 
-		}// end else if
-		else if ( 'month' == this.get_zoom() ) {
+				if ( 'undefined' == typeof this.stats[ item ] ) {
+					this.stats[ item ] = {
+						item: item,
+						posts: 0,
+						comments: 0,
+						match_pro: 0,
+						match_events: 0,
+						pvs: null
+					};
+				}// end if
 
-		}// end else if
-		else if ( 'quarter' == this.get_zoom() ) {
+				this.stats[ item ].posts += this.day_stats[ date ].posts;
+				this.stats[ item ].comments += this.day_stats[ date ].comments;
 
-		}// end else if
+				// @TODO: these need to be done conditionally, or dynamically, or something...
+				this.stats[ item ].match_pro += this.day_stats[ date ].match_pro;
+				this.stats[ item ].match_events += this.day_stats[ date ].match_events;
+			}// end for
+		} // end else
 	};
 
 	go_content_stats.build_summary = function() {
+		this.summary = {
+			'items': 0,
+			'posts': 0,
+			'pvs': 0,
+			'comments': 0,
+		};
+
 		for ( var i in this.stats ) {
-			this.summary.days++;
+			this.summary.items++;
 			this.summary.posts += this.stats[ i ].posts;
 			this.summary.pvs += this.stats[ i ].pvs;
 			this.summary.comments += this.stats[ i ].comments;
