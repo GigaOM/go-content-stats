@@ -28,21 +28,48 @@
 		var height = 300 - margin;
 		var width = parseInt( this.$top_graph.width(), 10 ) - margin * 2;
 
-		var x_scale = d3.time.scale().range( [ 0, width ] ).nice( d3.time.year );
-		var y_scale = d3.scale.linear().range( [ height, 0 ] ).nice();
+		var x_scale = d3.time.scale()
+			.range( [ 0, width ] )
+			.nice( d3.time.year )
+			.domain(
+				d3.extent( graph_data, function( d ) {
+					return d.item;
+				} )
+			);
 
-		var x_axis = d3.svg.axis().scale( x_scale ).orient( 'bottom' );
-		var y_axis = d3.svg.axis().scale( y_scale ).orient( 'left' );
+		var y_scale_left = d3.scale.linear()
+			.range( [ height, 0 ] )
+			.domain( [
+				0,
+				d3.max( graph_data, function( d ) { return d.posts && d.pvs ? d.pvs / d.posts : 0; } )
+			] );
 
-		var comments_line = d3.svg.line()
-			.interpolate( 'basis' )
-			.x( function( d ) { return x_scale( d.item ); } )
-			.y( function( d ) { return y_scale( d.comments ); } );
+		var y_scale_right = d3.scale.linear()
+			.range( [ height, 0 ] )
+			.domain( [
+				0,
+				d3.max( graph_data, function( d ) { return d.comments_per_post ? d.comments_per_post : 0; } )
+			] );
+
+		console.dir( graph_data );
 
 		var pvs_line = d3.svg.line()
-			.interpolate( 'basis' )
-			.x( function( d ) { return x_scale( d.item ); } )
-			.y( function( d ) { return y_scale( d.pvs ); } );
+			.x( function( d ) {
+				return x_scale( d.item );
+			} )
+			.y( function( d ) {
+				console.log( 'plotting y value for pvs data point: ' + d.item + ' to be at our y_scale_left: ' + y_scale_left( d.posts && d.pvs ? d.pvs / d.posts : 0 ) );
+				return y_scale_left( d.posts && d.pvs ? d.pvs / d.posts : 0 );
+			} );
+
+		var comments_line = d3.svg.line()
+			.x( function( d ) {
+				return x_scale( d.item );
+			} )
+			.y( function( d ) {
+				console.log( 'plotting y value for comments data point: ' + d.item + ' to be at our y_scale_right: ' + y_scale_right( d.comments_per_post ? d.comments_per_post : 0 ) );
+				return y_scale_right( d.comments_per_post ? d.comments_per_post : 0 );
+			} );
 
 		var graph = d3.select( '#top-graph' ).append( 'svg' )
 			.attr( 'width', width + margin * 2 )
@@ -50,40 +77,42 @@
 			.append( 'g' )
 				.attr( 'transform', 'translate(' + margin + ', ' + margin + ')' );
 
-		x_scale.domain(
-			d3.extent( graph_data, function( d ) {
-				return d.item;
-			} )
-		);
-
-		y_scale.domain( [
-			0,
-			d3.max( graph_data, function( d ) { return d.pvs > d.comments ? d.pvs : d.comments; } )
-		] );
+		var x_axis = d3.svg.axis().scale( x_scale );//.orient( 'bottom' );
+		var y_axis_left = d3.svg.axis().scale( y_scale_left ).ticks( 10 ).orient( 'left' );
+		var y_axis_right = d3.svg.axis().scale( y_scale_right ).ticks( 6 ).orient( 'right' );
 
 		graph.append( 'g' )
 			.attr( 'class', 'x axis' )
 			.attr( 'transform', 'translate( 0, ' + height + ' )' )
 			.call( x_axis );
 
-		graph.append( 'g' )
-			.attr( 'class', 'y axis' )
-			.call( y_axis )
+		graph.append( 'svg:g' )
+			.attr( 'class', 'y axis axis-left' )
+			.call( y_axis_left )
 			.append( 'text' )
 				.attr( 'transform', 'rotate( -90 )' )
 				.attr( 'y', 6 )
 				.attr( 'dy', '.71em' )
 				.style( 'text-anchor', 'end' )
-				.text( 'comments' );
+				.text( 'page views per post' );
 
-		graph.append( 'path' )
-			.datum( graph_data )
+		graph.append( 'svg:g' )
+			.attr( 'class', 'y axis axis-right' )
+			.attr( 'transform', 'translate( ' + width + ', 0 )' )
+			.call( y_axis_right )
+			.append( 'text' )
+				.attr( 'transform', 'rotate( -90 )' )
+				.attr( 'y', 6 )
+				.attr( 'dy', '-.71em' )
+				.style( 'text-anchor', 'end' )
+				.text( 'comments per post' );
+
+		graph.append( 'svg:path' )
 			.attr( 'class', 'line line-1 pvs-line' )
-			.attr( 'd', pvs_line );
+			.attr( 'd', pvs_line( graph_data ) );
 
-		graph.append( 'path' )
-			.datum( graph_data )
+		graph.append( 'svg:path' )
 			.attr( 'class', 'line line-2 comments-line' )
-			.attr( 'd', comments_line );
+			.attr( 'd', comments_line( graph_data ) );
 	};
 } )( jQuery );
