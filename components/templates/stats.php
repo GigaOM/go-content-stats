@@ -112,6 +112,9 @@ if ( ! $start || ! $end )
 			<?php echo $filter_template; ?>
 		</script>
 
+		<div id="top-graph">
+		</div>
+
 		<div id="stat-data">
 			<!-- stat-row-template template will render here -->
 			<div class="data-placeholder">

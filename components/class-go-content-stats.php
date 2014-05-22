@@ -130,6 +130,14 @@ class GO_Content_Stats
 		);
 
 		wp_register_script(
+			'd3',
+			plugins_url( 'js/external/d3.min.js', __FILE__ ),
+			array(),
+			$script_config['version'],
+			TRUE
+		);
+
+		wp_register_script(
 			'handlebars',
 			plugins_url( 'js/external/handlebars.js', __FILE__ ),
 			array( 'jquery' ),
@@ -176,12 +184,37 @@ class GO_Content_Stats
 		wp_register_script(
 			'go-content-stats',
 			plugins_url( 'js/go-content-stats.js', __FILE__ ),
-			array( 'handlebars', 'jquery-blockui', 'bootstrap-daterangepicker' ),
+			array(
+				'bootstrap-daterangepicker',
+				'd3',
+				'handlebars',
+				'jquery-blockui',
+			),
 			$script_config['version'],
 			TRUE
 		);
 
-		wp_enqueue_script( 'go-content-stats' );
+		wp_register_script(
+			'go-content-stats-graph',
+			plugins_url( 'js/go-content-stats-graph.js', __FILE__ ),
+			array(
+				'go-content-stats',
+			),
+			$script_config['version'],
+			TRUE
+		);
+
+		wp_register_script(
+			'go-content-stats-behavior',
+			plugins_url( 'js/go-content-stats-behavior.js', __FILE__ ),
+			array(
+				'go-content-stats-graph',
+			),
+			$script_config['version'],
+			TRUE
+		);
+
+		wp_enqueue_script( 'go-content-stats-behavior' );
 
 		wp_localize_script( 'go-content-stats', 'go_content_stats', $data );
 	}//end admin_enqueue_scripts

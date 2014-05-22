@@ -1,0 +1,47 @@
+$graph-color-1: #f54f29;
+$graph-color-2: #405952;
+$graph-color-3: #ff974f;
+$graph-color-4: #9c9b7a;
+$graph-color-5: #ffd393;
+
+#top-graph {
+	background: #fff;
+	height: 100%;
+	width: 100%;
+
+	.axis path,
+	.axis line {
+		fill: none;
+		stroke: #555;
+		shape-rendering: crispEdges;
+	}
+
+	.axis text {
+		fill: #555;
+	}
+
+	.line {
+		fill: none;
+		stroke-width: 1.5px;
+	}
+
+	.line-1 {
+		stroke: $graph-color-1;
+	}
+
+	.line-2 {
+		stroke: $graph-color-2;
+	}
+
+	.line-3 {
+		stroke: $graph-color-3;
+	}
+
+	.line-4 {
+		stroke: $graph-color-4;
+	}
+
+	.line-5 {
+		stroke: $graph-color-5;
+	}
+}
