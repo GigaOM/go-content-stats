@@ -24,6 +24,8 @@ if ( 'undefined' == typeof go_content_stats ) {
 	};
 
 	go_content_stats.init = function() {
+		this.graph.init();
+
 		this.blockui_args = {
 			message: '<i class="fa fa-spinner fa-spin"></i>',
 			css: {
@@ -555,6 +557,8 @@ if ( 'undefined' == typeof go_content_stats ) {
 		} else {
 			$summary.find( '.pvs-per-post' ).html( 0 );
 		}//end else
+
+		this.graph.render_top_graph();
 	};
 
 	/**
@@ -813,7 +817,3 @@ if ( 'undefined' == typeof go_content_stats ) {
 		return 'go-content-stats-' + context_key + '-' + index;
 	};
 } )( jQuery );
-
-jQuery( function( $ ) {
-	go_content_stats.init();
-} );
