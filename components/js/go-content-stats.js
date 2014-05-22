@@ -205,25 +205,28 @@ if ( 'undefined' == typeof go_content_stats ) {
 	};
 
 	go_content_stats.build_stats = function( day_stats ) {
+		var item;
+		var date;
+
 		// clear the stats object so we start fresh
 		this.stats = {};
 
 		if ( 'day' === this.get_zoom() ) {
-			for ( var date in this.day_stats ) {
+			for ( date in this.day_stats ) {
 				this.stats[ date ] = this.day_stats[ date ];
 				this.stats[ date ].item = date;
 			}// end for
 		}// end if
 		else {
-			for ( var date in this.day_stats ) {
+			for ( date in this.day_stats ) {
 				if ( 'week' == this.get_zoom() ) {
-					var item = 'Week ' + moment( date, 'YYYY-MM-DD' ).format( 'W, GGGG' );
+					item = 'Week ' + moment( date, 'YYYY-MM-DD' ).format( 'W, GGGG' );
 				}//end if
 				else if ( 'month' == this.get_zoom() ) {
-					var item = moment( date, 'YYYY-MM-DD' ).format( 'MMMM YY' );
+					item = moment( date, 'YYYY-MM-DD' ).format( 'MMMM YY' );
 				}//end if
 				else if ( 'quarter' == this.get_zoom() ) {
-					var item = moment( date, 'YYYY-MM-DD' ).fquarter( 1 ).toString();
+					item = moment( date, 'YYYY-MM-DD' ).fquarter( 1 ).toString();
 				}//end if
 
 				if ( 'undefined' == typeof this.stats[ item ] ) {
