@@ -170,7 +170,7 @@ if ( ! $start || ! $end )
 				<th class="posts">{{summary.posts}}</th>
 				<th class="pvs" data-num-pvs="{{summary.pvs}}">{{summary.pvs}}</th>
 				<th class="pvs-per-post">loading...</th>
-				<th class="comments">{{summary.comments}}</th>
+				<th class="comments">{{number_format summary.comments}}</th>
 				<th class="comments-per-post"></th>
 				<?php echo $content_summary; ?>
 			</tr>
@@ -183,7 +183,7 @@ if ( ! $start || ! $end )
 				<td class="pvs">{{pvs}}</td>
 				<td class="pvs-per-post">{{pvs_per_post}}</td>
 				<td class="comments">{{number_format comments}}</td>
-				<td class="comments-per-posts">{{number_format comments_per_posts}}</td>
+				<td class="comments-per-posts">{{decimal_format comments_per_post}}</td>
 				<?php echo $content_row; ?>
 			</tr>
 			<tr class="stat-row-posts">
@@ -198,7 +198,7 @@ if ( ! $start || ! $end )
 				<th class="posts">{{summary.posts}}</th>
 				<th class="pvs" data-num-pvs="{{summary.pvs}}">{{summary.pvs}}</th>
 				<th class="pvs-per-post">loading...</th>
-				<th class="comments">{{summary.comments}}</th>
+				<th class="comments">{{number_format summary.comments}}</th>
 				<th class="comments-per-post"></th>
 				<?php echo $content_summary; ?>
 			</tr>

@@ -67,8 +67,9 @@ if ( 'undefined' == typeof go_content_stats ) {
 		this.zoom = this.get_zoom();
 
 		// this registers a handlebars helper so we can output formatted numbers
-		// rounded to 1 decimal
 		Handlebars.registerHelper( 'number_format', this.number_format );
+		// and this one is rounded to 2 decimals and always shows 2 places
+		Handlebars.registerHelper( 'decimal_format', this.decimal_format );
 
 		// load stats for the current page
 		this.prep_stats();
@@ -265,7 +266,13 @@ if ( 'undefined' == typeof go_content_stats ) {
 			}// end if
 
 			this.stats[ i ] = stats_to_build[ key ];
+
 			this.stats[ i ].item = key;
+			if ( this.stats[ i ].posts > 0 )
+			{
+				this.stats[ i ].comments_per_post = this.stats[ i ].comments / this.stats[ i ].posts
+			}//end if
+
 			i++;
 		}// end for
 	};
@@ -553,7 +560,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 
 			$row.find( '.pvs' ).html( this.number_format( pvs ) );
 			$row.find( '.pvs' ).data( 'num-pvs', pvs );
-			$row.find( '.pvs-per-post' ).html( this.number_format( pvs / num_posts ) );
+			$row.find( '.pvs-per-post' ).html( this.decimal_format( pvs / num_posts ) );
 		}//end for
 
 		this.render_summary();
@@ -568,17 +575,17 @@ if ( 'undefined' == typeof go_content_stats ) {
 		$summary.find( '.pvs' ).html( this.number_format( this.summary.pvs ) );
 
 		if ( ! this.summary.posts ) {
-			$summary.find( '.comments-per-post' ).html( 0 );
-			$summary.find( '.pvs-per-post' ).html( 0 );
+			$summary.find( '.comments-per-post' ).html( '0.00' );
+			$summary.find( '.pvs-per-post' ).html( '0.00' );
 			return;
 		}//end if
 
-		$summary.find( '.comments-per-post' ).html( this.number_format( this.summary.comments / this.summary.posts ) );
+		$summary.find( '.comments-per-post' ).html( this.decimal_format( this.summary.comments / this.summary.posts ) );
 
 		if ( this.summary.pvs ) {
-			$summary.find( '.pvs-per-post' ).html( this.number_format( this.summary.pvs / this.summary.posts ) );
+			$summary.find( '.pvs-per-post' ).html( this.decimal_format( this.summary.pvs / this.summary.posts ) );
 		} else {
-			$summary.find( '.pvs-per-post' ).html( 0 );
+			$summary.find( '.pvs-per-post' ).html( '0.00' );
 		}//end else
 
 		this.graph.render_top_graph();
@@ -613,11 +620,22 @@ if ( 'undefined' == typeof go_content_stats ) {
 	 */
 	go_content_stats.number_format = function( num ) {
 		if ( ! num || 'undefined' == typeof num ) {
-			return 0;
+			return '0';
+		}//end if
+
+		return num.toString().replace( /\B(?=(\d{3})+(?!\d))/g, ',' );
+	};
+
+	/**
+	 * output number with commas and 2 decimal places
+	 */
+	go_content_stats.decimal_format = function( num ) {
+		if ( ! num || 'undefined' == typeof num ) {
+			return '0.00';
 		}//end if
 
 		// round to 1 decimal
-		num = parseFloat( parseInt( num, 10 ).toFixed( 2 ), 10 );
+		num = num.toFixed( 2 );
 
 		return num.toString().replace( /\B(?=(\d{3})+(?!\d))/g, ',' );
 	};
