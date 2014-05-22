@@ -221,7 +221,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 					var item = moment( date, 'YYYY-MM-DD' ).format( 'MMMM YY' );
 				}//end if
 				else if ( 'quarter' == this.get_zoom() ) {
-					var item = moment( date, 'YYYY-MM-DD' ).fquarter();
+					var item = moment( date, 'YYYY-MM-DD' ).fquarter( 1 ).toString();
 				}//end if
 
 				if ( 'undefined' == typeof this.stats[ item ] ) {
