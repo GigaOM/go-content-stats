@@ -36,6 +36,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 		this.$filters = $( '#content-stats .filters' );
 		this.$start = $( '#go-content-stats-start' );
 		this.$end = $( '#go-content-stats-end' );
+		this.$zoom_levels = $( '#zoom-levels' );
 		this.$stat_data = $( '#stat-data' );
 		this.$taxonomy_data = $( '#taxonomy-data' );
 
@@ -73,6 +74,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 		$( document ).on( 'click', '#criteria a', this.event.select_criteria );
 		$( document ).on( 'click', '.stat-row a', this.event.fetch_posts );
 		$( document ).on( 'click', '#content-stats .filters .remove', this.event.remove_criteria );
+		$( document ).on( 'click', '#zoom-levels button', this.event.select_zoom );
 		$( document ).on( 'go-content-stats-insert', this.event.mind_the_gap );
 		$( document ).on( 'go-content-stats-update', this.event.mind_the_gap );
 		$( window ).on( 'popstate', this.event.change_state );
@@ -110,13 +112,30 @@ if ( 'undefined' == typeof go_content_stats ) {
 	};
 
 	/**
+	 * selects a zoom level
+	 */
+	go_content_stats.select_zoom = function( zoom_level ) {
+		var $current = this.$zoom_levels.find( '.active' );
+
+		if ( zoom_level === $current.data( 'zoom-level' ) ) {
+			return;
+		}//end if
+
+		this.$zoom_levels.find( 'button' ).removeClass( 'active' );
+		this.$zoom_levels.find( '[data-zoom-level="' + zoom_level + '"]' ).addClass( 'active' );
+
+		this.push_state();
+	};
+
+	/**
 	 * push a state change
 	 */
 	go_content_stats.push_state = function () {
 		var period = this.get_period();
 		var context = this.get_context();
+		var zoom = this.get_zoom();
 
-		history.pushState( period, '', 'index.php?page=go-content-stats&type=' + context.type + '&key=' + context.key + '&start=' + period.start + '&end=' + period.end );
+		history.pushState( period, '', 'index.php?page=go-content-stats&type=' + context.type + '&key=' + context.key + '&start=' + period.start + '&end=' + period.end + '&zoom=' + zoom );
 		this.change_state( period );
 	};
 
@@ -392,7 +411,13 @@ if ( 'undefined' == typeof go_content_stats ) {
 	 * gets the current selected context
 	 */
 	go_content_stats.get_zoom = function () {
-		return 'day';
+		var $zoom = this.$zoom_levels.find( '.active' );
+
+		if ( ! $zoom.length ) {
+			return 'day';
+		}//end if
+
+		return $zoom.data( 'zoom-level' );
 	};
 
 	/**
@@ -649,6 +674,13 @@ if ( 'undefined' == typeof go_content_stats ) {
 		e.preventDefault();
 		go_content_stats.store.clear();
 		go_content_stats.push_state();
+	};
+
+	/**
+	 * handles the zoom level selection event
+	 */
+	go_content_stats.event.select_zoom = function( e ) {
+		go_content_stats.select_zoom( $( this ).data( 'zoom-level' ) );
 	};
 
 	/**
