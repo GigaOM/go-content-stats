@@ -53,6 +53,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 			}
 		},
 		function( start, end ) {
+			console.info( 'change' );
 			go_content_stats.$date_range.find( 'span' ).html( start.format( 'MMMM D, YYYY' ) + ' - ' + end.format( 'MMMM D, YYYY' ) );
 			go_content_stats.$start.val( start.format( 'YYYY-MM-DD' ) );
 			go_content_stats.$end.val( end.format( 'YYYY-MM-DD' ) );
@@ -206,27 +207,32 @@ if ( 'undefined' == typeof go_content_stats ) {
 		// clear the stats object so we start fresh
 		this.stats = {};
 
-		if ( 'day' === this.get_zoom() ) {
-			for ( var date in this.day_stats ) {
-				this.stats[ date ] = this.day_stats[ date ];
-				this.stats[ date ].item = date;
-			}// end for
+		var stats_to_build = {};
+		var zoom = this.get_zoom();
+
+		var i =0;
+		if ( 'day' === zoom ) {
+			stats_to_build = this.day_stats;
 		}// end if
 		else {
 			for ( var date in this.day_stats ) {
-				if ( 'week' == this.get_zoom() ) {
+				if ( ! this.day_stats[ date ] ) {
+					// if there are still gaps, don't bother continuing...
+					return;
+				}// end if
+
+				if ( 'week' == zoom ) {
 					var item = 'Week ' + moment( date, 'YYYY-MM-DD' ).format( 'W, GGGG' );
 				}//end if
-				else if ( 'month' == this.get_zoom() ) {
+				else if ( 'month' == zoom ) {
 					var item = moment( date, 'YYYY-MM-DD' ).format( 'MMMM YY' );
 				}//end if
-				else if ( 'quarter' == this.get_zoom() ) {
+				else if ( 'quarter' == zoom ) {
 					var item = moment( date, 'YYYY-MM-DD' ).fquarter( 1 ).toString();
 				}//end if
 
-				if ( 'undefined' == typeof this.stats[ item ] ) {
-					this.stats[ item ] = {
-						item: item,
+				if ( 'undefined' == typeof stats_to_build[ item ] || ! stats_to_build[ item ] ) {
+					stats_to_build[ item ] = {
 						posts: 0,
 						comments: 0,
 						match_pro: 0,
@@ -235,14 +241,30 @@ if ( 'undefined' == typeof go_content_stats ) {
 					};
 				}// end if
 
-				this.stats[ item ].posts += this.day_stats[ date ].posts;
-				this.stats[ item ].comments += this.day_stats[ date ].comments;
+				stats_to_build[ item ].posts += this.day_stats[ date ].posts;
+				stats_to_build[ item ].comments += this.day_stats[ date ].comments;
+
+				if ( this.day_stats[ date ].pvs ) {
+					stats_to_build[ item ].pvs += this.day_stats[ date ].pvs;
+				}// end if
 
 				// @TODO: these need to be done conditionally, or dynamically, or something...
-				this.stats[ item ].match_pro += this.day_stats[ date ].match_pro;
-				this.stats[ item ].match_events += this.day_stats[ date ].match_events;
+				stats_to_build[ item ].match_pro += this.day_stats[ date ].match_pro;
+				stats_to_build[ item ].match_events += this.day_stats[ date ].match_events;
 			}// end for
 		} // end else
+
+		// this.stats should be numerically indexed, so lets coerce it into that
+		for ( var item in stats_to_build ) {
+			if ( ! stats_to_build[ item ] ) {
+				// gaps, not ready...
+				return;
+			}// end if
+
+			this.stats[ i ] = stats_to_build[ item ];
+			this.stats[ i ].item = item;
+			i++;
+		}// end for
 	};
 
 	go_content_stats.build_summary = function() {
@@ -296,7 +318,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 			}//end if
 		}//end for
 
-		console.log( this.gaps );
+		console.dir( this.gaps );
 
 		this.$stat_data.block( this.blockui_args );
 		this.$taxonomy_data.block( this.blockui_args );
@@ -569,10 +591,6 @@ if ( 'undefined' == typeof go_content_stats ) {
 		$next = $row.next();
 		$next.find( 'td' ).html( template( data ) );
 		$next.removeClass( 'loading' ).addClass( 'loaded' );
-
-		console.log('render!');
-		// @TODO: figure out how/where to append
-		//$( '#taxonomy-data' ).html( template( data ) );
 	};
 
 	/**
