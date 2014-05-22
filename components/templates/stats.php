@@ -84,8 +84,30 @@ if ( ! $start || ! $end )
 			$item = str_replace( '{{key}}', esc_attr( $key ), $item );
 			$item = str_replace( '{{name}}', esc_html( $name ), $item );
 		}//end if
+
+		$zoom_levels = array(
+			'day',
+			'week',
+			'month',
+			'quarter',
+		);
+
+		$zoom = empty( $_GET['zoom'] ) ? 'day' : preg_replace( '/[^a-z]/', '', $_GET['zoom'] );
+		$zoom = in_array( $zoom, $zoom_levels ) ? $zoom : 'day';
 		?>
-		<ul class="filters"><?php echo $item; ?></ul>
+		<div class="options">
+			<div id="zoom-levels" class="pull-right">
+				<?php
+				foreach ( $zoom_levels as $zoom_level )
+				{
+					?>
+					<button type="button" data-zoom-level="<?php echo esc_attr( $zoom_level ); ?>" class="<?php echo $zoom_level == $zoom ? 'active' : ''; ?>"><?php echo ucwords( $zoom_level ); ?></button>
+					<?php
+				}//end foreach
+				?>
+			</div>
+			<ul class="filters"><?php echo $item; ?></ul>
+		</div>
 		<script type="text/x-handlebars-template" id="filter-template">
 			<?php echo $filter_template; ?>
 		</script>
