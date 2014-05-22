@@ -1,5 +1,13 @@
 $global-radius: 4px;
 
+.pull-left {
+	float: left;
+}
+
+.pull-right {
+	float: right;
+}
+
 .data-placeholder,
 .blockMsg {
 	.fa {
@@ -20,6 +28,71 @@ $global-radius: 4px;
 }
 
 #content-stats {
+	button {
+		background-color: #fff;
+		background-image: none;
+		border-radius: 4px;
+		border: 1px solid transparent;
+		border-color: #ccc;
+		color: #333;
+		cursor: pointer;
+		display: inline-block;
+		font-size: 14px;
+		font-weight: normal;
+		line-height: 1.428571429;
+		margin-bottom: 0;
+		margin-left: 0;
+		margin-right: 0;
+		padding: 6px 12px;
+		text-align: center;
+		vertical-align: middle;
+		white-space: nowrap;
+		-webkit-user-select: none;
+		-moz-user-select: none;
+		-ms-user-select: none;
+		-o-user-select: none;
+		user-select: none;
+
+		&:hover,
+		&:focus,
+		&:active,
+		&.active {
+			color: #333;
+			background-color: #ebebeb;
+			border-color: #adadad;
+		}
+
+		&.active {
+			color: #fff;
+			background-color: #428bca;
+			border-color: #357ebd;
+
+			&:hover,
+			&:focus,
+			&:active,
+			&.active {
+				color: #fff;
+				background-color: #3276b1;
+				border-color: #285e8e;
+			}
+		}
+
+		&.btn-success {
+			color: #fff;
+			background-color: #5cb85c;
+			border-color: #4cae4c;
+
+			&:hover,
+			&:focus,
+			&:active,
+			&.active {
+				color: #fff;
+				background-color: #47a447;
+				border-color: #398439;
+			}
+		}
+	}
+
 	& > header {
 		color: #222;
 		font-size: 1.1rem;
@@ -202,7 +275,6 @@ $global-radius: 4px;
 		background: #fff;
 		border: 1px solid #ddd;
 		display: inline-block;
-		float: right;
 		padding: .5rem;
 
 		&:hover {
@@ -219,6 +291,41 @@ $global-radius: 4px;
 
 		& > .fa-angle-down {
 			margin-left: .5rem;
+		}
+	}
+
+	.options {
+		margin-bottom: .5rem;
+		overflow: hidden;
+	}
+
+	#zoom-levels {
+		display: inline-block;
+		overflow: hidden;
+		position: relative;
+		vertical-align: middle;
+
+		button {
+			position: relative;
+			float: left;
+
+			&+button {
+				margin-left: -1px;
+			}
+
+			&:first-child:not(:last-child) {
+				border-bottom-right-radius: 0;
+				border-top-right-radius: 0;
+			}
+
+			&:not(:first-child):not(:last-child) {
+				border-radius: 0;
+			}
+
+			&:last-child:not(:first-child) {
+				border-bottom-left-radius: 0;
+				border-top-left-radius: 0;
+			}
 		}
 	}
 }
