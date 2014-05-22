@@ -24,6 +24,8 @@ if ( 'undefined' == typeof go_content_stats ) {
 	};
 
 	go_content_stats.init = function() {
+		this.graph.init();
+
 		this.blockui_args = {
 			message: '<i class="fa fa-spinner fa-spin"></i>',
 			css: {
@@ -204,17 +206,17 @@ if ( 'undefined' == typeof go_content_stats ) {
 	};
 
 	go_content_stats.build_stats = function( day_stats ) {
+
 		// clear the stats object so we start fresh
 		this.stats = {};
-
 		var stats_to_build = {};
 		var zoom = this.get_zoom();
 
-		var i =0;
 		if ( 'day' === zoom ) {
 			stats_to_build = this.day_stats;
 		}// end if
 		else {
+			var item;
 			for ( var date in this.day_stats ) {
 				if ( ! this.day_stats[ date ] ) {
 					// if there are still gaps, don't bother continuing...
@@ -222,14 +224,14 @@ if ( 'undefined' == typeof go_content_stats ) {
 				}// end if
 
 				if ( 'week' == zoom ) {
-					var item = 'Week ' + moment( date, 'YYYY-MM-DD' ).format( 'W, GGGG' );
+					item = 'Week ' + moment( date, 'YYYY-MM-DD' ).format( 'W, GGGG' );
 				}//end if
 				else if ( 'month' == zoom ) {
-					var item = moment( date, 'YYYY-MM-DD' ).format( 'MMMM YY' );
-				}//end if
+					item = moment( date, 'YYYY-MM-DD' ).format( 'MMMM YY' );
+				}//end else if
 				else if ( 'quarter' == zoom ) {
-					var item = moment( date, 'YYYY-MM-DD' ).fquarter( 1 ).toString();
-				}//end if
+					item = moment( date, 'YYYY-MM-DD' ).fquarter( 1 ).toString();
+				}//end else if
 
 				if ( 'undefined' == typeof stats_to_build[ item ] || ! stats_to_build[ item ] ) {
 					stats_to_build[ item ] = {
@@ -255,14 +257,15 @@ if ( 'undefined' == typeof go_content_stats ) {
 		} // end else
 
 		// this.stats should be numerically indexed, so lets coerce it into that
-		for ( var item in stats_to_build ) {
-			if ( ! stats_to_build[ item ] ) {
+		var i = 0;
+		for ( var key in stats_to_build ) {
+			if ( ! stats_to_build[ key ] ) {
 				// gaps, not ready...
 				return;
 			}// end if
 
-			this.stats[ i ] = stats_to_build[ item ];
-			this.stats[ i ].item = item;
+			this.stats[ i ] = stats_to_build[ key ];
+			this.stats[ i ].item = key;
 			i++;
 		}// end for
 	};
@@ -577,6 +580,8 @@ if ( 'undefined' == typeof go_content_stats ) {
 		} else {
 			$summary.find( '.pvs-per-post' ).html( 0 );
 		}//end else
+
+		this.graph.render_top_graph();
 	};
 
 	/**
@@ -831,7 +836,3 @@ if ( 'undefined' == typeof go_content_stats ) {
 		return 'go-content-stats-' + context_key + '-' + index;
 	};
 } )( jQuery );
-
-jQuery( function( $ ) {
-	go_content_stats.init();
-} );
