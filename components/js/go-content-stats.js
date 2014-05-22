@@ -60,6 +60,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 
 		this.period = this.get_period();
 		this.context = this.get_context();
+		this.zoom = this.get_zoom();
 
 		// this registers a handlebars helper so we can output formatted numbers
 		// rounded to 1 decimal
@@ -163,11 +164,11 @@ if ( 'undefined' == typeof go_content_stats ) {
 	};
 
 	go_content_stats.load_stats = function() {
-		var days = this.get_range();
 		var day;
 
-		// clear the stats object so we start fresh
-		this.stats = {};
+		// clear the day stats object so we start fresh
+		this.day_stats = {};
+
 		this.summary = {
 			'days': 0,
 			'posts': 0,
@@ -176,19 +177,47 @@ if ( 'undefined' == typeof go_content_stats ) {
 		};
 
 		var context = this.get_context();
+		var days = this.get_range();
+
 		for ( var i in days ) {
 			day = this.store.get( days[ i ], context );
 
-			this.stats[ days[ i ] ] = day;
+			this.day_stats[ days[ i ] ] = day;
+		}//end for
 
-			if ( null === day ) {
-				continue;
-			}//end if
+		this.build_stats();
 
+		this.build_summary();
+	};
+
+	go_content_stats.build_stats = function( day_stats ) {
+		// clear the stats object so we start fresh
+		this.stats = {};
+
+		if ( 'day' === this.get_zoom() ) {
+			var k = 0;
+			for ( var i in this.day_stats ) {
+				this.stats[ k ] = this.day_stats[ i ];
+				k++;
+			}// end for
+		}// end if
+		else if ( 'week' == this.get_zoom() ) {
+
+		}// end else if
+		else if ( 'month' == this.get_zoom() ) {
+
+		}// end else if
+		else if ( 'quarter' == this.get_zoom() ) {
+
+		}// end else if
+	};
+
+	go_content_stats.build_summary = function() {
+		for ( var i in this.stats ) {
 			this.summary.days++;
-			this.summary.posts += day.posts;
-			this.summary.pvs += day.pvs;
-			this.summary.comments += day.comments;
+			this.summary.posts += this.stats[ i ].posts;
+			this.summary.pvs += this.stats[ i ].pvs;
+			this.summary.comments += this.stats[ i ].comments;
 		}//end for
 	};
 
@@ -210,7 +239,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 		var day;
 
 		for ( var i in days ) {
-			day = this.stats[ days[ i ] ];
+			day = this.day_stats[ days[ i ] ];
 
 			if ( null === day ) {
 				this.gaps.general[ i ] = days[ i ];
@@ -360,6 +389,13 @@ if ( 'undefined' == typeof go_content_stats ) {
 	};
 
 	/**
+	 * gets the current selected context
+	 */
+	go_content_stats.get_zoom = function () {
+		return 'day';
+	};
+
+	/**
 	 * fetches stats from the endpoint
 	 *
 	 * @param string which stats to retrieve from the endpoint (general|pvs|taxonomies)
@@ -431,6 +467,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 		var pvs = 0;
 
 		// populate the pvs columns in the stat rows
+		// @TODO: handle zoom levels for pv stats, will need to summarize these by zoom level
 		for ( var i in this.stats ) {
 			if ( null === this.stats[ i ].pvs ) {
 				continue;

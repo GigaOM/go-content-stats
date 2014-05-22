@@ -39,7 +39,7 @@ if ( ! $start || ! $end )
 		<div id="date-range" class="pull-right">
 			<i class="fa fa-calendar fa-lg"></i>
 			<span><?php echo date( 'F j, Y', strtotime( $start ) ); ?> - <?php echo date( 'F j, Y', strtotime( $end ) ); ?></span>
-			<b class="fa fa-angle-down"></b>
+			<i class="fa fa-angle-down"></i>
 			<input type="hidden" id="<?php echo $this->get_field_id( 'start' ); ?>" name="<?php echo $this->get_field_name( 'start' ); ?>" value="<?php echo esc_attr( $start ); ?>"/>
 			<input type="hidden" id="<?php echo $this->get_field_id( 'end' ); ?>" name="<?php echo $this->get_field_name( 'end' ); ?>" value="<?php echo esc_attr( $end ); ?>"/>
 		</div>
