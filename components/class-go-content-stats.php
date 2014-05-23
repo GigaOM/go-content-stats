@@ -734,6 +734,7 @@ class GO_Content_Stats
 
 		return array(
 			'posts' => $post_data,
+			'key' => $key,
 		);
 	}//end fetch_posts
 

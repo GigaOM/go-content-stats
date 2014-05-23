@@ -184,7 +184,13 @@ if ( ! $start || ! $end )
 			{{#each stats}}
 			<tr id="row-{{@key}}" class="stat-row" data-num-posts="{{posts}}">
 				<td class="item">{{item}}</td>
-				<td class="posts"><a href="#">{{number_format posts}} <i class="fa fa-angle-down"></i></a></td>
+				<td class="posts">
+					{{#if ../link_posts}}
+						<a href="#">{{number_format posts}} <i class="fa fa-angle-down"></i></a>
+					{{else}}
+						{{number_format posts}}
+					{{/if}}
+				</td>
 				<td class="pvs">{{number_format pvs}}</td>
 				<td class="pvs-per-post">{{decimal_format pvs_per_post}}</td>
 				<td class="comments">{{number_format comments}}</td>

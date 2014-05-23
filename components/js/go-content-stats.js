@@ -163,9 +163,6 @@ if ( 'undefined' == typeof go_content_stats ) {
 		this.$zoom_levels.find( '[data-zoom-level="' + zoom_level + '"]' ).addClass( 'active' );
 
 		this.push_state();
-		var start = moment( this.$start.val() );
-		var end = moment( this.$end.val() );
-		var diff = end.diff( start, 'months' );
 	};
 
 	/**
@@ -562,9 +559,12 @@ if ( 'undefined' == typeof go_content_stats ) {
 
 	go_content_stats.fetch_posts = function ( $row ) {
 		// @TODO: this will need to change when we are doing more than a single day per row
-		var post_date = $row.attr( 'id' ).replace( 'row-', '' );
+		var key = $row.attr( 'id' ).replace( 'row-', '' );
+
+		var post_date = this.stats[ key ].day;
 		var args = {
-			days: [ post_date ]
+			days: [ post_date ],
+			key: key
 		};
 
 		var posts_promise = this.fetch_stats( 'posts', args );
@@ -577,39 +577,18 @@ if ( 'undefined' == typeof go_content_stats ) {
 	/**
 	 * renders the general stats via a Handlebars template
 	 */
-	go_content_stats.render_general_stats = function () {
+	go_content_stats.render_stats = function () {
 		this.load_stats();
 
 		// z: using handlebars: http://handlebarsjs.com/
 		var source = $( '#stat-row-template' ).html();
 		var template = Handlebars.compile( source );
+		var link_posts = ( 'day' === this.get_zoom() );
 
 		var template_data = {
 			stats: this.stats,
-			summary: this.summary
-		};
-
-		$( '#stat-data' ).html( template( template_data ) );
-
-		this.render_summary();
-	};
-
-	/**
-	 * render the pv stats on the stats that have already been populated via
-	 * the this.render_general_stats function
-	 */
-	go_content_stats.render_pvs_stats = function () {
-		this.load_stats();
-
-		//@TODO: can we replace this with a call to render_general_stats??!?!
-
-		// z: using handlebars: http://handlebarsjs.com/
-		var source = $( '#stat-row-template' ).html();
-		var template = Handlebars.compile( source );
-
-		var template_data = {
-			stats: this.stats,
-			summary: this.summary
+			summary: this.summary,
+			link_posts: link_posts
 		};
 
 		$( '#stat-data' ).html( template( template_data ) );
@@ -642,10 +621,11 @@ if ( 'undefined' == typeof go_content_stats ) {
 	 * renders the post data via a Handlebars template
 	 */
 	go_content_stats.render_posts = function ( data ) {
+		console.info('render posts');
 		var source = $( '#post-row-template' ).html();
 		var template = Handlebars.compile( source );
 
-		var $row = $( '#row-' + data.period.start );
+		var $row = $( '#row-' + data.key );
 		$row.find( '.posts i' ).attr( 'class', '' ).addClass( 'fa fa-angle-up' );
 		$next = $row.next();
 		$next.find( 'td' ).html( template( data ) );
@@ -705,7 +685,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 			return;
 		}//end if
 
-		this[ 'render_' + data.which + '_stats' ]();
+		this.render_stats();
 	};
 
 	go_content_stats.changed_dates = function() {

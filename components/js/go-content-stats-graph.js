@@ -32,8 +32,7 @@
 			comments_per_post: 'Comments per post',
 			pvs_per_post: 'Page view per post (in thousands)'
 		};
-console.info( 'graph these:' );
-console.log( go_content_stats.stats );
+
 		for ( var i in go_content_stats.stats ) {
 			var item = go_content_stats.stats[ i ];
 
