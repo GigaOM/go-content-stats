@@ -272,16 +272,16 @@ if ( 'undefined' == typeof go_content_stats ) {
 				else if ( 'quarter' == zoom ) {
 					item = moment( date, 'YYYY-MM-DD' ).fquarter( 1 ).toString();
 					if ( 0 === item.lastIndexOf( 'Q1', 0 ) ) {
-						xaxis = moment( date, 'YYY-MM-DD' ).format( 'YYYY-01-01' );
+						xaxis = moment( date, 'YYYY-MM-DD' ).format( 'YYYY-01-01' );
 					}// end if
 					else if( 0 === item.lastIndexOf( 'Q2', 0 ) ) {
-						xaxis = moment( date, 'YYY-MM-DD' ).format( 'YYYY-04-01' );
+						xaxis = moment( date, 'YYYY-MM-DD' ).format( 'YYYY-04-01' );
 					}//end else if
 					else if( 0 === item.lastIndexOf( 'Q3', 0 ) ) {
-						xaxis = moment( date, 'YYY-MM-DD' ).format( 'YYYY-07-01' );
+						xaxis = moment( date, 'YYYY-MM-DD' ).format( 'YYYY-07-01' );
 					}//end else if
 					else if( 0 === item.lastIndexOf( 'Q4', 0 ) ) {
-						xaxis = moment( date, 'YYY-MM-DD' ).format( 'YYYY-10-01' );
+						xaxis = moment( date, 'YYYY-MM-DD' ).format( 'YYYY-10-01' );
 					}//end else if
 				}//end else if
 
