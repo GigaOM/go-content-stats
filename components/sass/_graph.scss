@@ -6,9 +6,45 @@ $graph-color-5: #ffd393;
 
 #top-graph {
 	background: #fff;
-	height: 100%;
+	height: 200px;
+	position: relative;
 	width: 100%;
 
+	#chart {
+		bottom: 20px;
+		top: 20px;
+		position: relative;
+		margin-left: 40px;
+		margin-right: 40px;
+
+		.x_tick {
+			.title {
+				right: 5px;
+			}
+		}
+
+		.detail {
+			.x_label {
+				display: none;
+			}
+		}
+	}
+
+	#y-axis-left,
+	#y-axis-right {
+		padding-bottom: 20px;
+		padding-top: 20px;
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		width: 40px;
+	}
+
+	#y-axis-right {
+		right: 0;
+	}
+
+	/*
 	.axis path,
 	.axis line {
 		fill: none;
@@ -44,4 +80,5 @@ $graph-color-5: #ffd393;
 	.line-5 {
 		stroke: $graph-color-5;
 	}
+	*/
 }

@@ -1,118 +1,158 @@
 ( function ( $ ) {
 	go_content_stats.graph = {};
+	go_content_stats.graph.event = {};
 
 	/**
 	 * initialize the graphs for stats
 	 */
 	go_content_stats.graph.init = function() {
 		this.$top_graph = $( '#top-graph' );
-		console.log( this );
+		this.$chart = this.$top_graph.find( '#chart' );
+		this.$pv_axis = this.$top_graph.find( '#y-axis-left' );
+		this.$comment_axis = this.$top_graph.find( '#y-axis-right' );
+		this.top_graph = null;
+		this.resize_event_bound = false;
+
+		$( window ).on( 'resize', this.event.resize );
 	};
 
-	go_content_stats.graph.render_top_graph = function() {
-		this.$top_graph.html( '' );
-
-		var graph_data = [];
-
+	go_content_stats.graph.top_data = function() {
+		var data = {
+			comments_per_post: [],
+			pvs_per_post: []
+		};
 		var parse_date = d3.time.format( '%Y-%m-%d' ).parse;
+
+		var labels = {
+			when: 'When',
+			comments_per_post: 'Comments per post',
+			pvs_per_post: 'Page view per post (in thousands)'
+		};
 
 		for ( var i in go_content_stats.stats ) {
 			var item = go_content_stats.stats[ i ];
 
-			item.xaxis = parse_date( item.xaxis );
+			item.xaxis = parseInt( moment( item.xaxis ).format( 'X' ), 10 );
+			item.comments_per_post = item.comments_per_post ? item.comments_per_post : 0;
+			item.pvs_per_post = item.posts && item.pvs ? ( item.pvs / item.posts ) : 0;
 
-			graph_data.push( item );
+			data.comments_per_post.push( {
+				x: item.xaxis,
+				y: item.comments_per_post
+			} );
+
+			data.pvs_per_post.push( {
+				x: item.xaxis,
+				y: item.pvs_per_post
+			} );
 		}//end for
 
-		var margin = 40;
-		var height = 300 - margin;
-		var width = parseInt( this.$top_graph.width(), 10 ) - margin * 2;
+		return data;
+	};
 
-		var x_scale = d3.time.scale()
-			.range( [ 0, width ] )
-			.nice( d3.time.year )
-			.domain(
-				d3.extent( graph_data, function( d ) {
-					return d.xaxis;
-				} )
-			);
+	go_content_stats.graph.render_top_graph = function() {
+		this.$chart.html( '' );
+		this.$pv_axis.html( '' );
+		this.$comment_axis.html( '' );
 
-		var y_scale_left = d3.scale.linear()
-			.range( [ height, 0 ] )
+		var height = 160;
+		var width = this.$chart.width();
+
+		var data = this.top_data();
+
+		var pvs_scale = d3.scale.linear()
+			.range( [ 0, 1000 ] )
 			.domain( [
 				0,
-				d3.max( graph_data, function( d ) { return d.posts && d.pvs ? d.pvs / d.posts : 0; } )
+				d3.max( data.pvs_per_post, function( d ) { return d.y; } )
 			] );
 
-		var y_scale_right = d3.scale.linear()
-			.range( [ height, 0 ] )
+		var comments_scale = d3.scale.linear()
+			.range( [ 0, 1 ] )
 			.domain( [
 				0,
-				d3.max( graph_data, function( d ) { return d.comments_per_post ? d.comments_per_post : 0; } )
+				d3.max( data.comments_per_post, function( d ) { return d.y; } )
 			] );
 
-		console.dir( graph_data );
+		var palette = new Rickshaw.Color.Palette( { scheme: 'spectrum14' } );
 
-		var pvs_line = d3.svg.line()
-			.x( function( d ) {
-				return x_scale( d.xaxis );
-			} )
-			.y( function( d ) {
-				console.log( 'plotting y value for pvs data point: ' + d.xaxis + ' to be at our y_scale_left: ' + y_scale_left( d.posts && d.pvs ? d.pvs / d.posts : 0 ) );
-				return y_scale_left( d.posts && d.pvs ? d.pvs / d.posts : 0 );
-			} );
+		this.top_graph = new Rickshaw.Graph( {
+			element: this.$chart.get( 0 ),
+			width: width,
+			height: height,
+			renderer: 'line',
+			series: [
+				{
+					color: palette.color(),
+					data: data.pvs_per_post,
+					name: 'Page views per post (in thousands)',
+					scale: pvs_scale
+				},
+				{
+					color: palette.color(),
+					data: data.comments_per_post,
+					name: 'Comments per post',
+					scale: comments_scale
+				}
+			]
+		} );
 
-		var comments_line = d3.svg.line()
-			.x( function( d ) {
-				return x_scale( d.xaxis );
-			} )
-			.y( function( d ) {
-				console.log( 'plotting y value for comments data point: ' + d.xaxis + ' to be at our y_scale_right: ' + y_scale_right( d.comments_per_post ? d.comments_per_post : 0 ) );
-				return y_scale_right( d.comments_per_post ? d.comments_per_post : 0 );
-			} );
+		this.top_graph.render();
 
-		var graph = d3.select( '#top-graph' ).append( 'svg' )
-			.attr( 'width', width + margin * 2 )
-			.attr( 'height', height + margin * 2 )
-			.append( 'g' )
-				.attr( 'transform', 'translate(' + margin + ', ' + margin + ')' );
+		var pvs_axis = new Rickshaw.Graph.Axis.Y.Scaled( {
+			graph: this.top_graph,
+			orientation: 'left',
+			element: this.$pv_axis.get( 0 ),
+			scale: pvs_scale,
+			ticks: 6
+		} );
 
-		var x_axis = d3.svg.axis().scale( x_scale );//.orient( 'bottom' );
-		var y_axis_left = d3.svg.axis().scale( y_scale_left ).ticks( 10 ).orient( 'left' );
-		var y_axis_right = d3.svg.axis().scale( y_scale_right ).ticks( 6 ).orient( 'right' );
+		pvs_axis.render();
 
-		graph.append( 'g' )
-			.attr( 'class', 'x axis' )
-			.attr( 'transform', 'translate( 0, ' + height + ' )' )
-			.call( x_axis );
+		var comments_axis = new Rickshaw.Graph.Axis.Y.Scaled( {
+			graph: this.top_graph,
+			orientation: 'right',
+			element: this.$comment_axis.get( 0 ),
+			scale: comments_scale,
+			ticks: 6
+		} );
 
-		graph.append( 'svg:g' )
-			.attr( 'class', 'y axis axis-left' )
-			.call( y_axis_left )
-			.append( 'text' )
-				.attr( 'transform', 'rotate( -90 )' )
-				.attr( 'y', 6 )
-				.attr( 'dy', '.71em' )
-				.style( 'text-anchor', 'end' )
-				.text( 'page views per post' );
+		comments_axis.render();
 
-		graph.append( 'svg:g' )
-			.attr( 'class', 'y axis axis-right' )
-			.attr( 'transform', 'translate( ' + width + ', 0 )' )
-			.call( y_axis_right )
-			.append( 'text' )
-				.attr( 'transform', 'rotate( -90 )' )
-				.attr( 'y', 6 )
-				.attr( 'dy', '-.71em' )
-				.style( 'text-anchor', 'end' )
-				.text( 'comments per post' );
+		var x_axis = new Rickshaw.Graph.Axis.Time( {
+			graph: this.top_graph
+		} );
 
-		graph.append( 'svg:path' )
-			.attr( 'class', 'line line-1 pvs-line' )
-			.attr( 'd', pvs_line( graph_data ) );
+		x_axis.render();
 
-		graph.append( 'svg:path' )
-			.attr( 'class', 'line line-2 comments-line' )
-			.attr( 'd', comments_line( graph_data ) );
+		var hover_detail = new Rickshaw.Graph.HoverDetail( {
+			graph: this.top_graph,
+			formatter: function( series, x, y ) {
+				var date = '<span class="date">' + moment.unix( x ).format( 'MMMM D, YYYY' ) + '</span>';
+				var swatch = '<span class="detail-swatch" style="background-color: ' + series.color + '"></span>';
+				var content = '<div class="info">' + swatch + series.name + ": " + parseInt( y, 10 ) + '</div>' + date;
+				return content;
+			}
+		} );
+
+		if ( ! this.resize_event_bound ) {
+			this.resize_event_bound = true;
+		}//end if
+	};
+
+	go_content_stats.graph.resize = function() {
+		var width = this.$chart.width();
+		var height = this.$chart.height();
+
+		this.top_graph.configure( {
+			width: width,
+			height: height
+		} );
+
+		this.top_graph.render();
+	};
+
+	go_content_stats.graph.event.resize = function( e ) {
+		go_content_stats.graph.resize();
 	};
 } )( jQuery );
