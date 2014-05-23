@@ -4,6 +4,34 @@ $graph-color-3: #ff974f;
 $graph-color-4: #9c9b7a;
 $graph-color-5: #ffd393;
 
+#legend {
+	background: #fff;
+	border-radius: 0;
+	display: block;
+	overflow: hidden;
+	padding: .5rem;
+	width: auto;
+
+	ul {
+		margin: 0;
+	}
+
+	.label {
+		color: #333;
+	}
+
+	.line {
+		clear: none;
+		display: inline-block;
+		float: left;
+		margin: 0;
+
+		&:last-child {
+			float: right;
+		}
+	}
+}
+
 #top-graph {
 	background: #fff;
 	height: 200px;
@@ -16,6 +44,14 @@ $graph-color-5: #ffd393;
 		position: relative;
 		margin-left: 40px;
 		margin-right: 40px;
+
+		.y_grid {
+			.tick {
+				&:not(:first-child) {
+					stroke: transparent;
+				}
+			}
+		}
 
 		.x_tick {
 			.title {
