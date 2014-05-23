@@ -113,6 +113,9 @@ if ( ! $start || ! $end )
 		</script>
 
 		<div id="top-graph">
+			<div id="y-axis-left"></div>
+			<div id="chart"></div>
+			<div id="y-axis-right"></div>
 		</div>
 
 		<div id="stat-data">

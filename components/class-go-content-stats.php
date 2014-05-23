@@ -112,6 +112,13 @@ class GO_Content_Stats
 		);
 
 		wp_register_style(
+			'rickshaw',
+			plugins_url( 'js/external/rickshaw/rickshaw.min.css', __FILE__ ),
+			array(),
+			$script_config['version']
+		);
+
+		wp_register_style(
 			'bootstrap-daterangepicker',
 			plugins_url( 'js/external/bootstrap-daterangepicker/daterangepicker-bs3.css', __FILE__ ),
 			array(),
@@ -121,7 +128,11 @@ class GO_Content_Stats
 		wp_enqueue_style(
 			'go-content-stats',
 			plugins_url( 'css/go-content-stats.css', __FILE__ ),
-			array( 'fontawesome', 'bootstrap-daterangepicker' ),
+			array(
+				'bootstrap-daterangepicker',
+				'fontawesome',
+				'rickshaw',
+			),
 			$script_config['version']
 		);
 
@@ -133,6 +144,14 @@ class GO_Content_Stats
 			'd3',
 			plugins_url( 'js/external/d3.min.js', __FILE__ ),
 			array(),
+			$script_config['version'],
+			TRUE
+		);
+
+		wp_register_script(
+			'rickshaw',
+			plugins_url( 'js/external/rickshaw/rickshaw.min.js', __FILE__ ),
+			array( 'd3' ),
 			$script_config['version'],
 			TRUE
 		);
@@ -186,7 +205,7 @@ class GO_Content_Stats
 			plugins_url( 'js/go-content-stats.js', __FILE__ ),
 			array(
 				'bootstrap-daterangepicker',
-				'd3',
+				'rickshaw',
 				'handlebars',
 				'jquery-blockui',
 			),
@@ -541,7 +560,6 @@ class GO_Content_Stats
 			'taxonomies',
 			'posts',
 		);
-do_action( 'debug_robot', 'ZZZ: ' . print_r( $_GET, true ) );
 
 		if ( ! in_array( $which, $valid_which ) )
 		{
