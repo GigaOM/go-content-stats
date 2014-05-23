@@ -6,14 +6,18 @@
 	 * initialize the graphs for stats
 	 */
 	go_content_stats.graph.init = function() {
+		this.$legend = $( '#legend' );
 		this.$top_graph = $( '#top-graph' );
 		this.$chart = this.$top_graph.find( '#chart' );
 		this.$pv_axis = this.$top_graph.find( '#y-axis-left' );
 		this.$comment_axis = this.$top_graph.find( '#y-axis-right' );
+		this.$x_axis = this.$top_graph.find( '#x-axis' );
 		this.top_graph = null;
-		this.resize_event_bound = false;
 
 		$( window ).on( 'resize', this.event.resize );
+		$( this.$chart ).on( 'mouseover', '.detail', function( e ) {
+			console.log( e );
+		} );
 	};
 
 	go_content_stats.graph.top_data = function() {
@@ -34,7 +38,7 @@
 
 			item.xaxis = parseInt( moment( item.xaxis ).format( 'X' ), 10 );
 			item.comments_per_post = item.comments_per_post ? item.comments_per_post : 0;
-			item.pvs_per_post = item.posts && item.pvs ? ( item.pvs / item.posts ) : 0;
+			item.pvs_per_post = item.posts && item.pvs ? ( item.pvs / item.posts ) / 1000: 0;
 
 			data.comments_per_post.push( {
 				x: item.xaxis,
@@ -51,6 +55,7 @@
 	};
 
 	go_content_stats.graph.render_top_graph = function() {
+		this.$legend.html( '' );
 		this.$chart.html( '' );
 		this.$pv_axis.html( '' );
 		this.$comment_axis.html( '' );
@@ -61,7 +66,7 @@
 		var data = this.top_data();
 
 		var pvs_scale = d3.scale.linear()
-			.range( [ 0, 1000 ] )
+			.range( [ 0, 1 ] )
 			.domain( [
 				0,
 				d3.max( data.pvs_per_post, function( d ) { return d.y; } )
@@ -81,18 +86,22 @@
 			width: width,
 			height: height,
 			renderer: 'line',
+			padding: {
+				bottom: 0.05,
+				top: 0.05
+			},
 			series: [
 				{
-					color: palette.color(),
-					data: data.pvs_per_post,
-					name: 'Page views per post (in thousands)',
-					scale: pvs_scale
-				},
-				{
-					color: palette.color(),
+					color: palette.color( 7 ),
 					data: data.comments_per_post,
 					name: 'Comments per post',
 					scale: comments_scale
+				},
+				{
+					color: palette.color( 1 ),
+					data: data.pvs_per_post,
+					name: 'Page views per post (in thousands)',
+					scale: pvs_scale
 				}
 			]
 		} );
@@ -120,10 +129,16 @@
 		comments_axis.render();
 
 		var x_axis = new Rickshaw.Graph.Axis.Time( {
-			graph: this.top_graph
+			graph: this.top_graph,
+			element: this.$x_axis.get( 0 )
 		} );
 
 		x_axis.render();
+
+		var legend = new Rickshaw.Graph.Legend( {
+			graph: this.top_graph,
+			element: this.$legend.get( 0 )
+		} );
 
 		var hover_detail = new Rickshaw.Graph.HoverDetail( {
 			graph: this.top_graph,
@@ -134,10 +149,6 @@
 				return content;
 			}
 		} );
-
-		if ( ! this.resize_event_bound ) {
-			this.resize_event_bound = true;
-		}//end if
 	};
 
 	go_content_stats.graph.resize = function() {

@@ -24,7 +24,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 	};
 
 	go_content_stats.init = function() {
-		//this.graph.init();
+		this.graph.init();
 
 		this.blockui_args = {
 			message: '<i class="fa fa-spinner fa-spin"></i>',
@@ -635,7 +635,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 			$summary.find( '.pvs-per-post' ).html( this.decimal_format( this.summary.pvs / this.summary.posts ) );
 		}
 
-		//this.graph.render_top_graph();
+		this.graph.render_top_graph();
 	};
 
 	/**
