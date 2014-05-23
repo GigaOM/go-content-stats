@@ -68,6 +68,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 
 		// load stats for the current page
 		this.prep_stats();
+		this.fetch_taxonomies();
 
 		$( document ).on( 'click', '#go-content-stats-clear-cache', this.event.clear_cache );
 		$( document ).on( 'click', '#criteria a', this.event.select_criteria );
@@ -392,10 +393,10 @@ if ( 'undefined' == typeof go_content_stats ) {
 
 		this.fetch_in_chunks( 'general', this.gaps.general.slice( 0 ) );
 		this.fetch_in_chunks( 'pvs', this.gaps.pvs.slice( 0 ) );
+	};
 
-		var taxonomies_promise = this.fetch_stats( 'taxonomies', {
-			days: this.get_range()
-		} );
+	go_content_stats.fetch_taxonomies = function() {
+		var taxonomies_promise = this.fetch_stats( 'taxonomies' );
 
 		// when the taxonomy data has come back, render it
 		taxonomies_promise.done( $.proxy( function( response ) {

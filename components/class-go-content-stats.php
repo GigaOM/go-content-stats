@@ -568,7 +568,7 @@ class GO_Content_Stats
 
 		$this->days = isset( $_GET['days'] ) ? $_GET['days'] : array();
 
-		if ( ! is_array( $this->days ) || empty( $this->days ) )
+		if ( 'taxonomies' != $which && ( ! is_array( $this->days ) || empty( $this->days ) ) )
 		{
 			wp_send_json_error( 'Nice try. Days are invalid.' . print_r( $_GET, true ) );
 		}//end if
