@@ -158,7 +158,7 @@ class GO_Content_Stats
 
 		wp_register_script(
 			'handlebars',
-			plugins_url( 'js/external/handlebars.js', __FILE__ ),
+			plugins_url( 'js/external/handlebars.min.js', __FILE__ ),
 			array( 'jquery' ),
 			$script_config['version'],
 			TRUE
@@ -184,7 +184,7 @@ class GO_Content_Stats
 		// from https://github.com/dangrossman/bootstrap-daterangepicker
 		wp_register_script(
 			'bootstrap-daterangepicker',
-			plugins_url( 'js/external/bootstrap-daterangepicker/daterangepicker.js', __FILE__ ),
+			plugins_url( 'js/external/bootstrap-daterangepicker/daterangepicker.min.js', __FILE__ ),
 			array( 'jquery', 'moment-fquarter' ),
 			$script_config['version'],
 			TRUE
