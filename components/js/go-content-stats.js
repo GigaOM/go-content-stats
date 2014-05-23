@@ -24,7 +24,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 	};
 
 	go_content_stats.init = function() {
-		this.graph.init();
+		//this.graph.init();
 
 		this.blockui_args = {
 			message: '<i class="fa fa-spinner fa-spin"></i>',
@@ -120,10 +120,52 @@ if ( 'undefined' == typeof go_content_stats ) {
 			return;
 		}//end if
 
+		if ( 'month' == zoom_level ) {
+			var start = moment( this.$start.val() );
+			var end = moment( this.$end.val() );
+			var diff = end.diff( start, 'months' );
+			var min_months = 4;
+
+			if ( diff < min_months ) {
+				start.subtract( 'months', min_months - diff - 1 ).date( 1 );
+
+				this.$date_range.data( 'daterangepicker' ).setStartDate( start );
+				this.$date_range.data( 'daterangepicker' ).setEndDate( end );
+				this.changed_dates();
+			}// end if
+		}// end if
+		else if ( 'quarter' == zoom_level ) {
+			var min_quarters = 4;
+			var start = moment( this.$start.val() );
+			var end = moment( this.$end.val() );
+			var month_diff = end.diff( start, 'months' );
+			var quarter_diff = month_diff / 3;
+
+			if ( quarter_diff < min_quarters ) {
+				var months_to_adjust = ( min_quarters - quarter_diff - 1 ) * 3;
+				start.subtract( 'months', months_to_adjust );
+				// adjust start date to the beginning of the quarter
+				var new_start_month = ( start.quarter() - 1 ) * 3;
+				start = start.date( 1 ).month( new_start_month ).format( 'MM/DD/YYYY' );
+
+				// push the end date to the start of the next quarter, then remove 1 ms
+				// this will ensure that it is at the last moment of the selected quarter
+				var new_end_month = end.quarter() * 3;
+				end = end.month( new_end_month ).startOf( 'month' ).subtract( 1, 'ms' ).format( 'MM/DD/YYYY' );
+
+				this.$date_range.data( 'daterangepicker' ).setStartDate( start );
+				this.$date_range.data( 'daterangepicker' ).setEndDate( end );
+				this.changed_dates();
+			}// end if
+		}
+
 		this.$zoom_levels.find( 'button' ).removeClass( 'active' );
 		this.$zoom_levels.find( '[data-zoom-level="' + zoom_level + '"]' ).addClass( 'active' );
 
 		this.push_state();
+		var start = moment( this.$start.val() );
+		var end = moment( this.$end.val() );
+		var diff = end.diff( start, 'months' );
 	};
 
 	/**
@@ -593,7 +635,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 			$summary.find( '.pvs-per-post' ).html( this.decimal_format( this.summary.pvs / this.summary.posts ) );
 		}
 
-		this.graph.render_top_graph();
+		//this.graph.render_top_graph();
 	};
 
 	/**
