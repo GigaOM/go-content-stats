@@ -53,14 +53,9 @@ if ( 'undefined' == typeof go_content_stats ) {
 				'This month': [ moment().startOf( 'month' ), moment().endOf( 'month' ) ],
 				'Last month': [ moment().subtract( 'month', 1 ).startOf( 'month' ), moment().subtract( 'month', 1 ).endOf( 'month' ) ]
 			}
-		},
-		function( start, end ) {
-			console.info( 'change' );
-			go_content_stats.$date_range.find( 'span' ).html( start.format( 'MMMM D, YYYY' ) + ' - ' + end.format( 'MMMM D, YYYY' ) );
-			go_content_stats.$start.val( start.format( 'YYYY-MM-DD' ) );
-			go_content_stats.$end.val( end.format( 'YYYY-MM-DD' ) );
-			go_content_stats.push_state();
 		} );
+
+		this.$date_range.on( 'apply.daterangepicker', this.event.changed_dates );
 
 		this.period = this.get_period();
 		this.context = this.get_context();
@@ -563,34 +558,9 @@ if ( 'undefined' == typeof go_content_stats ) {
 	 */
 	go_content_stats.render_pvs_stats = function () {
 		this.load_stats();
-console.info( 'render pvs' );
-/*
-		var num_posts = 0;
-		var pvs = 0;
 
-		// populate the pvs columns in the stat rows
-		// @TODO: handle zoom levels for pv stats, will need to summarize these by zoom level
-		for ( var i in this.stats ) {
-			if ( null === this.stats[ i ].pvs ) {
-				continue;
-			}//end if
+		//@TODO: can we replace this with a call to render_general_stats??!?!
 
-			var $row = $( '#row-' + i );
-
-			num_posts = parseInt( $row.data( 'num-posts' ), 10 );
-			pvs = parseInt( this.stats[ i ].pvs, 10 );
-
-			this.summary.pvs += pvs;
-
-			$row.find( '.pvs' ).html( this.number_format( pvs ) );
-			$row.find( '.pvs' ).data( 'num-pvs', pvs );
-			$row.find( '.pvs-per-post' ).html( this.decimal_format( pvs / num_posts ) );
-		}//end for
-
-		this.render_summary();
-		*/
-
-console.log( this.stats );
 		// z: using handlebars: http://handlebarsjs.com/
 		var source = $( '#stat-row-template' ).html();
 		var template = Handlebars.compile( source );
@@ -696,6 +666,16 @@ console.log( this.stats );
 		this[ 'render_' + data.which + '_stats' ]();
 	};
 
+	go_content_stats.changed_dates = function() {
+		console.info( 'changed dates!' );
+		var datepicker = this.$date_range.data( 'daterangepicker' );
+
+		this.$date_range.find( 'span' ).html( datepicker.startDate.format( 'MMMM D, YYYY' ) + ' - ' + datepicker.endDate.format( 'MMMM D, YYYY' ) );
+		this.$start.val( datepicker.startDate.format( 'YYYY-MM-DD' ) );
+		this.$end.val( datepicker.endDate.format( 'YYYY-MM-DD' ) );
+		this.push_state();
+	};
+
 	go_content_stats.event.mind_the_gap = function( e, data ) {
 		go_content_stats.mind_the_gap( data );
 	};
@@ -778,6 +758,14 @@ console.log( this.stats );
 	 */
 	go_content_stats.event.select_zoom = function( e ) {
 		go_content_stats.select_zoom( $( this ).data( 'zoom-level' ) );
+	};
+
+	/**
+	 * event picker changed
+	 */
+	go_content_stats.event.changed_dates = function() {
+		console.info( 'event' );
+		go_content_stats.changed_dates();
 	};
 
 	/**
