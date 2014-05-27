@@ -1,0 +1,120 @@
+$graph-color-1: #f54f29;
+$graph-color-2: #405952;
+$graph-color-3: #ff974f;
+$graph-color-4: #9c9b7a;
+$graph-color-5: #ffd393;
+
+#legend {
+	background: #fff;
+	border-radius: 0;
+	display: block;
+	overflow: hidden;
+	padding: .5rem;
+	width: auto;
+
+	ul {
+		margin: 0;
+	}
+
+	.label {
+		color: #333;
+	}
+
+	.line {
+		clear: none;
+		display: inline-block;
+		float: left;
+		margin: 0;
+
+		&:last-child {
+			float: right;
+		}
+	}
+}
+
+#top-graph {
+	background: #fff;
+	height: 200px;
+	position: relative;
+	width: 100%;
+
+	#chart {
+		bottom: 20px;
+		top: 20px;
+		position: relative;
+		margin-left: 40px;
+		margin-right: 40px;
+
+		.y_grid {
+			.tick {
+				&:not(:first-child) {
+					stroke: transparent;
+				}
+			}
+		}
+
+		.x_tick {
+			.title {
+				right: 5px;
+			}
+		}
+
+		.detail {
+			.x_label {
+				display: none;
+			}
+		}
+	}
+
+	#y-axis-left,
+	#y-axis-right {
+		padding-bottom: 20px;
+		padding-top: 20px;
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		width: 40px;
+	}
+
+	#y-axis-right {
+		right: 0;
+	}
+
+	/*
+	.axis path,
+	.axis line {
+		fill: none;
+		stroke: #555;
+		shape-rendering: crispEdges;
+	}
+
+	.axis text {
+		fill: #555;
+	}
+
+	.line {
+		fill: none;
+		stroke-width: 1.5px;
+	}
+
+	.line-1 {
+		stroke: $graph-color-1;
+	}
+
+	.line-2 {
+		stroke: $graph-color-2;
+	}
+
+	.line-3 {
+		stroke: $graph-color-3;
+	}
+
+	.line-4 {
+		stroke: $graph-color-4;
+	}
+
+	.line-5 {
+		stroke: $graph-color-5;
+	}
+	*/
+}
