@@ -1,4 +1,4 @@
-if ( 'undefined' == typeof go_content_stats ) {
+if ( undefined === go_content_stats ) {
 	var go_content_stats = {
 		// endpoint is set from a wp_localize_script. If we get into here, we're in a bad place
 		endpoint: ''
@@ -6,6 +6,8 @@ if ( 'undefined' == typeof go_content_stats ) {
 }//end if
 
 ( function ( $ ) {
+	'use strict';
+
 	// initialize the event object
 	go_content_stats.event = {};
 
@@ -116,14 +118,16 @@ if ( 'undefined' == typeof go_content_stats ) {
 	 */
 	go_content_stats.select_zoom = function( zoom_level ) {
 		var $current = this.$zoom_levels.find( '.active' );
+		var start = null;
+		var end = null;
 
 		if ( zoom_level === $current.data( 'zoom-level' ) ) {
 			return;
 		}//end if
 
-		if ( 'month' == zoom_level ) {
-			var start = moment( this.$start.val() );
-			var end = moment( this.$end.val() );
+		if ( 'month' === zoom_level ) {
+			start = moment( this.$start.val() );
+			end = moment( this.$end.val() );
 			var diff = end.diff( start, 'months' );
 			var min_months = 4;
 
@@ -135,10 +139,10 @@ if ( 'undefined' == typeof go_content_stats ) {
 				this.changed_dates();
 			}// end if
 		}// end if
-		else if ( 'quarter' == zoom_level ) {
+		else if ( 'quarter' === zoom_level ) {
 			var min_quarters = 4;
-			var start = moment( this.$start.val() );
-			var end = moment( this.$end.val() );
+			start = moment( this.$start.val() );
+			end = moment( this.$end.val() );
 			var month_diff = end.diff( start, 'months' );
 			var quarter_diff = month_diff / 3;
 
@@ -230,7 +234,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 		var context = this.get_context();
 		var days = this.get_range();
 
-		for ( var i in days ) {
+		for ( var i = 0; i < days.length; i++ ) {
 			day = this.store.get( days[ i ], context );
 
 			this.day_stats[ days[ i ] ] = day;
@@ -241,7 +245,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 		this.build_summary();
 	};
 
-	go_content_stats.build_stats = function( day_stats ) {
+	go_content_stats.build_stats = function() {
 
 		// clear the stats object so we start fresh
 		this.stats = {};
@@ -254,20 +258,20 @@ if ( 'undefined' == typeof go_content_stats ) {
 		else {
 			var item;
 			for ( var date in this.day_stats ) {
-				if ( ! this.day_stats[ date ] ) {
+				if ( ! this.day_stats.hasOwnProperty( date ) ) {
 					// if there are still gaps, don't bother continuing...
 					return;
 				}// end if
 
-				if ( 'week' == zoom ) {
+				if ( 'week' === zoom ) {
 					item = 'Week ' + moment( date, 'YYYY-MM-DD' ).format( 'W, GGGG' );
 					xaxis = moment( date, 'YYYY-MM-DD' ).day( 0 ).format( 'YYYY-MM-DD' );
 				}//end if
-				else if ( 'month' == zoom ) {
+				else if ( 'month' === zoom ) {
 					item = moment( date, 'YYYY-MM-DD' ).format( 'MMMM YY' );
 					xaxis = moment( date, 'YYYY-MM-DD' ).startOf( 'month' ).format( 'YYYY-MM-DD' );
 				}//end else if
-				else if ( 'quarter' == zoom ) {
+				else if ( 'quarter' === zoom ) {
 					item = moment( date, 'YYYY-MM-DD' ).fquarter( 1 ).toString();
 					if ( 0 === item.lastIndexOf( 'Q1', 0 ) ) {
 						xaxis = moment( date, 'YYYY-MM-DD' ).format( 'YYYY-01-01' );
@@ -283,7 +287,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 					}//end else if
 				}//end else if
 
-				if ( 'undefined' == typeof tmp_stats[ item ] || ! tmp_stats[ item ] ) {
+				if ( undefined === tmp_stats[ item ] || ! tmp_stats[ item ] ) {
 					tmp_stats[ item ] = {
 						xaxis: xaxis,
 						posts: 0,
@@ -310,7 +314,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 		// this.stats should be numerically indexed, so lets coerce it into that
 		var i = 0;
 		for ( var key in tmp_stats ) {
-			if ( ! tmp_stats[ key ] ) {
+			if ( ! tmp_stats.hasOwnProperty( key ) ) {
 				// gaps, not ready...
 				return;
 			}// end if
@@ -324,7 +328,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 			}// end if
 
 			if ( this.stats[ i ].posts > 0 ) {
-				this.stats[ i ].comments_per_post = this.stats[ i ].comments / this.stats[ i ].posts
+				this.stats[ i ].comments_per_post = this.stats[ i ].comments / this.stats[ i ].posts;
 
 				if ( this.stats[ i ].pvs ) {
 					this.stats[ i ].pvs_per_post = this.stats[ i ].pvs / this.stats[ i ].posts;
@@ -368,7 +372,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 		var days = this.get_range();
 		var day;
 
-		for ( var i in days ) {
+		for ( var i = 0; i < days.length; i++ ) {
 			day = this.day_stats[ days[ i ] ];
 
 			if ( null === day ) {
@@ -378,7 +382,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 			if (
 				day
 				&& (
-					'undefined' == typeof day.pvs
+					undefined === day.pvs
 					|| null === day.pvs
 				)
 			) {
@@ -508,7 +512,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 	 * gets the current selected context
 	 */
 	go_content_stats.get_context = function () {
-		if ( 'undefined' === typeof this.context ) {
+		if ( undefined === this.context ) {
 			return {
 				type: $( '#go-content-stats-type' ).val(),
 				key: $( '#go-content-stats-key' ).val()
@@ -647,7 +651,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 	 * output number with commas
 	 */
 	go_content_stats.number_format = function( num ) {
-		if ( ! num || 'undefined' == typeof num ) {
+		if ( ! num || undefined === num ) {
 			return '0';
 		}//end if
 
@@ -658,7 +662,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 	 * output number with commas and 2 decimal places
 	 */
 	go_content_stats.decimal_format = function( num ) {
-		if ( ! num || 'undefined' == typeof num ) {
+		if ( ! num || undefined === num ) {
 			return '0.00';
 		}//end if
 
@@ -670,6 +674,10 @@ if ( 'undefined' == typeof go_content_stats ) {
 
 	go_content_stats.mind_the_gap = function( data ) {
 		for ( var i in data.stats ) {
+			if ( ! data.stats.hasOwnProperty( i ) ) {
+				continue;
+			}//end if
+
 			var index = this.gaps[ data.which ].indexOf( i );
 
 			if ( -1 !== index ) {
@@ -682,7 +690,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 		}//end if
 
 		// we only want to render the pvs data if the general data has all been loaded
-		if ( 'pvs' == data.which && this.gaps.general.length > 0 ) {
+		if ( 'pvs' === data.which && this.gaps.general.length > 0 ) {
 			return;
 		}//end if
 
@@ -722,7 +730,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 	/**
 	 * handle the removal of criteria
 	 */
-	go_content_stats.event.remove_criteria = function ( e ) {
+	go_content_stats.event.remove_criteria = function () {
 		go_content_stats.remove_criteria();
 	};
 
@@ -732,7 +740,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 	go_content_stats.event.change_state = function ( e ) {
 		e.preventDefault();
 
-		if ( 'undefined' != typeof e.originalEvent.state.start ){
+		if ( undefined !== e.originalEvent.state.start ) {
 			go_content_stats.change_state( e.originalEvent.state );
 		}
 	};
@@ -779,7 +787,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 	/**
 	 * handles the zoom level selection event
 	 */
-	go_content_stats.event.select_zoom = function( e ) {
+	go_content_stats.event.select_zoom = function() {
 		go_content_stats.select_zoom( $( this ).data( 'zoom-level' ) );
 	};
 
@@ -813,6 +821,10 @@ if ( 'undefined' == typeof go_content_stats ) {
 	 */
 	go_content_stats.store.insert = function ( data, context ) {
 		for ( var i in data.stats ) {
+			if ( ! data.stats.hasOwnProperty( i ) ) {
+				continue;
+			}//end if
+
 			data.stats[ i ].inserted_timestamp = new Date().getTime();
 			this.set( i, context, data.stats[ i ] );
 		}
@@ -830,6 +842,10 @@ if ( 'undefined' == typeof go_content_stats ) {
 	go_content_stats.store.update = function ( data, context ) {
 		var record;
 		for ( var i in data.stats ) {
+			if ( ! data.stats.hasOwnProperty( i ) ) {
+				continue;
+			}//end if
+
 			record = this.get( i, context );
 			$.extend( record, data.stats[ i ] );
 			this.set( i, context, record );
@@ -854,7 +870,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 		}//end if
 
 		if ( record.inserted_timestamp + this.ttl < now ) {
-			this.delete( index, context );
+			this.delete_item( index, context );
 			return null;
 		}//end if
 
@@ -880,7 +896,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 	 * @param  object context includes 'type' and optionally 'key'
 	 * @return null
 	 */
-	go_content_stats.store.delete = function ( index, context ) {
+	go_content_stats.store.delete_item = function ( index, context ) {
 		localStorage.removeItem( this.key( index, context ) );
 	};
 
