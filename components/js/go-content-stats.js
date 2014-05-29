@@ -116,14 +116,16 @@ if ( 'undefined' == typeof go_content_stats ) {
 	 */
 	go_content_stats.select_zoom = function( zoom_level ) {
 		var $current = this.$zoom_levels.find( '.active' );
+		var start = null;
+		var end = null;
 
 		if ( zoom_level === $current.data( 'zoom-level' ) ) {
 			return;
 		}//end if
 
-		if ( 'month' == zoom_level ) {
-			var start = moment( this.$start.val() );
-			var end = moment( this.$end.val() );
+		if ( 'month' === zoom_level ) {
+			start = moment( this.$start.val() );
+			end = moment( this.$end.val() );
 			var diff = end.diff( start, 'months' );
 			var min_months = 4;
 
@@ -135,10 +137,10 @@ if ( 'undefined' == typeof go_content_stats ) {
 				this.changed_dates();
 			}// end if
 		}// end if
-		else if ( 'quarter' == zoom_level ) {
+		else if ( 'quarter' === zoom_level ) {
 			var min_quarters = 4;
-			var start = moment( this.$start.val() );
-			var end = moment( this.$end.val() );
+			start = moment( this.$start.val() );
+			end = moment( this.$end.val() );
 			var month_diff = end.diff( start, 'months' );
 			var quarter_diff = month_diff / 3;
 
@@ -324,7 +326,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 			}// end if
 
 			if ( this.stats[ i ].posts > 0 ) {
-				this.stats[ i ].comments_per_post = this.stats[ i ].comments / this.stats[ i ].posts
+				this.stats[ i ].comments_per_post = this.stats[ i ].comments / this.stats[ i ].posts;
 
 				if ( this.stats[ i ].pvs ) {
 					this.stats[ i ].pvs_per_post = this.stats[ i ].pvs / this.stats[ i ].posts;
