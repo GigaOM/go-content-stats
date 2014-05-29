@@ -261,15 +261,15 @@ if ( 'undefined' == typeof go_content_stats ) {
 					return;
 				}// end if
 
-				if ( 'week' == zoom ) {
+				if ( 'week' === zoom ) {
 					item = 'Week ' + moment( date, 'YYYY-MM-DD' ).format( 'W, GGGG' );
 					xaxis = moment( date, 'YYYY-MM-DD' ).day( 0 ).format( 'YYYY-MM-DD' );
 				}//end if
-				else if ( 'month' == zoom ) {
+				else if ( 'month' === zoom ) {
 					item = moment( date, 'YYYY-MM-DD' ).format( 'MMMM YY' );
 					xaxis = moment( date, 'YYYY-MM-DD' ).startOf( 'month' ).format( 'YYYY-MM-DD' );
 				}//end else if
-				else if ( 'quarter' == zoom ) {
+				else if ( 'quarter' === zoom ) {
 					item = moment( date, 'YYYY-MM-DD' ).fquarter( 1 ).toString();
 					if ( 0 === item.lastIndexOf( 'Q1', 0 ) ) {
 						xaxis = moment( date, 'YYYY-MM-DD' ).format( 'YYYY-01-01' );
