@@ -1,4 +1,4 @@
-if ( 'undefined' == typeof go_content_stats ) {
+if ( undefined === go_content_stats ) {
 	var go_content_stats = {
 		// endpoint is set from a wp_localize_script. If we get into here, we're in a bad place
 		endpoint: ''
@@ -6,6 +6,8 @@ if ( 'undefined' == typeof go_content_stats ) {
 }//end if
 
 ( function ( $ ) {
+	'use strict';
+
 	// initialize the event object
 	go_content_stats.event = {};
 
@@ -232,7 +234,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 		var context = this.get_context();
 		var days = this.get_range();
 
-		for ( var i in days ) {
+		for ( var i = 0; i < days.length; i++ ) {
 			day = this.store.get( days[ i ], context );
 
 			this.day_stats[ days[ i ] ] = day;
@@ -243,7 +245,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 		this.build_summary();
 	};
 
-	go_content_stats.build_stats = function( day_stats ) {
+	go_content_stats.build_stats = function() {
 
 		// clear the stats object so we start fresh
 		this.stats = {};
@@ -256,7 +258,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 		else {
 			var item;
 			for ( var date in this.day_stats ) {
-				if ( ! this.day_stats[ date ] ) {
+				if ( ! this.day_stats.hasOwnProperty( date ) ) {
 					// if there are still gaps, don't bother continuing...
 					return;
 				}// end if
@@ -285,7 +287,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 					}//end else if
 				}//end else if
 
-				if ( 'undefined' == typeof tmp_stats[ item ] || ! tmp_stats[ item ] ) {
+				if ( undefined === tmp_stats[ item ] || ! tmp_stats[ item ] ) {
 					tmp_stats[ item ] = {
 						xaxis: xaxis,
 						posts: 0,
@@ -312,7 +314,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 		// this.stats should be numerically indexed, so lets coerce it into that
 		var i = 0;
 		for ( var key in tmp_stats ) {
-			if ( ! tmp_stats[ key ] ) {
+			if ( ! tmp_stats.hasOwnProperty( key ) ) {
 				// gaps, not ready...
 				return;
 			}// end if
@@ -370,7 +372,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 		var days = this.get_range();
 		var day;
 
-		for ( var i in days ) {
+		for ( var i = 0; i < days.length; i++ ) {
 			day = this.day_stats[ days[ i ] ];
 
 			if ( null === day ) {
@@ -380,7 +382,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 			if (
 				day
 				&& (
-					'undefined' == typeof day.pvs
+					undefined === day.pvs
 					|| null === day.pvs
 				)
 			) {
@@ -510,7 +512,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 	 * gets the current selected context
 	 */
 	go_content_stats.get_context = function () {
-		if ( 'undefined' === typeof this.context ) {
+		if ( undefined === this.context ) {
 			return {
 				type: $( '#go-content-stats-type' ).val(),
 				key: $( '#go-content-stats-key' ).val()
@@ -649,7 +651,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 	 * output number with commas
 	 */
 	go_content_stats.number_format = function( num ) {
-		if ( ! num || 'undefined' == typeof num ) {
+		if ( ! num || undefined === num ) {
 			return '0';
 		}//end if
 
@@ -660,7 +662,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 	 * output number with commas and 2 decimal places
 	 */
 	go_content_stats.decimal_format = function( num ) {
-		if ( ! num || 'undefined' == typeof num ) {
+		if ( ! num || undefined === num ) {
 			return '0.00';
 		}//end if
 
@@ -672,6 +674,10 @@ if ( 'undefined' == typeof go_content_stats ) {
 
 	go_content_stats.mind_the_gap = function( data ) {
 		for ( var i in data.stats ) {
+			if ( ! data.stats.hasOwnProperty( i ) ) {
+				continue;
+			}//end if
+
 			var index = this.gaps[ data.which ].indexOf( i );
 
 			if ( -1 !== index ) {
@@ -684,7 +690,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 		}//end if
 
 		// we only want to render the pvs data if the general data has all been loaded
-		if ( 'pvs' == data.which && this.gaps.general.length > 0 ) {
+		if ( 'pvs' === data.which && this.gaps.general.length > 0 ) {
 			return;
 		}//end if
 
@@ -734,7 +740,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 	go_content_stats.event.change_state = function ( e ) {
 		e.preventDefault();
 
-		if ( 'undefined' != typeof e.originalEvent.state.start ){
+		if ( undefined !== e.originalEvent.state.start ) {
 			go_content_stats.change_state( e.originalEvent.state );
 		}
 	};
@@ -815,6 +821,10 @@ if ( 'undefined' == typeof go_content_stats ) {
 	 */
 	go_content_stats.store.insert = function ( data, context ) {
 		for ( var i in data.stats ) {
+			if ( ! data.stats.hasOwnProperty( i ) ) {
+				continue;
+			}//end if
+
 			data.stats[ i ].inserted_timestamp = new Date().getTime();
 			this.set( i, context, data.stats[ i ] );
 		}
@@ -832,6 +842,10 @@ if ( 'undefined' == typeof go_content_stats ) {
 	go_content_stats.store.update = function ( data, context ) {
 		var record;
 		for ( var i in data.stats ) {
+			if ( ! data.stats.hasOwnProperty( i ) ) {
+				continue;
+			}//end if
+
 			record = this.get( i, context );
 			$.extend( record, data.stats[ i ] );
 			this.set( i, context, record );
