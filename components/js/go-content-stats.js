@@ -258,7 +258,7 @@ if ( undefined === go_content_stats ) {
 		else {
 			var item;
 			for ( var date in this.day_stats ) {
-				if ( ! this.day_stats.hasOwnProperty( date ) ) {
+				if ( ! this.day_stats.hasOwnProperty( date ) || ! this.day_stats[ date ] ) {
 					// if there are still gaps, don't bother continuing...
 					return;
 				}// end if
@@ -314,7 +314,7 @@ if ( undefined === go_content_stats ) {
 		// this.stats should be numerically indexed, so lets coerce it into that
 		var i = 0;
 		for ( var key in tmp_stats ) {
-			if ( ! tmp_stats.hasOwnProperty( key ) ) {
+			if ( ! tmp_stats.hasOwnProperty( key ) || ! tmp_stats[ key ] ) {
 				// gaps, not ready...
 				return;
 			}// end if
@@ -674,7 +674,7 @@ if ( undefined === go_content_stats ) {
 
 	go_content_stats.mind_the_gap = function( data ) {
 		for ( var i in data.stats ) {
-			if ( ! data.stats.hasOwnProperty( i ) ) {
+			if ( ! data.stats.hasOwnProperty( i ) || ! data.stats[ i ] ) {
 				continue;
 			}//end if
 
@@ -821,7 +821,7 @@ if ( undefined === go_content_stats ) {
 	 */
 	go_content_stats.store.insert = function ( data, context ) {
 		for ( var i in data.stats ) {
-			if ( ! data.stats.hasOwnProperty( i ) ) {
+			if ( ! data.stats.hasOwnProperty( i ) || ! data.stats[ i ] ) {
 				continue;
 			}//end if
 
@@ -842,7 +842,7 @@ if ( undefined === go_content_stats ) {
 	go_content_stats.store.update = function ( data, context ) {
 		var record;
 		for ( var i in data.stats ) {
-			if ( ! data.stats.hasOwnProperty( i ) ) {
+			if ( ! data.stats.hasOwnProperty( i ) || ! data.stats[ i ] ) {
 				continue;
 			}//end if
 
