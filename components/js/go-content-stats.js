@@ -854,7 +854,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 		}//end if
 
 		if ( record.inserted_timestamp + this.ttl < now ) {
-			this.delete( index, context );
+			this.delete_item( index, context );
 			return null;
 		}//end if
 
@@ -880,7 +880,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 	 * @param  object context includes 'type' and optionally 'key'
 	 * @return null
 	 */
-	go_content_stats.store.delete = function ( index, context ) {
+	go_content_stats.store.delete_item = function ( index, context ) {
 		localStorage.removeItem( this.key( index, context ) );
 	};
 
