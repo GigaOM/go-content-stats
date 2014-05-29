@@ -724,7 +724,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 	/**
 	 * handle the removal of criteria
 	 */
-	go_content_stats.event.remove_criteria = function ( e ) {
+	go_content_stats.event.remove_criteria = function () {
 		go_content_stats.remove_criteria();
 	};
 
@@ -781,7 +781,7 @@ if ( 'undefined' == typeof go_content_stats ) {
 	/**
 	 * handles the zoom level selection event
 	 */
-	go_content_stats.event.select_zoom = function( e ) {
+	go_content_stats.event.select_zoom = function() {
 		go_content_stats.select_zoom( $( this ).data( 'zoom-level' ) );
 	};
 
