@@ -597,8 +597,8 @@ class GO_Content_Stats
 			$this->date_lesser = date( 'Y-m-d', $this->date_lesser_stamp );
 		}// end else
 
-		$type = isset( $_GET['type'] ) ? $_GET['type'] : 'general';
-		$key = isset( $_GET['key'] ) ? $_GET['key'] : NULL;
+		$type = isset( $_GET['type'] ) ? sanitize_text_field( $_GET['type'] ) : 'general';
+		$key = isset( $_GET['key'] ) ? sanitize_text_field( $_GET['key'] ) : NULL;
 		$args = array(
 			'type' => $type,
 			'key' => $key,
