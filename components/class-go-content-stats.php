@@ -600,8 +600,8 @@ class GO_Content_Stats
 		$type = isset( $_GET['type'] ) ? $_GET['type'] : 'general';
 		$key = isset( $_GET['key'] ) ? $_GET['key'] : NULL;
 		$args = array(
-			'type' => $type,
-			'key' => $key,
+			'type' => esc_attr( $type ),
+			'key' => esc_attr( $key ),
 		);
 
 		$function = "fetch_$which";
