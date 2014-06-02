@@ -102,6 +102,12 @@ class GO_Content_Stats
 
 	public function admin_enqueue_scripts()
 	{
+		// If we aren't on the actual content stats page we don't need any of this
+		if ( 'dashboard_page_go-content-stats' != get_current_screen()->base )
+		{
+			return;
+		} // END if
+
 		$script_config = apply_filters( 'go-config', array( 'version' => 1 ), 'go-script-version' );
 
 		wp_register_style(
