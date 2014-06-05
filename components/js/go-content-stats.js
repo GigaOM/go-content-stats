@@ -193,12 +193,8 @@ if ( undefined === go_content_stats ) {
 
 	go_content_stats.get_range = function() {
 		var days = [];
-
-		var current = this.period.start.split( '-' );
-		var end = this.period.end.split( '-' );
-
-		current = new Date( current );
-		end = new Date( end );
+		var current = new Date( this.period.start );
+		var end = new Date( this.period.end );
 
 		while ( current <= end ) {
 			days.push( this.format_date( current ) );
@@ -740,7 +736,7 @@ if ( undefined === go_content_stats ) {
 	go_content_stats.event.change_state = function ( e ) {
 		e.preventDefault();
 
-		if ( undefined !== e.originalEvent.state.start ) {
+		if ( undefined !== e.originalEvent.state && undefined !== e.originalEvent.state.start ) {
 			go_content_stats.change_state( e.originalEvent.state );
 		}
 	};
