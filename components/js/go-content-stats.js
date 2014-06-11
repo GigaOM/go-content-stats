@@ -795,7 +795,6 @@ if ( undefined === go_content_stats ) {
 		console.info( 'event' );
 		go_content_stats.changed_dates();
 	};
-
 	/**
 	 * clear go-content-stats entries from local storage
 	 *
@@ -822,7 +821,6 @@ if ( undefined === go_content_stats ) {
 				continue;
 			}//end if
 
-			data.stats[ i ].inserted_timestamp = new Date().getTime();
 			this.set( i, context, data.stats[ i ] );
 		}
 
@@ -866,12 +864,12 @@ if ( undefined === go_content_stats ) {
 			return null;
 		}//end if
 
-		if ( record.inserted_timestamp + this.ttl < now ) {
+		if ( record.t + this.ttl < now ) {
 			this.delete_item( index, context );
 			return null;
 		}//end if
 
-		return record;
+		return this.massage( record );
 	};
 
 	/**
@@ -883,7 +881,42 @@ if ( undefined === go_content_stats ) {
 	 * @return null
 	 */
 	go_content_stats.store.set = function ( index, context, stats ) {
+		stats = this.massage( stats );
 		localStorage.setItem( this.key( index, context ), JSON.stringify( stats ) );
+	};
+
+	/**
+	 * massage the stats data into or out of a tighter indexed object
+	 *
+	 * @param  object stats the stats
+	 * @return object that has been massaged
+	 */
+	go_content_stats.store.massage = function( stats ) {
+		var new_stats;
+
+		if ( undefined !== stats.comments ) {
+			new_stats = {
+				v: stats.pvs,
+				c: stats.comments,
+				d: parseInt( stats.day.replace( /-/g, '') ),
+				p: stats.posts,
+				r: stats.match_pro,
+				e: stats.match_events,
+				t: new Date().getTime()
+			};
+		}
+		else {
+			new_stats = {
+				pvs: stats.v,
+				comments: stats.c,
+				day: ( stats.d + '' ).replace( /([0-9]{4})([0-9]{2})([0-9]{2})/, '$1-$2-$3' ),
+				posts: stats.p,
+				match_pro: stats.r,
+				match_events: stats.e
+			};
+		}
+
+		return new_stats;
 	};
 
 	/**
