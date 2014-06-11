@@ -247,6 +247,7 @@ if ( undefined === go_content_stats ) {
 		this.stats = {};
 		var tmp_stats = {};
 		var zoom = this.get_zoom();
+		var xaxis = null;
 
 		if ( 'day' === zoom ) {
 			tmp_stats = this.day_stats;
