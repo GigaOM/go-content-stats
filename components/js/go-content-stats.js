@@ -1,4 +1,4 @@
-if ( undefined === go_content_stats ) {
+if ( 'undefined' === typeof go_content_stats ) {
 	var go_content_stats = {
 		// endpoint is set from a wp_localize_script. If we get into here, we're in a bad place
 		endpoint: ''
@@ -284,7 +284,7 @@ if ( undefined === go_content_stats ) {
 					}//end else if
 				}//end else if
 
-				if ( undefined === tmp_stats[ item ] || ! tmp_stats[ item ] ) {
+				if ( 'undefined' === typeof tmp_stats[ item ] || ! tmp_stats[ item ] ) {
 					tmp_stats[ item ] = {
 						xaxis: xaxis,
 						posts: 0,
@@ -379,7 +379,7 @@ if ( undefined === go_content_stats ) {
 			if (
 				day
 				&& (
-					undefined === day.pvs
+					'undefined' === typeof day.pvs
 					|| null === day.pvs
 				)
 			) {
@@ -509,7 +509,7 @@ if ( undefined === go_content_stats ) {
 	 * gets the current selected context
 	 */
 	go_content_stats.get_context = function () {
-		if ( undefined === this.context ) {
+		if ( 'undefined' === typeof this.context ) {
 			return {
 				type: $( '#go-content-stats-type' ).val(),
 				key: $( '#go-content-stats-key' ).val()
@@ -648,7 +648,7 @@ if ( undefined === go_content_stats ) {
 	 * output number with commas
 	 */
 	go_content_stats.number_format = function( num ) {
-		if ( ! num || undefined === num ) {
+		if ( ! num || 'undefined' === typeof num ) {
 			return '0';
 		}//end if
 
@@ -659,7 +659,7 @@ if ( undefined === go_content_stats ) {
 	 * output number with commas and 2 decimal places
 	 */
 	go_content_stats.decimal_format = function( num ) {
-		if ( ! num || undefined === num ) {
+		if ( ! num || 'undefined' === typeof num ) {
 			return '0.00';
 		}//end if
 
@@ -737,7 +737,7 @@ if ( undefined === go_content_stats ) {
 	go_content_stats.event.change_state = function ( e ) {
 		e.preventDefault();
 
-		if ( undefined !== e.originalEvent.state && undefined !== e.originalEvent.state.start ) {
+		if ( 'undefined' !== typeof e.originalEvent.state && 'undefined' !== typeof e.originalEvent.state.start ) {
 			go_content_stats.change_state( e.originalEvent.state );
 		}
 	};
@@ -894,7 +894,7 @@ if ( undefined === go_content_stats ) {
 	go_content_stats.store.massage = function( stats ) {
 		var new_stats;
 
-		if ( undefined !== stats.comments ) {
+		if ( 'undefined' !== typeof stats.comments ) {
 			new_stats = {
 				v: stats.pvs,
 				c: stats.comments,
