@@ -10,3 +10,5 @@
 
 require_once __DIR__ .'/components/class-go-content-stats.php';
 go_content_stats();
+
+register_activation_hook( __FILE__, array( go_content_stats(), 'activate' ) );

@@ -12,6 +12,7 @@ class GO_Content_Stats
 	private $days = array();
 	private $pieces;
 	private $id_base = 'go-content-stats';
+	private $storage;
 
 	/**
 	 * constructor
@@ -21,6 +22,29 @@ class GO_Content_Stats
 		add_action( 'admin_init', array( $this, 'admin_init' ) );
 		add_action( 'admin_menu', array( $this, 'admin_menu_init' ) );
 	} // END __construct
+
+	/**
+	 * called on register_activation_hook
+	 */
+	public function activate()
+	{
+		$this->storage()->create_table();
+	}// end activate
+
+	/**
+	 * stats table object accessor
+	 */
+	public function storage()
+	{
+		if ( ! $this->storage )
+		{
+			require_once __DIR__ . '/class-go-content-stats-storage.php';
+
+			$this->storage = new GO_Content_Stats_Storage( $this );
+		}//end if
+
+		return $this->storage;
+	}//end storage
 
 	/**
 	 * add the menu item to the dashboard
@@ -35,6 +59,7 @@ class GO_Content_Stats
 	public function admin_init()
 	{
 		$this->config();
+		$this->storage();
 		add_action( 'go-content-stats-posts', array( $this, 'prime_pv_cache' ) );
 		add_action( 'wp_ajax_go_content_stats_fetch', array( $this, 'fetch_ajax' ) );
 
