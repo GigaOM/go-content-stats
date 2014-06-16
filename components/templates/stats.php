@@ -132,8 +132,6 @@ if ( ! $start || ! $end )
 		<header>Select a knife to slice through the stats</header>
 		<div id="taxonomy-data"><!-- taxonomy-criteria-template template will render here --></div>
 	</section>
-
-	<p>WPCom stats using API Key <?php echo esc_html( $this->get_wpcom_api_key() ); ?></p>
 </div>
 
 <script type="text/x-handlebars-template" id="taxonomy-criteria-template">

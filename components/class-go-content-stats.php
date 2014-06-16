@@ -236,7 +236,7 @@ class GO_Content_Stats
 			TRUE
 		);
 
-		/* note: we'll need to include this if we plan to open source, else delete.
+		/* note: we'll need to include this if we plan to open source, else delete. */
 		wp_register_script(
 			'jquery-blockui',
 			plugins_url( 'js/external/jquery.blockUI.js', __FILE__ ),
@@ -244,7 +244,7 @@ class GO_Content_Stats
 			$script_config['version'],
 			TRUE
 		);
-		*/
+
 
 		wp_register_script(
 			'go-content-stats',
@@ -375,26 +375,21 @@ class GO_Content_Stats
 	} // END get_taxonomy_stats
 
 	/**
-	 * get pageviews for the given post guid from our stat storage table
+	 * get pageviews for the given post IDs from our stat storage table
 	 *
-	 * @param string $guid Post GUID
+	 * @param mixed $post_ids Post ID or array of Post IDs
 	 */
-	public function get_pvs( $guid )
+	public function get_pvs( $post_ids )
 	{
 		$hits = 0;
 
-		// test the cache like a good API user
-		if ( ! $hits = wp_cache_get( $guid, 'go-content-stats-hits' ) )
-		{
-			$args = array(
-				'guid' => $guid,
-				'sum' => TRUE,
-			);
+		$args = array(
+			'post_id' => $post_ids,
+			'sum' => TRUE,
+		);
+do_action( 'debug_robot', 'ZZZ: ' . print_r( $args, true ) );
 
-			$hits = $this->storage()->get( $args );
-
-			wp_cache_set( $guid, $hits, 'go-content-stats-hits', 1800 );
-		}//end if
+		$hits = $this->storage()->get( $args );
 
 		return $hits;
 	} // END get_pvs
@@ -590,12 +585,23 @@ class GO_Content_Stats
 			return FALSE;
 		}// end if
 
-		$stats = $this->initialize_stats( FALSE );
+		$post_ids = array();
 		foreach ( $posts as $post )
 		{
 			$post_date = date( 'Y-m-d', strtotime( $post->post_date ) );
 
-			$stats[ $post_date ]->pvs += $this->get_pvs( $post->guid );
+			if ( empty( $post_ids[ $post_date ] ) )
+			{
+				$post_ids[ $post_date ] = array();
+			}// end if
+
+			$post_ids[ $post_date ][] = $post->ID;
+		}// end foreach
+
+		$stats = $this->initialize_stats( FALSE );
+		foreach ( $post_ids as $post_date => $posts_by_day )
+		{
+			$stats[ $post_date ] = $this->get_pvs( $posts_by_day );
 		}// end foreach
 
 		return array(
@@ -640,7 +646,7 @@ class GO_Content_Stats
 			$data->title = get_the_title( $post->ID );
 			$data->permalink = get_permalink( $post->ID );
 			$data->day = date( 'Y-m-d', strtotime( $post->post_date ) );
-			$data->pvs = $this->get_pvs( $post->guid );
+			$data->pvs = $this->get_pvs( $post->ID );
 			$data->comments = $post->comment_count;
 
 			foreach ( $this->config['content_matches'] as $key => $match )
