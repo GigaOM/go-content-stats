@@ -885,6 +885,34 @@ if ( 'undefined' === typeof go_content_stats ) {
 		localStorage.setItem( this.key( index, context ), JSON.stringify( stats ) );
 	};
 
+	go_content_stats.store.massage = function( data ) {
+		var new_data;
+
+		if ( undefined !== data.comments ) {
+			new_data = {
+				v: data.pvs,
+				c: data.comments,
+				d: data.day,
+				p: data.posts,
+				r: data.match_pro,
+				e: data.match_events,
+				t: new Date().getTime()
+			};
+		}
+		else {
+			new_data = {
+				pvs: data.v,
+				comments: data.c,
+				day: data.d,
+				posts: data.p,
+				match_pro: data.r,
+				match_events: data.e
+			};
+		}
+
+		return new_data;
+	};
+
 	/**
 	 * massage the stats data into or out of a tighter indexed object
 	 *
