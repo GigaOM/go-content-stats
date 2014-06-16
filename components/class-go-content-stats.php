@@ -13,6 +13,7 @@ class GO_Content_Stats
 	private $pieces;
 	private $id_base = 'go-content-stats';
 	private $storage;
+	private $load;
 
 	/**
 	 * constructor
@@ -45,6 +46,21 @@ class GO_Content_Stats
 
 		return $this->storage;
 	}//end storage
+
+	/**
+	 * stats load object accessor
+	 */
+	public function load()
+	{
+		if ( ! $this->load )
+		{
+			require_once __DIR__ . '/class-go-content-stats-load.php';
+
+			$this->load = new GO_Content_Stats_Load();
+		}//end if
+
+		return $this->load;
+	}//end load
 
 	/**
 	 * add the menu item to the dashboard
