@@ -28,7 +28,7 @@ class GO_Content_Stats_Storage
 	/**
 	 * inserts a record
 	 *
-	 * @param object $data
+	 * @param array $data Row to insert into table
 	 */
 	public function insert( $data )
 	{
@@ -45,6 +45,11 @@ class GO_Content_Stats_Storage
 		);
 
 		$args = array_merge( $defaults, $data );
+
+		if ( ! $args['views'] )
+		{
+			return FALSE;
+		}//end if
 
 		$formats = array_values( $this->fields );
 
@@ -97,7 +102,14 @@ class GO_Content_Stats_Storage
 		{
 			if ( isset( $args[ $field_name ] ) )
 			{
-				$query .= " AND $field_name = $format ";
+				if ( NULL === $args[ $field_name ] )
+				{
+					$query .= " AND $field_name = '' ";
+				}//end if
+				else
+				{
+					$query .= " AND $field_name = $format ";
+				}//end else
 				$curated_args[] = $args[ $field_name ];
 			}//end if
 		}//end foreach
@@ -195,9 +207,6 @@ class GO_Content_Stats_Storage
 	}// end delete
 
 	/**
-	 * delete from the queue
-	 *
-	 * @param array fields to use as conditional for delete
 	 */
 	public function update( $data, $where )
 	{
@@ -222,6 +231,59 @@ class GO_Content_Stats_Storage
 			$where_formats
 		);
 	}// end update
+
+	/**
+	 * fill guid
+	 */
+	public function fill_guid()
+	{
+		$args = array(
+			'guid' => NULL,
+			'limit' => 50,
+		);
+
+		$records = $this->get( $args );
+
+		$remote_args = array(
+			'compress' => TRUE,
+		);
+
+		foreach ( $records as $row )
+		{
+			$guid = NULL;
+			$content = wp_remote_get( $row->url, $remote_args );
+
+			if ( is_wp_error( $content ) )
+			{
+				// do something about errors
+				continue;
+			}//end if
+
+			$pattern = '/var bstat = ({.+});/';
+			if ( 1 === preg_match( $pattern, $content['body'], $matches ) )
+			{
+				// the json payload
+				$bstat_var = json_decode( $matches[1] );
+				if ( ! empty( $bstat_var ) )
+				{
+					$guid = $bstat_var->guid;
+				}//end if
+			}//end if
+
+			if ( ! $guid )
+			{
+				// do something about a non-existent guid
+				continue;
+			}//end if
+
+			$row->guid = $guid;
+			$this->update( (array) $row, array(
+				'property' => $row->property,
+				'url' => $row->url,
+				'guid' => '',
+			) );
+		}//end foreach
+	}//end fill_guid
 
 	/**
 	 * create table if it doesn't exist
@@ -251,8 +313,8 @@ class GO_Content_Stats_Storage
 				`date` DATE NOT NULL,
 				`property` varchar(20) NOT NULL,
 				`url` varchar(255) NOT NULL,
-				`guid` varchar(255) DEFAULT NULL,
-				`views` mediumint unsigned NOT NULL default 0,
+				`guid` varchar(255) NOT NULL DEFAULT '',
+				`views` mediumint unsigned NOT NULL DEFAULT 0,
 				`added_timestamp` timestamp DEFAULT 0,
 				PRIMARY KEY (id),
 				KEY `date` (`date`),
