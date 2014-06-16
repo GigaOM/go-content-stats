@@ -821,7 +821,6 @@ if ( undefined === go_content_stats ) {
 				continue;
 			}//end if
 
-			data.stats[ i ].inserted_timestamp = new Date().getTime();
 			this.set( i, context, data.stats[ i ] );
 		}
 
@@ -865,12 +864,12 @@ if ( undefined === go_content_stats ) {
 			return null;
 		}//end if
 
-		if ( record.inserted_timestamp + this.ttl < now ) {
+		if ( record.t + this.ttl < now ) {
 			this.delete_item( index, context );
 			return null;
 		}//end if
 
-		return record;
+		return this.massage( record );
 	};
 
 	/**
@@ -882,7 +881,36 @@ if ( undefined === go_content_stats ) {
 	 * @return null
 	 */
 	go_content_stats.store.set = function ( index, context, stats ) {
+		stats = this.massage( stats );
 		localStorage.setItem( this.key( index, context ), JSON.stringify( stats ) );
+	};
+
+	go_content_stats.store.massage = function( data ) {
+		var new_data;
+
+		if ( undefined !== data.comments ) {
+			new_data = {
+				v: data.pvs,
+				c: data.comments,
+				d: data.day,
+				p: data.posts,
+				r: data.match_pro,
+				e: data.match_events,
+				t: new Date().getTime()
+			};
+		}
+		else {
+			new_data = {
+				pvs: data.v,
+				comments: data.c,
+				day: data.d,
+				posts: data.p,
+				match_pro: data.r,
+				match_events: data.e
+			};
+		}
+
+		return new_data;
 	};
 
 	/**
