@@ -9,7 +9,7 @@ class GO_Content_Stats_Storage
 		'date' => '%s',
 		'property' => '%s',
 		'url' => '%s',
-		'guid' => '%s',
+		'post_id' => '%d',
 		'views' => '%d',
 		'added_timestamp' => '%s',
 	);
@@ -39,7 +39,7 @@ class GO_Content_Stats_Storage
 			'date' => NULL,
 			'property' => NULL,
 			'url' => NULL,
-			'guid' => NULL,
+			'post_id' => 0,
 			'views' => 0,
 			'added_timestamp' => current_time( 'mysql', 1 ),
 		);
@@ -66,7 +66,7 @@ class GO_Content_Stats_Storage
 	 *     'date'
 	 *     'property'
 	 *     'url'
-	 *     'guid'
+	 *     'post_id'
 	 *     'views'
 	 *     'added_timestamp'
 	 *     'orderby'  - Default is 'date'. How to order the queued alerts.
@@ -104,8 +104,12 @@ class GO_Content_Stats_Storage
 			{
 				if ( NULL === $args[ $field_name ] )
 				{
-					$query .= " AND $field_name = '' ";
+					$query .= " AND `$field_name` = '' ";
 				}//end if
+				elseif ( is_array( $args[ $field_name ] ) )
+				{
+					$query .= " AND `$field_name` IN ( '" . implode( "','", $args[ $field_name ] ) . "' )";
+				}
 				else
 				{
 					$query .= " AND $field_name = $format ";
@@ -165,7 +169,6 @@ class GO_Content_Stats_Storage
 		}//end if
 
 		$sql = $wpdb->prepare( $query, $curated_args );
-
 		$results = $wpdb->get_results( $sql );
 
 		if ( isset( $args['count'] ) && $args['count'] )
@@ -233,14 +236,17 @@ class GO_Content_Stats_Storage
 	}// end update
 
 	/**
-	 * fill guid
+	 * fill post_id
 	 */
-	public function fill_guid()
+	public function fill_post_id()
 	{
+		global $wpdb;
 		$args = array(
-			'guid' => NULL,
-			'limit' => 50,
+			'post_id' => 0,
+			'limit' => '0,50',
 		);
+
+		switch_to_blog( 3 );
 
 		$records = $this->get( $args );
 
@@ -248,42 +254,57 @@ class GO_Content_Stats_Storage
 			'compress' => TRUE,
 		);
 
+		$count = 0;
+
 		foreach ( $records as $row )
 		{
-			$guid = NULL;
+			echo '.';
+			$post_id = -1;
+			$guid = '';
+
 			$content = wp_remote_get( $row->url, $remote_args );
+
+			echo '-';
 
 			if ( is_wp_error( $content ) )
 			{
-				// do something about errors
-				continue;
+				$post_id = -2;
 			}//end if
-
-			$pattern = '/var bstat = ({.+});/';
-			if ( 1 === preg_match( $pattern, $content['body'], $matches ) )
+			else
 			{
-				// the json payload
-				$bstat_var = json_decode( $matches[1] );
-				if ( ! empty( $bstat_var ) )
+				$pattern = '/var bstat = ({.+});/';
+				if ( 1 === preg_match( $pattern, $content['body'], $matches ) )
 				{
-					$guid = $bstat_var->guid;
+					// the json payload
+					$bstat_var = json_decode( $matches[1] );
+					if ( ! empty( $bstat_var ) )
+					{
+						$guid = $bstat_var->guid;
+					}//end if
+
+					if ( $guid )
+					{
+						$sql = "SELECT ID FROM {$wpdb->posts} WHERE guid = %s";
+						$sql = $wpdb->prepare( $sql, $guid );
+						$post_id = $wpdb->get_var( $sql );
+					}//end if
 				}//end if
-			}//end if
+			}//end else
+			echo '+';
 
-			if ( ! $guid )
-			{
-				// do something about a non-existent guid
-				continue;
-			}//end if
-
-			$row->guid = $guid;
-			$this->update( (array) $row, array(
+			$count += $this->update( array( 'post_id' => $post_id ), array(
 				'property' => $row->property,
 				'url' => $row->url,
-				'guid' => '',
+				'post_id' => 0,
 			) );
+
+			echo '=';
 		}//end foreach
-	}//end fill_guid
+
+		restore_current_blog();
+
+		return $count;
+	}//end fill_post_id
 
 	/**
 	 * create table if it doesn't exist
@@ -313,12 +334,12 @@ class GO_Content_Stats_Storage
 				`date` DATE NOT NULL,
 				`property` varchar(20) NOT NULL,
 				`url` varchar(255) NOT NULL,
-				`guid` varchar(255) NOT NULL DEFAULT '',
+				`post_id` int NOT NULL DEFAULT 0,
 				`views` mediumint unsigned NOT NULL DEFAULT 0,
 				`added_timestamp` timestamp DEFAULT 0,
 				PRIMARY KEY (id),
 				KEY `date` (`date`),
-				KEY `guid` (`guid`)
+				KEY `post_id` (`post_id`)
 			) ENGINE=InnoDB $charset_collate
 		";
 
