@@ -2,7 +2,6 @@
 
 class GO_Content_Stats
 {
-	public $wpcom_api_key = FALSE; // get yours at http://apikey.wordpress.com/
 	public $config;
 	public $date_greater_stamp;
 	public $date_greater;
@@ -359,150 +358,30 @@ class GO_Content_Stats
 		return $query->posts;
 	} // END get_taxonomy_stats
 
-	public function get_wpcom_api_key()
-	{
-		$api_key = FALSE;
-
-		// a locally set API key overrides everything
-		if ( ! empty( $this->wpcom_api_key ) )
-		{
-			$api_key = $this->wpcom_api_key;
-		}// end if
-		// attempt to get the API key from the user
-		elseif (
-			( $user = wp_get_current_user() ) &&
-			isset( $user->api_key )
-		)
-		{
-			$api_key = $user->api_key;
-		}// end elseif
-		elseif ( isset( $this->config['pv_api_key'] ) )
-		{
-			$api_key = $this->config['pv_api_key'];
-		}// end elseif
-
-		return $api_key;
-	}//end get_wpcom_api_key
-
 	/**
-	 * get pageviews for the given post ID from Automattic's stats API
+	 * get pageviews for the given post guid from our stat storage table
 	 *
-	 * @param  int $post_id Post ID
+	 * @param string $guid Post GUID
 	 */
-	public function get_pvs( $post_id )
+	public function get_pvs( $guid )
 	{
-		// test the cache like a good API user
-		// if the prime_pv_cache() cache method earlier is working, this should always return a cached result
-		if ( ! $hits = wp_cache_get( $post_id, 'go-content-stats-hits' ) )
-		{
-			// attempt to get the API key
-			if ( ! $api_key = $this->get_wpcom_api_key() )
-			{
-				return NULL;
-			}
+		$hits = 0;
 
-			// the api has some very hacker-ish docs at http://stats.wordpress.com/csv.php
-			$get_url = sprintf(
-				 'http://stats.wordpress.com/csv.php?api_key=%1$s&blog_uri=%2$s&table=postviews&post_id=%3$d&days=-1&limit=-1&format=json&summarize',
-				 $api_key,
-				 urlencode( $this->config['pv_api_url'] ),
-				 $post_id
+		// test the cache like a good API user
+		if ( ! $hits = wp_cache_get( $guid, 'go-content-stats-hits' ) )
+		{
+			$args = array(
+				'guid' => $guid,
+				'sum' => TRUE,
 			);
 
-			$hits_api = wp_remote_request( $get_url );
-			if ( ! is_wp_error( $hits_api ) )
-			{
-				$hits_api = wp_remote_retrieve_body( $hits_api );
-				$hits_api = json_decode( $hits_api );
+			$hits = $this->storage()->get( $args );
 
-				if ( isset( $hits_api->views ) )
-				{
-					$hits = $hits_api->views;
-				}
-				else
-				{
-					$hits = NULL;
-				}
-
-				wp_cache_set( $post_id, $hits, 'go-content-stats-hits', 1800 );
-			}// end if
-		}// end if
+			wp_cache_set( $guid, $hits, 'go-content-stats-hits', 1800 );
+		}//end if
 
 		return $hits;
 	} // END get_pvs
-
-	/**
-	 * prime the pageview stats cache by doing a bulk query of all posts, rather than individual queries
-	 *
-	 * @param  array $post_ids Post IDs
-	 * @return null
-	 */
-	public function prime_pv_cache( $post_ids )
-	{
-		$to_fetch = array();
-		foreach ( $post_ids as $post_id )
-		{
-			$to_fetch[] = $post_id;
-			if ( 100 == count( $to_fetch ) )
-			{
-				$this->prime_pv_cache_chunk( $to_fetch );
-				$to_fetch = array();
-			}//end if
-		}// end foreach
-
-		$this->prime_pv_cache_chunk( $to_fetch );
-	}//end prime_pv_cache
-
-	private function prime_pv_cache_chunk( $post_ids )
-	{
-		// caching this, but the result doesn't really matter so much as the fact that
-		// we've already run it on a specific set of posts recently
-		$cachekey = md5( serialize( $post_ids ) );
-
-		// test the cache like a good API user
-		if ( ! $hits = wp_cache_get( $cachekey, 'go-content-stats-hits-bulk' ) )
-		{
-			// attempt to get the API key
-			if ( ! $api_key = $this->get_wpcom_api_key() )
-			{
-				return NULL;
-			}
-
-			// the api has some very hacker-ish docs at http://stats.wordpress.com/csv.php
-			$get_url = sprintf(
-				 'http://stats.wordpress.com/csv.php?api_key=%1$s&blog_uri=%2$s&table=postviews&post_id=%3$s&days=-1&limit=-1&format=json&summarize',
-				 $api_key,
-				 urlencode( $this->config['pv_api_url'] ),
-				 implode( ',', array_map( 'absint', $post_ids ) )
-			);
-
-			$hits_api = wp_remote_request( $get_url );
-
-			if ( ! is_wp_error( $hits_api ) )
-			{
-				$hits_api = wp_remote_retrieve_body( $hits_api );
-				$hits_api = json_decode( $hits_api );
-
-				if ( ! isset( $hits_api[0]->postviews ) )
-				{
-					return;
-				}
-
-				foreach ( $hits_api[0]->postviews as $hits_api_post )
-				{
-					if ( ! isset( $hits_api_post->post_id, $hits_api_post->views ) )
-					{
-						continue;
-					}
-
-					// the real gold here is setting the cache entry for the get_pv method to use later
-					wp_cache_set( $hits_api_post->post_id, $hits_api_post->views, 'go-content-stats-hits', 1800 );
-				}
-
-				wp_cache_set( $cachekey, $hits_api[0]->postviews, 'go-content-stats-hits-bulk', 1800 );
-			}// end if
-		}// end if
-	} // END prime_pv_cache_chunk
 
 	/**
 	 * get a list of authors from actual posts (rather than just authors on the blog)
@@ -695,14 +574,12 @@ class GO_Content_Stats
 			return FALSE;
 		}// end if
 
-		$this->prime_pv_cache( wp_list_pluck( $posts, 'ID' ) );
-
 		$stats = $this->initialize_stats( FALSE );
 		foreach ( $posts as $post )
 		{
 			$post_date = date( 'Y-m-d', strtotime( $post->post_date ) );
 
-			$stats[ $post_date ]->pvs += $this->get_pvs( $post->ID );
+			$stats[ $post_date ]->pvs += $this->get_pvs( $post->guid );
 		}// end foreach
 
 		return array(
@@ -747,7 +624,7 @@ class GO_Content_Stats
 			$data->title = get_the_title( $post->ID );
 			$data->permalink = get_permalink( $post->ID );
 			$data->day = date( 'Y-m-d', strtotime( $post->post_date ) );
-			$data->pvs = $this->get_pvs( $post->ID );
+			$data->pvs = $this->get_pvs( $post->guid );
 			$data->comments = $post->comment_count;
 
 			foreach ( $this->config['content_matches'] as $key => $match )
