@@ -140,6 +140,20 @@ class GO_Content_Stats
 		require __DIR__ . '/templates/stats.php';
 	} // END admin_menu
 
+	/**
+	 * object accessor for go-timepicker
+	 * @return GO_Timepicker object
+	 */
+	public function go_timepicker()
+	{
+		if ( ! function_exists( 'go_timepicker' ) )
+		{
+			require __DIR__ . '/external/go-timepicker/go-timepicker.php';
+		}// end if
+
+		return go_timepicker();
+	}//end go_timepicker
+
 	public function admin_enqueue_scripts()
 	{
 		// If we aren't on the actual content stats page we don't need any of this
@@ -149,6 +163,8 @@ class GO_Content_Stats
 		} // END if
 
 		$script_config = apply_filters( 'go-config', array( 'version' => 1 ), 'go-script-version' );
+
+		$this->go_timepicker()->register_resources();
 
 		wp_register_style(
 			'fontawesome',
@@ -160,13 +176,6 @@ class GO_Content_Stats
 		wp_register_style(
 			'rickshaw',
 			plugins_url( 'js/external/rickshaw/rickshaw.min.css', __FILE__ ),
-			array(),
-			$script_config['version']
-		);
-
-		wp_register_style(
-			'bootstrap-daterangepicker',
-			plugins_url( 'js/external/bootstrap-daterangepicker/daterangepicker-bs3.css', __FILE__ ),
 			array(),
 			$script_config['version']
 		);
@@ -210,32 +219,6 @@ class GO_Content_Stats
 			TRUE
 		);
 
-		wp_register_script(
-			'moment',
-			plugins_url( 'js/external/moment.min.js', __FILE__ ),
-			array(),
-			$script_config['version'],
-			TRUE
-		);
-
-		// fiscal quarter momentjs plugin
-		wp_register_script(
-			'moment-fquarter',
-			plugins_url( 'js/external/moment-fquarter.min.js', __FILE__ ),
-			array( 'moment' ),
-			$script_config['version'],
-			TRUE
-		);
-
-		// from https://github.com/dangrossman/bootstrap-daterangepicker
-		wp_register_script(
-			'bootstrap-daterangepicker',
-			plugins_url( 'js/external/bootstrap-daterangepicker/daterangepicker.min.js', __FILE__ ),
-			array( 'jquery', 'moment-fquarter' ),
-			$script_config['version'],
-			TRUE
-		);
-
 		/* note: we'll need to include this if we plan to open source, else delete. */
 		wp_register_script(
 			'jquery-blockui',
@@ -244,7 +227,6 @@ class GO_Content_Stats
 			$script_config['version'],
 			TRUE
 		);
-
 
 		wp_register_script(
 			'go-content-stats',
