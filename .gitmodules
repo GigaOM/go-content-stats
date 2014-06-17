@@ -1,0 +1,3 @@
+[submodule "components/external/go-graphing"]
+	path = components/external/go-graphing
+	url = git@github.com:GigaOM/go-graphing.git
