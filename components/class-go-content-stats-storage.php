@@ -262,6 +262,8 @@ class GO_Content_Stats_Storage
 		$args = array(
 			'post_id' => 0,
 			'limit' => '0,50',
+			'orderby' => 'day',
+			'order' => 'DESC',
 		);
 
 		switch_to_blog( 3 );

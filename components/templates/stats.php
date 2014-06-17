@@ -22,12 +22,6 @@ $key = isset( $_GET['key'] ) ? $_GET['key']: '';
 
 $start = isset( $_GET['start'] ) ? preg_replace( '/[^0-9\-]/', '', $_GET['start'] ) : '';
 $end = isset( $_GET['end'] ) ? preg_replace( '/[^0-9\-]/', '', $_GET['end'] ) : '';
-
-if ( ! $start || ! $end )
-{
-	$start = date( 'Y-m-d', strtotime( '-30 days' ) );
-	$end = date( 'Y-m-d' );
-}//end if
 ?>
 
 <div class="wrap" id="go-content-stats">
@@ -37,13 +31,17 @@ if ( ! $start || ! $end )
 	<a href="#" id="<?php echo /* @INSANE */ esc_attr( $this->get_field_id( 'clear-cache' ) ); ?>">Clear local cache</a>
 	<h2>Gigaom Content Stats</h2>
 	<section id="content-stats">
-		<div id="date-range" class="pull-right">
-			<i class="fa fa-calendar fa-lg"></i>
-			<span><?php echo date( 'F j, Y', strtotime( $start ) ); ?> - <?php echo date( 'F j, Y', strtotime( $end ) ); ?></span>
-			<i class="fa fa-angle-down"></i>
-			<input type="hidden" id="<?php echo /* @INSANE */ esc_attr( $this->get_field_id( 'start' ) ); ?>" name="<?php echo /* @INSANE */ esc_attr( $this->get_field_id( 'start' ) ); ?>" value="<?php echo esc_attr( $start ); ?>"/>
-			<input type="hidden" id="<?php echo /* @INSANE */ esc_attr( $this->get_field_id( 'end' ) ); ?>" name="<?php echo /* @INSANE */ esc_attr( $this->get_field_id( 'end' ) ); ?>" value="<?php echo esc_attr( $end ); ?>"/>
-		</div>
+		<?php
+		do_action( 'go_timepicker_date_range_picker', array(
+			'start' => $start,
+			'start_field_id' => $this->get_field_id( 'start' ),
+			'start_field_name' => $this->get_field_name( 'start' ),
+			'end' => $end,
+			'end_field_id' => $this->get_field_id( 'end' ),
+			'end_field_name' => $this->get_field_name( 'end' ),
+		) );
+		?>
+
 		<header>Post performance</header>
 		<?php ob_start(); ?>
 		<li data-type="{{type}}" data-key="{{key}}">
