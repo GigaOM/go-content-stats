@@ -24,6 +24,21 @@ class GO_Content_Stats
 	} // END __construct
 
 	/**
+	 * helper function to load the go_graphing singleton
+	 */
+	public function graphing()
+	{
+		// check for the existence of this library before including our local copy of it
+		if ( ! function_exists( 'go_graphing' ) )
+		{
+			// this is the path to the main plugin bootstrap file, the file WP would normally load itself if this we being loaded as a regular plugin
+			require_once __DIR__ . '/external/go-graphing/go-graphing.php';
+		}//end if
+
+		return go_graphing();
+	}//end graphing
+
+	/**
 	 * called on register_activation_hook
 	 */
 	public function activate()
@@ -148,7 +163,7 @@ class GO_Content_Stats
 	{
 		if ( ! function_exists( 'go_timepicker' ) )
 		{
-			require __DIR__ . '/external/go-timepicker/go-timepicker.php';
+			//require __DIR__ . '/external/go-timepicker/go-timepicker.php';
 		}// end if
 
 		return go_timepicker();
@@ -164,18 +179,15 @@ class GO_Content_Stats
 
 		$script_config = apply_filters( 'go-config', array( 'version' => 1 ), 'go-script-version' );
 
+		// make sure our go-graphing styles and js are registered
 		$this->go_timepicker()->register_resources();
+
+		// make sure our go-graphing styles and js are registered
+		$this->graphing();
 
 		wp_register_style(
 			'fontawesome',
 			plugins_url( 'css/font-awesome.css', __FILE__ ),
-			array(),
-			$script_config['version']
-		);
-
-		wp_register_style(
-			'rickshaw',
-			plugins_url( 'js/external/rickshaw/rickshaw.min.css', __FILE__ ),
 			array(),
 			$script_config['version']
 		);
@@ -196,33 +208,8 @@ class GO_Content_Stats
 		);
 
 		wp_register_script(
-			'd3',
-			plugins_url( 'js/external/d3.min.js', __FILE__ ),
-			array(),
-			$script_config['version'],
-			TRUE
-		);
-
-		wp_register_script(
-			'rickshaw',
-			plugins_url( 'js/external/rickshaw/rickshaw.min.js', __FILE__ ),
-			array( 'd3' ),
-			$script_config['version'],
-			TRUE
-		);
-
-		wp_register_script(
 			'handlebars',
 			plugins_url( 'js/external/handlebars.min.js', __FILE__ ),
-			array( 'jquery' ),
-			$script_config['version'],
-			TRUE
-		);
-
-		/* note: we'll need to include this if we plan to open source, else delete. */
-		wp_register_script(
-			'jquery-blockui',
-			plugins_url( 'js/external/jquery.blockUI.js', __FILE__ ),
 			array( 'jquery' ),
 			$script_config['version'],
 			TRUE

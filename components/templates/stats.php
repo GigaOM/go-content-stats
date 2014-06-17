@@ -32,7 +32,7 @@ $end = isset( $_GET['end'] ) ? preg_replace( '/[^0-9\-]/', '', $_GET['end'] ) : 
 	<h2>Gigaom Content Stats</h2>
 	<section id="content-stats">
 		<?php
-		go_timepicker()->date_range_picker( array(
+		do_action( 'go_timepicker_date_range_picker', array(
 			'start' => $start,
 			'start_field_id' => $this->get_field_id( 'start' ),
 			'start_field_name' => $this->get_field_name( 'start' ),
