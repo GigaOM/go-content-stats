@@ -1,0 +1,3 @@
+[submodule "components/external/go-timepicker"]
+	path = components/external/go-timepicker
+	url = git@github.com:GigaOM/go-timepicker.git
