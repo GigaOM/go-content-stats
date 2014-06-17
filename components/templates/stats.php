@@ -3,6 +3,7 @@
 $content_match_th = '';
 $content_summary = '';
 $content_row = '';
+$posts_content_row = '';
 $columns = 6;
 if ( is_array( $this->config['content_matches'] ) )
 {
@@ -71,12 +72,11 @@ if ( ! $start || ! $end )
 				$filter_object = get_term_by( 'slug', $key, $type );
 			}//end else
 
-			if ( is_wp_error( $filter_object ) )
+			$name = '';
+			if ( ! is_wp_error( $filter_object ) && is_object( $filter_object ) )
 			{
-				break;
+				$name = ! empty( $filter_object->name ) ? $filter_object->name : $filter_object->display_name;
 			}//end if
-
-			$name = ! empty( $filter_object->name ) ? $filter_object->name : $filter_object->display_name;
 
 			$item = $filter_template;
 			$item = str_replace( '{{type}}', esc_attr( $type ), $item );
@@ -246,14 +246,3 @@ if ( ! $start || ! $end )
 		</tbody>
 	</table>
 </script>
-
-
-
-
-
-
-
-
-
-
-

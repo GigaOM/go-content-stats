@@ -189,6 +189,24 @@ class GO_Content_Stats_Storage
 	}// end get
 
 	/**
+	 * calculate page views using unions
+	 * for some reason, MySQL does not perform well with >9 IDs in the "IN()"
+	 * with unions, it is super speedy quick like
+	 *
+	 * @param  array $post_ids post IDs
+	 * @return int count of page views for the posts
+	 */
+	public function calc_pvs( $post_ids )
+	{
+		global $wpdb;
+
+		$sql = 'SELECT SUM(v) FROM ( ';
+		$sub_sql = 'SELECT SUM(views) v FROM wp_go_content_stats where post_id=';
+		$sql .= $sub_sql . implode( ' union ' . $sub_sql, $post_ids ) . ') t';
+		return $wpdb->get_var( $sql );
+	}//end calc_pvs
+
+	/**
 	 * delete from the queue
 	 *
 	 * @param array fields to use as conditional for delete
@@ -286,12 +304,12 @@ class GO_Content_Stats_Storage
 					{
 						$sql = "SELECT ID FROM {$wpdb->posts} WHERE guid = %s";
 						$sql = $wpdb->prepare( $sql, $guid );
-						$post_id = $wpdb->get_var( $sql );
+						$result = $wpdb->get_var( $sql );
+						$post_id = $result ?: -3;
 					}//end if
 				}//end if
 			}//end else
 			echo '+';
-
 			$count += $this->update( array( 'post_id' => $post_id ), array(
 				'property' => $row->property,
 				'url' => $row->url,
