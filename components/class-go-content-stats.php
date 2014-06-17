@@ -381,17 +381,7 @@ class GO_Content_Stats
 	 */
 	public function get_pvs( $post_ids )
 	{
-		$hits = 0;
-
-		$args = array(
-			'post_id' => $post_ids,
-			'sum' => TRUE,
-		);
-do_action( 'debug_robot', 'ZZZ: ' . print_r( $args, true ) );
-
-		$hits = $this->storage()->get( $args );
-
-		return $hits;
+		return $this->storage()->calc_pvs( $post_ids );
 	} // END get_pvs
 
 	/**
@@ -534,8 +524,8 @@ do_action( 'debug_robot', 'ZZZ: ' . print_r( $args, true ) );
 		}// end if
 
 		$stats['period'] = array(
-			'start' => $this->days[ 0 ],
-			'end' => $this->days[ count( $this->days ) - 1 ],
+			'start' => empty( $this->days[ 0 ] ) ? $this->date_greater : $this->days[ 0 ],
+			'end' => empty( $this->days[ count( $this->days ) - 1 ] ) ? $this->date_lesser : $this->days[ count( $this->days ) - 1 ],
 		);
 
 		$stats['which'] = $which;
@@ -601,7 +591,7 @@ do_action( 'debug_robot', 'ZZZ: ' . print_r( $args, true ) );
 		$stats = $this->initialize_stats( FALSE );
 		foreach ( $post_ids as $post_date => $posts_by_day )
 		{
-			$stats[ $post_date ] = $this->get_pvs( $posts_by_day );
+			$stats[ $post_date ]->pvs = (int) $this->get_pvs( $posts_by_day );
 		}// end foreach
 
 		return array(
@@ -615,6 +605,7 @@ do_action( 'debug_robot', 'ZZZ: ' . print_r( $args, true ) );
 		// authors here
 		$authors = $this->get_authors_list();
 
+		$taxonomies = array();
 		// all configured taxonomies here
 		foreach ( $this->config['taxonomies'] as $tax )
 		{
