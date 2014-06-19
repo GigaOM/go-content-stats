@@ -311,7 +311,9 @@ class GO_Content_Stats_Storage
 					}//end if
 				}//end if
 			}//end else
+
 			echo '+';
+
 			$count += $this->update( array( 'post_id' => $post_id ), array(
 				'property' => $row->property,
 				'url' => $row->url,
