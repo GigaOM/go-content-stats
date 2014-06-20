@@ -10,9 +10,9 @@ class GO_Content_Stats
 	public $calendar;
 	private $days = array();
 	private $dependencies = array(
-		'go-google',
-		'go-graphing',
-		'go-timepicker',
+		'go-google' => 'https://github.com/GigaOM/go-google',
+		'go-graphing' => 'https://github.com/GigaOM/go-graphing',
+		'go-timepicker' => 'https://github.com/GigaOM/go-timepicker',
 	);
 	private $missing_dependencies = array();
 	private $pieces;
@@ -43,7 +43,7 @@ class GO_Content_Stats
 	 */
 	public function check_dependencies()
 	{
-		foreach ( $this->dependencies as $dependency )
+		foreach ( $this->dependencies as $dependency => $url )
 		{
 			if ( function_exists( str_replace( '-', '_', $dependency ) ) )
 			{
@@ -71,10 +71,10 @@ class GO_Content_Stats
 			</p>
 			<ul>
 				<?php
-				foreach ( $this->missing_dependencies as $dependency )
+				foreach ( $this->missing_dependencies as $dependency => $url )
 				{
 					?>
-					<li><?php echo esc_html( $dependency ); ?></li>
+					<li><a href="<?php echo esc_url( $url ); ?>"><?php echo esc_html( $dependency ); ?></a></li>
 					<?php
 				}//end foreach
 				?>
