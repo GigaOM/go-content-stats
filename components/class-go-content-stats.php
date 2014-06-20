@@ -39,6 +39,51 @@ class GO_Content_Stats
 	}//end init
 
 	/**
+	 * check plugin dependencies
+	 */
+	public function check_dependencies()
+	{
+		foreach ( $this->dependencies as $dependency )
+		{
+			if ( function_exists( str_replace( '-', '_', $dependency ) ) )
+			{
+				continue;
+			}//end if
+
+			$this->missing_dependencies[] = $dependency;
+		}//end foreach
+
+		if ( $this->missing_dependencies )
+		{
+			add_action( 'admin_notices', array( $this, 'admin_notices' ) );
+		}//end if
+	}//end check_dependencies
+
+	/**
+	 * hooked to the admin_notices action to inject a message if depenencies are not activated
+	 */
+	public function admin_notices()
+	{
+		?>
+		<div class="error">
+			<p>
+				You must <a href="<?php echo esc_url( admin_url( 'plugins.php' ) ); ?>">activate</a> the following plugins before using <code>go-content-stats</code> plugin:
+			</p>
+			<ul>
+				<?php
+				foreach ( $this->missing_dependencies as $dependency )
+				{
+					?>
+					<li><?php echo esc_html( $dependency ); ?></li>
+					<?php
+				}//end foreach
+				?>
+			</ul>
+		</div>
+		<?php
+	}//end admin_notices
+
+	/**
 	 * helper function to load the go_graphing singleton
 	 */
 	public function graphing()
@@ -114,51 +159,6 @@ class GO_Content_Stats
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ) );
 	}// end admin_init
 
-	/**
-	 * check plugin dependencies
-	 */
-	public function check_dependencies()
-	{
-		foreach ( $this->dependencies as $dependency )
-		{
-			if ( function_exists( str_replace( '-', '_', $dependency ) ) )
-			{
-				continue;
-			}//end if
-
-			$this->missing_dependencies[] = $dependency;
-		}//end foreach
-
-		if ( $this->missing_dependencies )
-		{
-			add_action( 'admin_notices', array( $this, 'admin_notices' ) );
-		}//end if
-	}//end check_dependencies
-
-	/**
-	 * hooked to the admin_notices action to inject a message if depenencies are not activated
-	 */
-	public function admin_notices()
-	{
-		?>
-		<div class="error">
-			<p>
-				You must <a href="<?php echo esc_url( admin_url( 'plugins.php' ) ); ?>">activate</a> the following plugins before using <code>go-content-stats</code> plugin:
-			</p>
-			<ul>
-				<?php
-				foreach ( $this->missing_dependencies as $dependency )
-				{
-					?>
-					<li><?php echo esc_html( $dependency ); ?></li>
-					<?php
-				}//end foreach
-				?>
-			</ul>
-		</div>
-		<?php
-	}//end admin_notices
-
 	private function config()
 	{
 		if ( $this->config )
@@ -224,11 +224,6 @@ class GO_Content_Stats
 	 */
 	public function go_timepicker()
 	{
-		if ( ! function_exists( 'go_timepicker' ) )
-		{
-			//require __DIR__ . '/external/go-timepicker/go-timepicker.php';
-		}// end if
-
 		return go_timepicker();
 	}//end go_timepicker
 
