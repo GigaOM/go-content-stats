@@ -9,6 +9,12 @@ class GO_Content_Stats
 	public $date_lesser;
 	public $calendar;
 	private $days = array();
+	private $dependencies = array(
+		'go-google',
+		'go-graphing',
+		'go-timepicker',
+	);
+	private $missing_dependencies = array();
 	private $pieces;
 	private $id_base = 'go-content-stats';
 	private $storage;
@@ -19,22 +25,24 @@ class GO_Content_Stats
 	 */
 	public function __construct()
 	{
+		add_action( 'init', array( $this, 'init' ) );
 		add_action( 'admin_init', array( $this, 'admin_init' ) );
 		add_action( 'admin_menu', array( $this, 'admin_menu_init' ) );
 	} // END __construct
+
+	/**
+	 * hooked to init for dependency checking
+	 */
+	public function init()
+	{
+		$this->check_dependencies();
+	}//end init
 
 	/**
 	 * helper function to load the go_graphing singleton
 	 */
 	public function graphing()
 	{
-		// check for the existence of this library before including our local copy of it
-		if ( ! function_exists( 'go_graphing' ) )
-		{
-			// this is the path to the main plugin bootstrap file, the file WP would normally load itself if this we being loaded as a regular plugin
-			require_once __DIR__ . '/external/go-graphing/go-graphing.php';
-		}//end if
-
 		return go_graphing();
 	}//end graphing
 
@@ -81,6 +89,11 @@ class GO_Content_Stats
 	 */
 	public function admin_menu_init()
 	{
+		if ( $this->missing_dependencies )
+		{
+			return;
+		}//end if
+
 		$this->config();
 		$this->menu_url = admin_url( 'index.php?page=go-content-stats' );
 		add_submenu_page( 'index.php', 'Gigaom Content Stats', 'Content Stats', 'edit_posts', 'go-content-stats', array( $this, 'admin_menu' ) );
@@ -88,6 +101,11 @@ class GO_Content_Stats
 
 	public function admin_init()
 	{
+		if ( $this->missing_dependencies )
+		{
+			return;
+		}//end if
+
 		$this->config();
 		$this->storage();
 		add_action( 'go-content-stats-posts', array( $this, 'prime_pv_cache' ) );
@@ -95,6 +113,51 @@ class GO_Content_Stats
 
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ) );
 	}// end admin_init
+
+	/**
+	 * check plugin dependencies
+	 */
+	public function check_dependencies()
+	{
+		foreach ( $this->dependencies as $dependency )
+		{
+			if ( function_exists( str_replace( '-', '_', $dependency ) ) )
+			{
+				continue;
+			}//end if
+
+			$this->missing_dependencies[] = $dependency;
+		}//end foreach
+
+		if ( $this->missing_dependencies )
+		{
+			add_action( 'admin_notices', array( $this, 'admin_notices' ) );
+		}//end if
+	}//end check_dependencies
+
+	/**
+	 * hooked to the admin_notices action to inject a message if depenencies are not activated
+	 */
+	public function admin_notices()
+	{
+		?>
+		<div class="error">
+			<p>
+				You must <a href="<?php echo esc_url( admin_url( 'plugins.php' ) ); ?>">activate</a> the following plugins before using <code>go-content-stats</code> plugin:
+			</p>
+			<ul>
+				<?php
+				foreach ( $this->missing_dependencies as $dependency )
+				{
+					?>
+					<li><?php echo esc_html( $dependency ); ?></li>
+					<?php
+				}//end foreach
+				?>
+			</ul>
+		</div>
+		<?php
+	}//end admin_notices
 
 	private function config()
 	{
