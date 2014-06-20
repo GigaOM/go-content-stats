@@ -193,7 +193,7 @@ $end = isset( $_GET['end'] ) ? preg_replace( '/[^0-9\-]/', '', $_GET['end'] ) : 
 				<td class="comments-per-posts">{{decimal_format comments_per_post}}</td>
 				<?php echo $content_row; ?>
 			</tr>
-			<tr class="stat-row-posts">
+			<tr id="row-posts-{{@key}}" class="stat-row-posts">
 				<td colspan="<?php echo absint( $columns ); ?>">
 				</td>
 			</tr>

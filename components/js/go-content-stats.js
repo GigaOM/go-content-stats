@@ -634,9 +634,10 @@ if ( 'undefined' === typeof go_content_stats ) {
 
 		var $row = $( '#row-' + data.key );
 		$row.find( '.posts i' ).attr( 'class', '' ).addClass( 'fa fa-angle-up' );
-		$next = $row.next();
-		$next.find( 'td' ).html( template( data ) );
-		$next.removeClass( 'loading' ).addClass( 'loaded' );
+
+		var $row_posts = $( '#row-posts-' + data.key );
+		$row_posts.find( 'td' ).html( template( data ) );
+		$row_posts.removeClass( 'loading' ).addClass( 'loaded' );
 	};
 
 	/**
