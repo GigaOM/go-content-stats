@@ -25,18 +25,44 @@ class GO_Content_Stats
 	 */
 	public function __construct()
 	{
-		add_action( 'init', array( $this, 'init' ) );
 		add_action( 'admin_init', array( $this, 'admin_init' ) );
 		add_action( 'admin_menu', array( $this, 'admin_menu_init' ) );
 	} // END __construct
 
 	/**
-	 * hooked to init for dependency checking
+	 * add the menu item to the dashboard
 	 */
-	public function init()
+	public function admin_menu_init()
 	{
 		$this->check_dependencies();
-	}//end init
+
+		if ( $this->missing_dependencies )
+		{
+			return;
+		}//end if
+
+		$this->config();
+		$this->menu_url = admin_url( 'index.php?page=go-content-stats' );
+		add_submenu_page( 'index.php', 'Gigaom Content Stats', 'Content Stats', 'edit_posts', 'go-content-stats', array( $this, 'admin_menu' ) );
+	} // END admin_menu_init
+
+	/**
+	 * hooked to the admin_init action
+	 */
+	public function admin_init()
+	{
+		if ( $this->missing_dependencies )
+		{
+			return;
+		}//end if
+
+		$this->config();
+		$this->storage();
+		add_action( 'go-content-stats-posts', array( $this, 'prime_pv_cache' ) );
+		add_action( 'wp_ajax_go_content_stats_fetch', array( $this, 'fetch_ajax' ) );
+
+		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ) );
+	}// end admin_init
 
 	/**
 	 * check plugin dependencies
@@ -128,36 +154,6 @@ class GO_Content_Stats
 
 		return $this->load;
 	}//end load
-
-	/**
-	 * add the menu item to the dashboard
-	 */
-	public function admin_menu_init()
-	{
-		if ( $this->missing_dependencies )
-		{
-			return;
-		}//end if
-
-		$this->config();
-		$this->menu_url = admin_url( 'index.php?page=go-content-stats' );
-		add_submenu_page( 'index.php', 'Gigaom Content Stats', 'Content Stats', 'edit_posts', 'go-content-stats', array( $this, 'admin_menu' ) );
-	} // END admin_menu_init
-
-	public function admin_init()
-	{
-		if ( $this->missing_dependencies )
-		{
-			return;
-		}//end if
-
-		$this->config();
-		$this->storage();
-		add_action( 'go-content-stats-posts', array( $this, 'prime_pv_cache' ) );
-		add_action( 'wp_ajax_go_content_stats_fetch', array( $this, 'fetch_ajax' ) );
-
-		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ) );
-	}// end admin_init
 
 	private function config()
 	{
