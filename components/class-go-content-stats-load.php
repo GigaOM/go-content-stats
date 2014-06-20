@@ -2,8 +2,8 @@
 
 class GO_Content_Stats_Load
 {
-	private $analytics;
 	private $config;
+	private $google_analytics;
 
 	public function load_range( $start, $end )
 	{
@@ -53,37 +53,15 @@ class GO_Content_Stats_Load
 		return $this->config;
 	}//end config
 
-	private function analytics()
+	private function google_analytics()
 	{
-		if ( ! $this->analytics )
+		if ( ! $this->google_analytics )
 		{
-			if ( ! ( $this->config( 'key_file' ) && $this->config( 'google_auth_account' ) ) )
-			{
-				return FALSE;
-			}// end if
+			$this->google_analytics = go_google( $this->config( 'application_name' ), $this->config( 'google_auth_account' ), $this->config( 'key_file' ) )->analytics();
+		}// end if
 
-			// required by the Google library
-			set_include_path( get_include_path() . PATH_SEPARATOR . __DIR__ . '/external' );
-
-			require_once 'external/Google/Client.php';
-			require_once 'external/Google/Service/Analytics.php';
-
-			$client = new Google_Client();
-			$client->setApplicationName( 'Gigaom Content Stats' );
-
-			$key = file_get_contents( $this->config( 'key_file' ) );
-			$cred = new Google_Auth_AssertionCredentials(
-				$this->config( 'google_auth_account' ),
-				array( 'https://www.googleapis.com/auth/analytics.readonly' ),
-				$key
-			);
-			$client->setAssertionCredentials( $cred );
-
-			$this->analytics = new Google_Service_Analytics( $client );
-		}//end if
-
-		return $this->analytics;
-	}//end analytics
+		return $this->google_analytics;
+	}//end google_analytics
 
 	private function generate_day( $date, $profile_id )
 	{
@@ -126,7 +104,7 @@ class GO_Content_Stats_Load
 			$args[ 'start-index' ] = $index;
 		}// end if
 
-		$data = $this->analytics()->data_ga->get(
+		$data = $this->google_analytics()->data_ga->get(
 			'ga:' . $profile_id,
 			$date,
 			$date,
