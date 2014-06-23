@@ -380,6 +380,44 @@ class GO_Content_Stats
 	} // END get_pvs
 
 	/**
+	 * get pageviews for a given post ID by day
+	 *
+	 * @param int $post_id Post ID
+	 */
+	public function get_pvs_by_day( $post_id )
+	{
+		$stats = array();
+
+		$args = array(
+			'post_id' => $post_id,
+		);
+		$views = $this->storage()->get( $args );
+
+		if ( ! $views )
+		{
+			return $stats;
+		}//end if
+
+		$date_start = $views[0]->date;
+		$date_end = $views[ count( $views ) - 1 ]->date;
+
+		$day = strtotime( $date_start );
+		$end = strtotime( $date_end );
+		while( $day <= $end )
+		{
+			$stats[ $day ] = 0;
+			$day = strtotime( '+1 day', $day );
+		}//end while
+
+		foreach ( $views as $view )
+		{
+			$stats[ strtotime( $view->date ) ] += $view->views;
+		}//end foreach
+
+		return $stats;
+	} // END get_pvs_by_day
+
+	/**
 	 * get a list of authors from actual posts (rather than just authors on the blog)
 	 * cached for a full day
 	 */
@@ -633,6 +671,7 @@ class GO_Content_Stats
 			$data->permalink = get_permalink( $post->ID );
 			$data->day = date( 'Y-m-d', strtotime( $post->post_date ) );
 			$data->pvs = $this->get_pvs( array( $post->ID ) );
+			$data->pvs_by_day = go_graphing()->array_to_series( $this->get_pvs_by_day( $post->ID ) );
 
 			$data->comments = $post->comment_count;
 

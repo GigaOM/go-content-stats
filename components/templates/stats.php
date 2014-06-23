@@ -227,6 +227,7 @@ $end = isset( $_GET['end'] ) ? preg_replace( '/[^0-9\-]/', '', $_GET['end'] ) : 
 		<thead>
 			<tr>
 				<th class="title">Title</th>
+				<th class="sparkline">Sparkline</th>
 				<th class="pvs">PVs</th>
 				<th class="comments">Comments</th>
 				<?php echo $content_match_th; ?>
@@ -236,6 +237,7 @@ $end = isset( $_GET['end'] ) ? preg_replace( '/[^0-9\-]/', '', $_GET['end'] ) : 
 			{{#each posts}}
 			<tr id="post-{{id}}" class="post-row" data-num-posts="{{posts}}">
 				<td class="title"><a href="{{{permalink}}}" target="_blank">{{{title}}}</a></td>
+				<td class="sparkline"><div class="sparkline-graph"></div></td>
 				<td class="pvs">{{number_format pvs}}</td>
 				<td class="comments">{{number_format comments}}</td>
 				<?php echo $posts_content_row; ?>

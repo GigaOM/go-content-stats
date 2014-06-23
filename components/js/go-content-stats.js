@@ -638,6 +638,22 @@ if ( 'undefined' === typeof go_content_stats ) {
 		var $row_posts = $( '#row-posts-' + data.key );
 		$row_posts.find( 'td' ).html( template( data ) );
 		$row_posts.removeClass( 'loading' ).addClass( 'loaded' );
+
+		for ( var i in data.posts ) {
+			var graph = new Rickshaw.Graph({
+			element: document.querySelector( '#post-' + data.posts[ i ].id + ' .sparkline-graph' ),
+				width: 200,
+				height: 25,
+				renderer: 'line',
+				min: 'auto',
+				series: [ {
+					data: data.posts[ i ].pvs_by_day,
+					color: '#4682b4'
+				}]
+			});
+			graph.render();
+		}
+
 	};
 
 	/**
