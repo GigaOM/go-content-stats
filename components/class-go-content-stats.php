@@ -403,7 +403,7 @@ class GO_Content_Stats
 
 		$day = strtotime( $date_start );
 		$end = strtotime( $date_end );
-		while( $day <= $end )
+		while ( $day <= $end )
 		{
 			$stats[ $day ] = 0;
 			$day = strtotime( '+1 day', $day );
@@ -685,7 +685,8 @@ class GO_Content_Stats
 					$i = 0;
 					foreach ( $data->pvs_by_day as $day_views )
 					{
-						if  ( $i < 7 ) {
+						if ( $i < 7 )
+						{
 							$views_7 += $day_views;
 						}//end if
 
@@ -701,7 +702,7 @@ class GO_Content_Stats
 						}//end if
 					}//end foreach
 					$data->pvs_percentage_plus_seven = ( 1 - ( $views_7 / $data->pvs ) ) * 100;
-				}
+				}//end if
 			}//end if
 
 			$data->pvs_by_day = go_graphing()->array_to_series( $data->pvs_by_day );
