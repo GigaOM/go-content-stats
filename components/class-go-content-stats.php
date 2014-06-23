@@ -13,6 +13,7 @@ class GO_Content_Stats
 		'go-google' => 'https://github.com/GigaOM/go-google',
 		'go-graphing' => 'https://github.com/GigaOM/go-graphing',
 		'go-timepicker' => 'https://github.com/GigaOM/go-timepicker',
+		'go-ui' => 'https://github.com/GigaOM/go-ui',
 	);
 	private $missing_dependencies = array();
 	private $pieces;
@@ -76,7 +77,7 @@ class GO_Content_Stats
 				continue;
 			}//end if
 
-			$this->missing_dependencies[] = $dependency;
+			$this->missing_dependencies[ $dependency ] = $url;
 		}//end foreach
 
 		if ( $this->missing_dependencies )
@@ -108,14 +109,6 @@ class GO_Content_Stats
 		</div>
 		<?php
 	}//end admin_notices
-
-	/**
-	 * helper function to load the go_graphing singleton
-	 */
-	public function graphing()
-	{
-		return go_graphing();
-	}//end graphing
 
 	/**
 	 * called on register_activation_hook
@@ -214,15 +207,6 @@ class GO_Content_Stats
 		require __DIR__ . '/templates/stats.php';
 	} // END admin_menu
 
-	/**
-	 * object accessor for go-timepicker
-	 * @return GO_Timepicker object
-	 */
-	public function go_timepicker()
-	{
-		return go_timepicker();
-	}//end go_timepicker
-
 	public function admin_enqueue_scripts()
 	{
 		// If we aren't on the actual content stats page we don't need any of this
@@ -234,17 +218,13 @@ class GO_Content_Stats
 		$script_config = apply_filters( 'go-config', array( 'version' => 1 ), 'go-script-version' );
 
 		// make sure our go-graphing styles and js are registered
-		$this->go_timepicker()->register_resources();
+		go_timepicker()->register_resources();
 
 		// make sure our go-graphing styles and js are registered
-		$this->graphing();
+		go_graphing();
 
-		wp_register_style(
-			'fontawesome',
-			plugins_url( 'css/font-awesome.css', __FILE__ ),
-			array(),
-			$script_config['version']
-		);
+		// make sure our go-ui styles and js are registered
+		go_ui();
 
 		wp_enqueue_style(
 			'go-content-stats',
@@ -259,14 +239,6 @@ class GO_Content_Stats
 
 		$data = array(
 			'endpoint' => admin_url( 'admin-ajax.php?action=go_content_stats_fetch' ),
-		);
-
-		wp_register_script(
-			'handlebars',
-			plugins_url( 'js/external/handlebars.min.js', __FILE__ ),
-			array( 'jquery' ),
-			$script_config['version'],
-			TRUE
 		);
 
 		wp_register_script(
