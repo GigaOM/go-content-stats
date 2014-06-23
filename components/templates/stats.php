@@ -227,8 +227,11 @@ $end = isset( $_GET['end'] ) ? preg_replace( '/[^0-9\-]/', '', $_GET['end'] ) : 
 		<thead>
 			<tr>
 				<th class="title">Title</th>
-				<th class="sparkline">Sparkline</th>
+				<th class="sparkline">PV sparkline</th>
 				<th class="pvs">PVs</th>
+				<th class="pvs">PVs days to 80%</th>
+				<th class="pvs">PV % +1</th>
+				<th class="pvs">PV % +7</th>
 				<th class="comments">Comments</th>
 				<?php echo $content_match_th; ?>
 			</tr>
@@ -239,6 +242,9 @@ $end = isset( $_GET['end'] ) ? preg_replace( '/[^0-9\-]/', '', $_GET['end'] ) : 
 				<td class="title"><a href="{{{permalink}}}" target="_blank">{{{title}}}</a></td>
 				<td class="sparkline"><div class="sparkline-graph"></div></td>
 				<td class="pvs">{{number_format pvs}}</td>
+				<td class="pvs-days-to-80-percent">{{number_format pvs_days_to_80_percent}}</td>
+				<td class="pvs-percentage-plus-one">{{decimal_format pvs_percentage_plus_one}}%</td>
+				<td class="pvs-percentage-plus-seven">{{decimal_format pvs_percentage_plus_seven}}%</td>
 				<td class="comments">{{number_format comments}}</td>
 				<?php echo $posts_content_row; ?>
 			</tr>

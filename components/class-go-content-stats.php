@@ -671,7 +671,40 @@ class GO_Content_Stats
 			$data->permalink = get_permalink( $post->ID );
 			$data->day = date( 'Y-m-d', strtotime( $post->post_date ) );
 			$data->pvs = $this->get_pvs( array( $post->ID ) );
-			$data->pvs_by_day = go_graphing()->array_to_series( $this->get_pvs_by_day( $post->ID ) );
+
+			$data->pvs_by_day = $this->get_pvs_by_day( $post->ID );
+			$data->pvs_percentage_plus_one = NULL;
+			if ( $data->pvs && $data->pvs_by_day )
+			{
+				$data->pvs_percentage_plus_one = ( 1 - ( current( $data->pvs_by_day ) / $data->pvs ) ) * 100;
+
+				if ( count( $data->pvs_by_day ) >= 7 )
+				{
+					$views_7 = 0;
+					$views_80_percent = 0;
+					$i = 0;
+					foreach ( $data->pvs_by_day as $day_views )
+					{
+						if  ( $i < 7 ) {
+							$views_7 += $day_views;
+						}//end if
+
+						$views_80_percent += $day_views;
+
+						$i++;
+
+						$pvs_percentage_80 = ( $views_80_percent / $data->pvs ) * 100;
+						if ( $pvs_percentage_80 >= 80 )
+						{
+							$data->pvs_days_to_80_percent = $i;
+							break;
+						}//end if
+					}//end foreach
+					$data->pvs_percentage_plus_seven = ( 1 - ( $views_7 / $data->pvs ) ) * 100;
+				}
+			}//end if
+
+			$data->pvs_by_day = go_graphing()->array_to_series( $data->pvs_by_day );
 
 			$data->comments = $post->comment_count;
 

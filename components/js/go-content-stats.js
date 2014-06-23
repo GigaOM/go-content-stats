@@ -637,7 +637,6 @@ if ( 'undefined' === typeof go_content_stats ) {
 
 		var $row_posts = $( '#row-posts-' + data.key );
 		$row_posts.find( 'td' ).html( template( data ) );
-		$row_posts.removeClass( 'loading' ).addClass( 'loaded' );
 
 		for ( var i in data.posts ) {
 			var graph = new Rickshaw.Graph({
@@ -654,6 +653,7 @@ if ( 'undefined' === typeof go_content_stats ) {
 			graph.render();
 		}
 
+		$row_posts.removeClass( 'loading' ).addClass( 'loaded' );
 	};
 
 	/**
