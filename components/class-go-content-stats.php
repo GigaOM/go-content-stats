@@ -661,6 +661,7 @@ class GO_Content_Stats
 			$data->permalink = get_permalink( $post->ID );
 			$data->day = date( 'Y-m-d', strtotime( $post->post_date ) );
 			$data->pvs = $this->get_pvs( array( $post->ID ) );
+
 			$data->comments = $post->comment_count;
 
 			foreach ( $this->config['content_matches'] as $key => $match )
@@ -678,7 +679,6 @@ class GO_Content_Stats
 
 		return array(
 			'posts' => $post_data,
-			'key' => $key,
 		);
 	}//end fetch_posts
 

@@ -279,7 +279,7 @@ class GO_Content_Stats_Storage
 		foreach ( $records as $row )
 		{
 			echo '.';
-			$post_id = -1;
+			$post_id = -1; // couldn't find a GUID
 			$guid = '';
 
 			$content = wp_remote_get( $row->url, $remote_args );
@@ -288,7 +288,7 @@ class GO_Content_Stats_Storage
 
 			if ( is_wp_error( $content ) )
 			{
-				$post_id = -2;
+				$post_id = -2; // page failed to load
 			}//end if
 			else
 			{
@@ -307,7 +307,7 @@ class GO_Content_Stats_Storage
 						$sql = "SELECT ID FROM {$wpdb->posts} WHERE guid = %s";
 						$sql = $wpdb->prepare( $sql, $guid );
 						$result = $wpdb->get_var( $sql );
-						$post_id = $result ?: -3;
+						$post_id = $result ?: -3; // no GUID match
 					}//end if
 				}//end if
 			}//end else
