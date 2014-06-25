@@ -2,7 +2,6 @@
 
 class GO_Content_Stats
 {
-	public $wpcom_api_key = FALSE; // get yours at http://apikey.wordpress.com/
 	public $config;
 	public $date_greater_stamp;
 	public $date_greater;
@@ -10,8 +9,17 @@ class GO_Content_Stats
 	public $date_lesser;
 	public $calendar;
 	private $days = array();
+	private $dependencies = array(
+		'go-google' => 'https://github.com/GigaOM/go-google',
+		'go-graphing' => 'https://github.com/GigaOM/go-graphing',
+		'go-timepicker' => 'https://github.com/GigaOM/go-timepicker',
+		'go-ui' => 'https://github.com/GigaOM/go-ui',
+	);
+	private $missing_dependencies = array();
 	private $pieces;
 	private $id_base = 'go-content-stats';
+	private $storage;
+	private $load;
 
 	/**
 	 * constructor
@@ -27,19 +35,118 @@ class GO_Content_Stats
 	 */
 	public function admin_menu_init()
 	{
+		$this->check_dependencies();
+
+		if ( $this->missing_dependencies )
+		{
+			return;
+		}//end if
+
 		$this->config();
 		$this->menu_url = admin_url( 'index.php?page=go-content-stats' );
 		add_submenu_page( 'index.php', 'Gigaom Content Stats', 'Content Stats', 'edit_posts', 'go-content-stats', array( $this, 'admin_menu' ) );
 	} // END admin_menu_init
 
+	/**
+	 * hooked to the admin_init action
+	 */
 	public function admin_init()
 	{
+		if ( $this->missing_dependencies )
+		{
+			return;
+		}//end if
+
 		$this->config();
+		$this->storage();
 		add_action( 'go-content-stats-posts', array( $this, 'prime_pv_cache' ) );
 		add_action( 'wp_ajax_go_content_stats_fetch', array( $this, 'fetch_ajax' ) );
 
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ) );
 	}// end admin_init
+
+	/**
+	 * check plugin dependencies
+	 */
+	public function check_dependencies()
+	{
+		foreach ( $this->dependencies as $dependency => $url )
+		{
+			if ( function_exists( str_replace( '-', '_', $dependency ) ) )
+			{
+				continue;
+			}//end if
+
+			$this->missing_dependencies[ $dependency ] = $url;
+		}//end foreach
+
+		if ( $this->missing_dependencies )
+		{
+			add_action( 'admin_notices', array( $this, 'admin_notices' ) );
+		}//end if
+	}//end check_dependencies
+
+	/**
+	 * hooked to the admin_notices action to inject a message if depenencies are not activated
+	 */
+	public function admin_notices()
+	{
+		?>
+		<div class="error">
+			<p>
+				You must <a href="<?php echo esc_url( admin_url( 'plugins.php' ) ); ?>">activate</a> the following plugins before using <code>go-content-stats</code> plugin:
+			</p>
+			<ul>
+				<?php
+				foreach ( $this->missing_dependencies as $dependency => $url )
+				{
+					?>
+					<li><a href="<?php echo esc_url( $url ); ?>"><?php echo esc_html( $dependency ); ?></a></li>
+					<?php
+				}//end foreach
+				?>
+			</ul>
+		</div>
+		<?php
+	}//end admin_notices
+
+	/**
+	 * called on register_activation_hook
+	 */
+	public function activate()
+	{
+		$this->storage()->create_table();
+	}// end activate
+
+	/**
+	 * stats table object accessor
+	 */
+	public function storage()
+	{
+		if ( ! $this->storage )
+		{
+			require_once __DIR__ . '/class-go-content-stats-storage.php';
+
+			$this->storage = new GO_Content_Stats_Storage( $this );
+		}//end if
+
+		return $this->storage;
+	}//end storage
+
+	/**
+	 * stats load object accessor
+	 */
+	public function load()
+	{
+		if ( ! $this->load )
+		{
+			require_once __DIR__ . '/class-go-content-stats-load.php';
+
+			$this->load = new GO_Content_Stats_Load();
+		}//end if
+
+		return $this->load;
+	}//end load
 
 	private function config()
 	{
@@ -110,26 +217,14 @@ class GO_Content_Stats
 
 		$script_config = apply_filters( 'go-config', array( 'version' => 1 ), 'go-script-version' );
 
-		wp_register_style(
-			'fontawesome',
-			plugins_url( 'css/font-awesome.css', __FILE__ ),
-			array(),
-			$script_config['version']
-		);
+		// make sure our go-graphing styles and js are registered
+		go_timepicker()->register_resources();
 
-		wp_register_style(
-			'rickshaw',
-			plugins_url( 'js/external/rickshaw/rickshaw.min.css', __FILE__ ),
-			array(),
-			$script_config['version']
-		);
+		// make sure our go-graphing styles and js are registered
+		go_graphing();
 
-		wp_register_style(
-			'bootstrap-daterangepicker',
-			plugins_url( 'js/external/bootstrap-daterangepicker/daterangepicker-bs3.css', __FILE__ ),
-			array(),
-			$script_config['version']
-		);
+		// make sure our go-ui styles and js are registered
+		go_ui();
 
 		wp_enqueue_style(
 			'go-content-stats',
@@ -145,66 +240,6 @@ class GO_Content_Stats
 		$data = array(
 			'endpoint' => admin_url( 'admin-ajax.php?action=go_content_stats_fetch' ),
 		);
-
-		wp_register_script(
-			'd3',
-			plugins_url( 'js/external/d3.min.js', __FILE__ ),
-			array(),
-			$script_config['version'],
-			TRUE
-		);
-
-		wp_register_script(
-			'rickshaw',
-			plugins_url( 'js/external/rickshaw/rickshaw.min.js', __FILE__ ),
-			array( 'd3' ),
-			$script_config['version'],
-			TRUE
-		);
-
-		wp_register_script(
-			'handlebars',
-			plugins_url( 'js/external/handlebars.min.js', __FILE__ ),
-			array( 'jquery' ),
-			$script_config['version'],
-			TRUE
-		);
-
-		wp_register_script(
-			'moment',
-			plugins_url( 'js/external/moment.min.js', __FILE__ ),
-			array(),
-			$script_config['version'],
-			TRUE
-		);
-
-		// fiscal quarter momentjs plugin
-		wp_register_script(
-			'moment-fquarter',
-			plugins_url( 'js/external/moment-fquarter.min.js', __FILE__ ),
-			array( 'moment' ),
-			$script_config['version'],
-			TRUE
-		);
-
-		// from https://github.com/dangrossman/bootstrap-daterangepicker
-		wp_register_script(
-			'bootstrap-daterangepicker',
-			plugins_url( 'js/external/bootstrap-daterangepicker/daterangepicker.min.js', __FILE__ ),
-			array( 'jquery', 'moment-fquarter' ),
-			$script_config['version'],
-			TRUE
-		);
-
-		/* note: we'll need to include this if we plan to open source, else delete.
-		wp_register_script(
-			'jquery-blockui',
-			plugins_url( 'js/external/jquery.blockUI.js', __FILE__ ),
-			array( 'jquery' ),
-			$script_config['version'],
-			TRUE
-		);
-		*/
 
 		wp_register_script(
 			'go-content-stats',
@@ -334,150 +369,53 @@ class GO_Content_Stats
 		return $query->posts;
 	} // END get_taxonomy_stats
 
-	public function get_wpcom_api_key()
-	{
-		$api_key = FALSE;
-
-		// a locally set API key overrides everything
-		if ( ! empty( $this->wpcom_api_key ) )
-		{
-			$api_key = $this->wpcom_api_key;
-		}// end if
-		// attempt to get the API key from the user
-		elseif (
-			( $user = wp_get_current_user() ) &&
-			isset( $user->api_key )
-		)
-		{
-			$api_key = $user->api_key;
-		}// end elseif
-		elseif ( isset( $this->config['pv_api_key'] ) )
-		{
-			$api_key = $this->config['pv_api_key'];
-		}// end elseif
-
-		return $api_key;
-	}//end get_wpcom_api_key
-
 	/**
-	 * get pageviews for the given post ID from Automattic's stats API
+	 * get pageviews for the given post IDs from our stat storage table
 	 *
-	 * @param  int $post_id Post ID
+	 * @param mixed $post_ids Post ID or array of Post IDs
 	 */
-	public function get_pvs( $post_id )
+	public function get_pvs( $post_ids )
 	{
-		// test the cache like a good API user
-		// if the prime_pv_cache() cache method earlier is working, this should always return a cached result
-		if ( ! $hits = wp_cache_get( $post_id, 'go-content-stats-hits' ) )
-		{
-			// attempt to get the API key
-			if ( ! $api_key = $this->get_wpcom_api_key() )
-			{
-				return NULL;
-			}
-
-			// the api has some very hacker-ish docs at http://stats.wordpress.com/csv.php
-			$get_url = sprintf(
-				 'http://stats.wordpress.com/csv.php?api_key=%1$s&blog_uri=%2$s&table=postviews&post_id=%3$d&days=-1&limit=-1&format=json&summarize',
-				 $api_key,
-				 urlencode( $this->config['pv_api_url'] ),
-				 $post_id
-			);
-
-			$hits_api = wp_remote_request( $get_url );
-			if ( ! is_wp_error( $hits_api ) )
-			{
-				$hits_api = wp_remote_retrieve_body( $hits_api );
-				$hits_api = json_decode( $hits_api );
-
-				if ( isset( $hits_api->views ) )
-				{
-					$hits = $hits_api->views;
-				}
-				else
-				{
-					$hits = NULL;
-				}
-
-				wp_cache_set( $post_id, $hits, 'go-content-stats-hits', 1800 );
-			}// end if
-		}// end if
-
-		return $hits;
+		return $this->storage()->calc_pvs( $post_ids );
 	} // END get_pvs
 
 	/**
-	 * prime the pageview stats cache by doing a bulk query of all posts, rather than individual queries
+	 * get pageviews for a given post ID by day
 	 *
-	 * @param  array $post_ids Post IDs
-	 * @return null
+	 * @param int $post_id Post ID
 	 */
-	public function prime_pv_cache( $post_ids )
+	public function get_pvs_by_day( $post_id )
 	{
-		$to_fetch = array();
-		foreach ( $post_ids as $post_id )
+		$stats = array();
+
+		$args = array(
+			'post_id' => $post_id,
+		);
+		$views = $this->storage()->get( $args );
+
+		if ( ! $views )
 		{
-			$to_fetch[] = $post_id;
-			if ( 100 == count( $to_fetch ) )
-			{
-				$this->prime_pv_cache_chunk( $to_fetch );
-				$to_fetch = array();
-			}//end if
-		}// end foreach
+			return $stats;
+		}//end if
 
-		$this->prime_pv_cache_chunk( $to_fetch );
-	}//end prime_pv_cache
+		$date_start = $views[0]->date;
+		$date_end = $views[ count( $views ) - 1 ]->date;
 
-	private function prime_pv_cache_chunk( $post_ids )
-	{
-		// caching this, but the result doesn't really matter so much as the fact that
-		// we've already run it on a specific set of posts recently
-		$cachekey = md5( serialize( $post_ids ) );
-
-		// test the cache like a good API user
-		if ( ! $hits = wp_cache_get( $cachekey, 'go-content-stats-hits-bulk' ) )
+		$day = strtotime( $date_start );
+		$end = strtotime( $date_end );
+		while ( $day <= $end )
 		{
-			// attempt to get the API key
-			if ( ! $api_key = $this->get_wpcom_api_key() )
-			{
-				return NULL;
-			}
+			$stats[ $day ] = 0;
+			$day = strtotime( '+1 day', $day );
+		}//end while
 
-			// the api has some very hacker-ish docs at http://stats.wordpress.com/csv.php
-			$get_url = sprintf(
-				 'http://stats.wordpress.com/csv.php?api_key=%1$s&blog_uri=%2$s&table=postviews&post_id=%3$s&days=-1&limit=-1&format=json&summarize',
-				 $api_key,
-				 urlencode( $this->config['pv_api_url'] ),
-				 implode( ',', array_map( 'absint', $post_ids ) )
-			);
+		foreach ( $views as $view )
+		{
+			$stats[ strtotime( $view->date ) ] += $view->views;
+		}//end foreach
 
-			$hits_api = wp_remote_request( $get_url );
-
-			if ( ! is_wp_error( $hits_api ) )
-			{
-				$hits_api = wp_remote_retrieve_body( $hits_api );
-				$hits_api = json_decode( $hits_api );
-
-				if ( ! isset( $hits_api[0]->postviews ) )
-				{
-					return;
-				}
-
-				foreach ( $hits_api[0]->postviews as $hits_api_post )
-				{
-					if ( ! isset( $hits_api_post->post_id, $hits_api_post->views ) )
-					{
-						continue;
-					}
-
-					// the real gold here is setting the cache entry for the get_pv method to use later
-					wp_cache_set( $hits_api_post->post_id, $hits_api_post->views, 'go-content-stats-hits', 1800 );
-				}
-
-				wp_cache_set( $cachekey, $hits_api[0]->postviews, 'go-content-stats-hits-bulk', 1800 );
-			}// end if
-		}// end if
-	} // END prime_pv_cache_chunk
+		return $stats;
+	} // END get_pvs_by_day
 
 	/**
 	 * get a list of authors from actual posts (rather than just authors on the blog)
@@ -619,8 +557,8 @@ class GO_Content_Stats
 		}// end if
 
 		$stats['period'] = array(
-			'start' => $this->days[ 0 ],
-			'end' => $this->days[ count( $this->days ) - 1 ],
+			'start' => empty( $this->days[ 0 ] ) ? $this->date_greater : $this->days[ 0 ],
+			'end' => empty( $this->days[ count( $this->days ) - 1 ] ) ? $this->date_lesser : $this->days[ count( $this->days ) - 1 ],
 		);
 
 		$stats['which'] = $which;
@@ -670,14 +608,23 @@ class GO_Content_Stats
 			return FALSE;
 		}// end if
 
-		$this->prime_pv_cache( wp_list_pluck( $posts, 'ID' ) );
-
-		$stats = $this->initialize_stats( FALSE );
+		$post_ids = array();
 		foreach ( $posts as $post )
 		{
 			$post_date = date( 'Y-m-d', strtotime( $post->post_date ) );
 
-			$stats[ $post_date ]->pvs += $this->get_pvs( $post->ID );
+			if ( empty( $post_ids[ $post_date ] ) )
+			{
+				$post_ids[ $post_date ] = array();
+			}// end if
+
+			$post_ids[ $post_date ][] = $post->ID;
+		}// end foreach
+
+		$stats = $this->initialize_stats( FALSE );
+		foreach ( $post_ids as $post_date => $posts_by_day )
+		{
+			$stats[ $post_date ]->pvs = (int) $this->get_pvs( $posts_by_day );
 		}// end foreach
 
 		return array(
@@ -691,6 +638,7 @@ class GO_Content_Stats
 		// authors here
 		$authors = $this->get_authors_list();
 
+		$taxonomies = array();
 		// all configured taxonomies here
 		foreach ( $this->config['taxonomies'] as $tax )
 		{
@@ -722,7 +670,43 @@ class GO_Content_Stats
 			$data->title = get_the_title( $post->ID );
 			$data->permalink = get_permalink( $post->ID );
 			$data->day = date( 'Y-m-d', strtotime( $post->post_date ) );
-			$data->pvs = $this->get_pvs( $post->ID );
+			$data->pvs = $this->get_pvs( array( $post->ID ) );
+
+			$data->pvs_by_day = $this->get_pvs_by_day( $post->ID );
+			$data->pvs_percentage_plus_one = NULL;
+			if ( $data->pvs && $data->pvs_by_day )
+			{
+				$data->pvs_percentage_plus_one = ( 1 - ( current( $data->pvs_by_day ) / $data->pvs ) ) * 100;
+
+				if ( count( $data->pvs_by_day ) >= 7 )
+				{
+					$views_7 = 0;
+					$views_80_percent = 0;
+					$i = 0;
+					foreach ( $data->pvs_by_day as $day_views )
+					{
+						if ( $i < 7 )
+						{
+							$views_7 += $day_views;
+						}//end if
+
+						$views_80_percent += $day_views;
+
+						$i++;
+
+						$pvs_percentage_80 = ( $views_80_percent / $data->pvs ) * 100;
+						if ( $pvs_percentage_80 >= 80 )
+						{
+							$data->pvs_days_to_80_percent = $i;
+							break;
+						}//end if
+					}//end foreach
+					$data->pvs_percentage_plus_seven = ( 1 - ( $views_7 / $data->pvs ) ) * 100;
+				}//end if
+			}//end if
+
+			$data->pvs_by_day = go_graphing()->array_to_series( $data->pvs_by_day );
+
 			$data->comments = $post->comment_count;
 
 			foreach ( $this->config['content_matches'] as $key => $match )
@@ -740,7 +724,6 @@ class GO_Content_Stats
 
 		return array(
 			'posts' => $post_data,
-			'key' => $key,
 		);
 	}//end fetch_posts
 

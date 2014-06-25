@@ -3,6 +3,7 @@
 $content_match_th = '';
 $content_summary = '';
 $content_row = '';
+$posts_content_row = '';
 $columns = 6;
 if ( is_array( $this->config['content_matches'] ) )
 {
@@ -21,12 +22,6 @@ $key = isset( $_GET['key'] ) ? $_GET['key']: '';
 
 $start = isset( $_GET['start'] ) ? preg_replace( '/[^0-9\-]/', '', $_GET['start'] ) : '';
 $end = isset( $_GET['end'] ) ? preg_replace( '/[^0-9\-]/', '', $_GET['end'] ) : '';
-
-if ( ! $start || ! $end )
-{
-	$start = date( 'Y-m-d', strtotime( '-30 days' ) );
-	$end = date( 'Y-m-d' );
-}//end if
 ?>
 
 <div class="wrap" id="go-content-stats">
@@ -36,13 +31,17 @@ if ( ! $start || ! $end )
 	<a href="#" id="<?php echo /* @INSANE */ esc_attr( $this->get_field_id( 'clear-cache' ) ); ?>">Clear local cache</a>
 	<h2>Gigaom Content Stats</h2>
 	<section id="content-stats">
-		<div id="date-range" class="pull-right">
-			<i class="fa fa-calendar fa-lg"></i>
-			<span><?php echo date( 'F j, Y', strtotime( $start ) ); ?> - <?php echo date( 'F j, Y', strtotime( $end ) ); ?></span>
-			<i class="fa fa-angle-down"></i>
-			<input type="hidden" id="<?php echo /* @INSANE */ esc_attr( $this->get_field_id( 'start' ) ); ?>" name="<?php echo /* @INSANE */ esc_attr( $this->get_field_id( 'start' ) ); ?>" value="<?php echo esc_attr( $start ); ?>"/>
-			<input type="hidden" id="<?php echo /* @INSANE */ esc_attr( $this->get_field_id( 'end' ) ); ?>" name="<?php echo /* @INSANE */ esc_attr( $this->get_field_id( 'end' ) ); ?>" value="<?php echo esc_attr( $end ); ?>"/>
-		</div>
+		<?php
+		do_action( 'go_timepicker_date_range_picker', array(
+			'start' => $start,
+			'start_field_id' => $this->get_field_id( 'start' ),
+			'start_field_name' => $this->get_field_name( 'start' ),
+			'end' => $end,
+			'end_field_id' => $this->get_field_id( 'end' ),
+			'end_field_name' => $this->get_field_name( 'end' ),
+		) );
+		?>
+
 		<header>Post performance</header>
 		<?php ob_start(); ?>
 		<li data-type="{{type}}" data-key="{{key}}">
@@ -71,12 +70,11 @@ if ( ! $start || ! $end )
 				$filter_object = get_term_by( 'slug', $key, $type );
 			}//end else
 
-			if ( is_wp_error( $filter_object ) )
+			$name = '';
+			if ( ! is_wp_error( $filter_object ) && is_object( $filter_object ) )
 			{
-				break;
+				$name = ! empty( $filter_object->name ) ? $filter_object->name : $filter_object->display_name;
 			}//end if
-
-			$name = ! empty( $filter_object->name ) ? $filter_object->name : $filter_object->display_name;
 
 			$item = $filter_template;
 			$item = str_replace( '{{type}}', esc_attr( $type ), $item );
@@ -132,8 +130,6 @@ if ( ! $start || ! $end )
 		<header>Select a knife to slice through the stats</header>
 		<div id="taxonomy-data"><!-- taxonomy-criteria-template template will render here --></div>
 	</section>
-
-	<p>WPCom stats using API Key <?php echo esc_html( $this->get_wpcom_api_key() ); ?></p>
 </div>
 
 <script type="text/x-handlebars-template" id="taxonomy-criteria-template">
@@ -197,7 +193,7 @@ if ( ! $start || ! $end )
 				<td class="comments-per-posts">{{decimal_format comments_per_post}}</td>
 				<?php echo $content_row; ?>
 			</tr>
-			<tr class="stat-row-posts">
+			<tr id="row-posts-{{@key}}" class="stat-row-posts">
 				<td colspan="<?php echo absint( $columns ); ?>">
 				</td>
 			</tr>
@@ -231,7 +227,11 @@ if ( ! $start || ! $end )
 		<thead>
 			<tr>
 				<th class="title">Title</th>
+				<th class="sparkline">PV sparkline</th>
 				<th class="pvs">PVs</th>
+				<th class="pvs">PVs days to 80%</th>
+				<th class="pvs">PV % +1</th>
+				<th class="pvs">PV % +7</th>
 				<th class="comments">Comments</th>
 				<?php echo $content_match_th; ?>
 			</tr>
@@ -240,7 +240,11 @@ if ( ! $start || ! $end )
 			{{#each posts}}
 			<tr id="post-{{id}}" class="post-row" data-num-posts="{{posts}}">
 				<td class="title"><a href="{{{permalink}}}" target="_blank">{{{title}}}</a></td>
+				<td class="sparkline"><div class="sparkline-graph"></div></td>
 				<td class="pvs">{{number_format pvs}}</td>
+				<td class="pvs-days-to-80-percent">{{number_format pvs_days_to_80_percent}}</td>
+				<td class="pvs-percentage-plus-one">{{decimal_format pvs_percentage_plus_one}}%</td>
+				<td class="pvs-percentage-plus-seven">{{decimal_format pvs_percentage_plus_seven}}%</td>
 				<td class="comments">{{number_format comments}}</td>
 				<?php echo $posts_content_row; ?>
 			</tr>
@@ -248,14 +252,3 @@ if ( ! $start || ! $end )
 		</tbody>
 	</table>
 </script>
-
-
-
-
-
-
-
-
-
-
-

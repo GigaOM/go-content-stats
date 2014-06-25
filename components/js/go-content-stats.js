@@ -406,6 +406,9 @@ if ( 'undefined' === typeof go_content_stats ) {
 	};
 
 	go_content_stats.fetch_in_chunks = function( which, gaps ) {
+		console.info( 'fetch in chunks' );
+		console.dir( gaps );
+
 		while ( gaps.length > 0 ) {
 			var args = {
 				days: []
@@ -419,9 +422,9 @@ if ( 'undefined' === typeof go_content_stats ) {
 
 			// when the general stats have come back, render them and then fire off
 			// a request for page view (pv) stats
-			promise.done( $.proxy( function( response ) {
-				this.receive( response, args );
-			}, this ) );
+			promise.done( $.proxy( function( proxy_args, response ) {
+				this.receive( response, proxy_args );
+			}, this, args ) );
 		}//end while
 	};
 
@@ -457,6 +460,8 @@ if ( 'undefined' === typeof go_content_stats ) {
 		this.store.insert( response.data, context );
 
 		// when the pv stats have come back, render them
+		console.info( 'pre-fetch pvs' );
+		console.dir( args );
 		var pv_promise = this.fetch_stats( 'pvs', args );
 
 		pv_promise.done( $.proxy( function( response ) {
@@ -629,9 +634,26 @@ if ( 'undefined' === typeof go_content_stats ) {
 
 		var $row = $( '#row-' + data.key );
 		$row.find( '.posts i' ).attr( 'class', '' ).addClass( 'fa fa-angle-up' );
-		$next = $row.next();
-		$next.find( 'td' ).html( template( data ) );
-		$next.removeClass( 'loading' ).addClass( 'loaded' );
+
+		var $row_posts = $( '#row-posts-' + data.key );
+		$row_posts.find( 'td' ).html( template( data ) );
+
+		for ( var i in data.posts ) {
+			var graph = new Rickshaw.Graph({
+			element: document.querySelector( '#post-' + data.posts[ i ].id + ' .sparkline-graph' ),
+				width: 200,
+				height: 25,
+				renderer: 'line',
+				min: 'auto',
+				series: [ {
+					data: data.posts[ i ].pvs_by_day,
+					color: '#4682b4'
+				}]
+			});
+			graph.render();
+		}
+
+		$row_posts.removeClass( 'loading' ).addClass( 'loaded' );
 	};
 
 	/**
