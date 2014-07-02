@@ -11,12 +11,14 @@ class GO_Content_Stats_WP_CLI extends WP_CLI_Command
 	 * : Date to begin fetching data from (format: something strtotime-able)
 	 * [--end=<end>]
 	 * : Date to end fetching data from (format: something strtotime-able)
+	 * [--json-dir=<json-dir>]
+	 * : Location to store and check for Google Analytics json data
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     wp go_content_stats fetch --start='-3 weeks' --end='now'
+	 *     wp go_content_stats fetch --start='-3 weeks' --end='now' --json-dir='/tmp/google-analytics-json/'
 	 *
-	 * @synopsis [--start=<start>] [--end=<end>]
+	 * @synopsis [--start=<start>] [--end=<end>] [--json-dir=<json-dir>]
 	 */
 	public function fetch( $unused_args, $assoc_args )
 	{
@@ -42,6 +44,16 @@ class GO_Content_Stats_WP_CLI extends WP_CLI_Command
 		$end = date( 'Y-m-d', $end );
 
 		WP_CLI::line( "Processing $start => $end" );
+
+		if ( isset( $assoc_args['json-dir'] ) )
+		{
+			go_content_stats()->load()->output_directory = $assoc_args['json-dir'];
+
+			if ( ! file_exists( go_content_stats()->load()->output_directory ) )
+			{
+				mkdir( go_content_stats()->load()->output_directory );
+			}//end if
+		}//end if
 
 		go_content_stats()->load()->load_range( $start, $end );
 

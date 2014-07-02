@@ -4,6 +4,7 @@ class GO_Content_Stats_Load
 {
 	private $config;
 	private $google_analytics;
+	public $output_directory = NULL;
 
 	public function load_range( $start, $end )
 	{
@@ -65,11 +66,9 @@ class GO_Content_Stats_Load
 
 	private function generate_day( $date, $profile_id )
 	{
-		$output_directory = $this->config( 'output_directory' );
-
-		if ( $output_directory )
+		if ( $this->output_directory )
 		{
-			$filename = "$output_directory/$profile_id-$date.json";
+			$filename = "$this->output_directory/$profile_id-$date.json";
 
 			if ( file_exists( $filename ) )
 			{
@@ -92,7 +91,7 @@ class GO_Content_Stats_Load
 			fwrite( STDOUT, "{$message}\n" );
 		}//end else
 
-		if ( $output_directory )
+		if ( $this->output_directory )
 		{
 			file_put_contents( $filename, json_encode( $data ) );
 		}// end if
