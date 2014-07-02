@@ -80,7 +80,17 @@ class GO_Content_Stats_Load
 		}// end if
 
 		$data = $this->get_analytics( $date, $profile_id );
-		fwrite( STDOUT, $date . ' (fetch): ' . count( $data ) . "\n" );
+
+		$message = $data . ' (fetch): ' . count( $data );
+
+		if ( defined( 'WP_CLI' ) && WP_CLI )
+		{
+			WP_CLI::line( $message );
+		}//end if
+		else
+		{
+			fwrite( STDOUT, "{$message}\n" );
+		}//end else
 
 		if ( $output_directory )
 		{
@@ -131,7 +141,16 @@ class GO_Content_Stats_Load
 			return;
 		}//end if
 
-		fwrite( STDOUT, $date . ' (insert): ' . count( $data ) . "\n" );
+		$message = $data . ' (insert): ' . count( $data );
+		if ( defined( 'WP_CLI' ) && WP_CLI )
+		{
+			WP_CLI::line( $message );
+		}//end if
+		else
+		{
+			fwrite( STDOUT, "{$message}\n" );
+		}//end else
+
 		go_content_stats()->storage()->delete( array( 'date' => $date ) );
 
 		foreach ( $data as $row )
