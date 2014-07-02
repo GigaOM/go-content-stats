@@ -81,7 +81,7 @@ class GO_Content_Stats_Load
 
 		$data = $this->get_analytics( $date, $profile_id );
 
-		$message = $data . ' (fetch): ' . count( $data );
+		$message = $date . ' (fetch): ' . count( $data );
 
 		if ( defined( 'WP_CLI' ) && WP_CLI )
 		{
@@ -141,7 +141,7 @@ class GO_Content_Stats_Load
 			return;
 		}//end if
 
-		$message = $data . ' (insert): ' . count( $data );
+		$message = $date . ' (insert): ' . count( $data );
 		if ( defined( 'WP_CLI' ) && WP_CLI )
 		{
 			WP_CLI::line( $message );
