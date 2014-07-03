@@ -45,7 +45,7 @@ if ( 'undefined' === typeof go_content_stats ) {
 		this.$taxonomy_data = $( '#taxonomy-data' );
 
 		// when the daterange has changed, push_state
-		$( document ).on( 'go-timepicker-daterange-changed-dates', function( e ) {
+		$( document ).on( 'go-timepicker-daterange-changed-dates', function() {
 			go_content_stats.push_state();
 		});
 
