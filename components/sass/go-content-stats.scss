@@ -278,29 +278,6 @@ $global-radius: 4px;
 		}
 	}
 
-	#date-range {
-		background: #fff;
-		border: 1px solid #ddd;
-		display: inline-block;
-		padding: .5rem;
-
-		&:hover {
-			cursor: pointer;
-		}
-
-		&.active {
-			background: #fafafa;
-		}
-
-		& > .fa-calendar {
-			margin-right: .5rem;
-		}
-
-		& > .fa-angle-down {
-			margin-left: .5rem;
-		}
-	}
-
 	.options {
 		margin-bottom: .5rem;
 		overflow: hidden;
@@ -332,78 +309,6 @@ $global-radius: 4px;
 			&:last-child:not(:first-child) {
 				border-bottom-left-radius: 0;
 				border-top-left-radius: 0;
-			}
-		}
-	}
-}
-
-.daterangepicker {
-	display: none;
-
-	&.opensright {
-		&:before {
-			top: -6px;
-		}
-		&:after {
-			top: -5px;
-		}
-	}
-
-	.ranges {
-		width: 180px;
-
-		.input-mini {
-			width: 84px;
-		}
-	}
-
-	.btn {
-		background-image: none;
-		border-radius: 4px;
-		border: 1px solid transparent;
-		cursor: pointer;
-		display: inline-block;
-		font-size: 14px;
-		font-weight: normal;
-		line-height: 1.428571429;
-		margin-bottom: 0;
-		padding: 6px 12px;
-		text-align: center;
-		vertical-align: middle;
-		white-space: nowrap;
-		-webkit-user-select: none;
-		-moz-user-select: none;
-		-ms-user-select: none;
-		-o-user-select: none;
-		user-select: none;
-
-		&.btn-success {
-			color: #fff;
-			background-color: #5cb85c;
-			border-color: #4cae4c;
-
-			&:hover,
-			&:focus,
-			&:active,
-			&.active {
-				color: #fff;
-				background-color: #47a447;
-				border-color: #398439;
-			}
-		}
-
-		&.btn-default {
-			color: #333;
-			background-color: #fff;
-			border-color: #ccc;
-
-			&:hover,
-			&:focus,
-			&:active,
-			&.active {
-				color: #333;
-				background-color: #ebebeb;
-				border-color: #adadad;
 			}
 		}
 	}

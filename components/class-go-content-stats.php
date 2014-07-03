@@ -232,6 +232,7 @@ class GO_Content_Stats
 			array(
 				'bootstrap-daterangepicker',
 				'fontawesome',
+				'go-timepicker-daterangepicker',
 				'rickshaw',
 			),
 			$script_config['version']
