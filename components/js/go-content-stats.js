@@ -36,28 +36,18 @@ if ( 'undefined' === typeof go_content_stats ) {
 				top: '10%'
 			}
 		};
-		this.$date_range = $( '#date-range' );
+		this.$date_range = $( '.date-range' );
 		this.$filters = $( '#content-stats .filters' );
-		this.$start = $( '#go-content-stats-start' );
-		this.$end = $( '#go-content-stats-end' );
+		this.$start = this.$date_range.find( '.daterange-start' );
+		this.$end = this.$date_range.find( '.daterange-end' );
 		this.$zoom_levels = $( '#zoom-levels' );
 		this.$stat_data = $( '#stat-data' );
 		this.$taxonomy_data = $( '#taxonomy-data' );
 
-		this.$date_range.daterangepicker( {
-			startDate: moment( this.$start.val() ),
-			endDate: moment( this.$end.val() ),
-			ranges: {
-				'Last 7 days': [ moment().subtract( 'days', 6 ), moment() ],
-				'Last 30 days': [ moment().subtract( 'days', 29 ), moment() ],
-				'This week': [ moment().startOf( 'week' ), moment() ],
-				'Last week': [ moment().subtract( 'week', 1 ).startOf( 'week' ), moment().subtract( 'week', 1 ).endOf( 'week' ) ],
-				'This month': [ moment().startOf( 'month' ), moment().endOf( 'month' ) ],
-				'Last month': [ moment().subtract( 'month', 1 ).startOf( 'month' ), moment().subtract( 'month', 1 ).endOf( 'month' ) ]
-			}
-		} );
-
-		this.$date_range.on( 'apply.daterangepicker', this.event.changed_dates );
+		// when the daterange has changed, push_state
+		$( document ).on( 'go-timepicker-daterange-changed-dates', function() {
+			go_content_stats.push_state();
+		});
 
 		this.period = this.get_period();
 		this.context = this.get_context();
@@ -136,7 +126,7 @@ if ( 'undefined' === typeof go_content_stats ) {
 
 				this.$date_range.data( 'daterangepicker' ).setStartDate( start );
 				this.$date_range.data( 'daterangepicker' ).setEndDate( end );
-				this.changed_dates();
+				go_timepicker.changed_dates();
 			}// end if
 		}// end if
 		else if ( 'quarter' === zoom_level ) {
@@ -160,7 +150,7 @@ if ( 'undefined' === typeof go_content_stats ) {
 
 				this.$date_range.data( 'daterangepicker' ).setStartDate( start );
 				this.$date_range.data( 'daterangepicker' ).setEndDate( end );
-				this.changed_dates();
+				go_timepicker.changed_dates();
 			}// end if
 		}
 
@@ -716,16 +706,6 @@ if ( 'undefined' === typeof go_content_stats ) {
 		this.render_stats();
 	};
 
-	go_content_stats.changed_dates = function() {
-		console.info( 'changed dates!' );
-		var datepicker = this.$date_range.data( 'daterangepicker' );
-
-		this.$date_range.find( 'span' ).html( datepicker.startDate.format( 'MMMM D, YYYY' ) + ' - ' + datepicker.endDate.format( 'MMMM D, YYYY' ) );
-		this.$start.val( datepicker.startDate.format( 'YYYY-MM-DD' ) );
-		this.$end.val( datepicker.endDate.format( 'YYYY-MM-DD' ) );
-		this.push_state();
-	};
-
 	go_content_stats.event.mind_the_gap = function( e, data ) {
 		go_content_stats.mind_the_gap( data );
 	};
@@ -810,13 +790,6 @@ if ( 'undefined' === typeof go_content_stats ) {
 		go_content_stats.select_zoom( $( this ).data( 'zoom-level' ) );
 	};
 
-	/**
-	 * event picker changed
-	 */
-	go_content_stats.event.changed_dates = function() {
-		console.info( 'event' );
-		go_content_stats.changed_dates();
-	};
 	/**
 	 * clear go-content-stats entries from local storage
 	 *
