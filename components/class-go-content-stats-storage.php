@@ -278,13 +278,10 @@ class GO_Content_Stats_Storage
 
 		foreach ( $records as $row )
 		{
-			echo '.';
 			$post_id = -1; // couldn't find a GUID
 			$guid = '';
 
 			$content = wp_remote_get( $row->url, $remote_args );
-
-			echo '-';
 
 			if ( is_wp_error( $content ) )
 			{
@@ -312,15 +309,11 @@ class GO_Content_Stats_Storage
 				}//end if
 			}//end else
 
-			echo '+';
-
 			$count += $this->update( array( 'post_id' => $post_id ), array(
 				'property' => $row->property,
 				'url' => $row->url,
 				'post_id' => 0,
 			) );
-
-			echo '=';
 		}//end foreach
 
 		restore_current_blog();
