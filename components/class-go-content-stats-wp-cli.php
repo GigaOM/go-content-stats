@@ -58,8 +58,23 @@ class GO_Content_Stats_WP_CLI extends WP_CLI_Command
 		go_content_stats()->load()->load_range( $start, $end );
 
 		WP_CLI::line( 'Finished fetching analytics data.' );
-		WP_CLI::line( 'Filling GUIDs.' );
 
+		$this->fill_post_ids();
+	}//end fetch
+
+	/**
+	 * fills post ids on records that are missing them
+	 *
+	 * ## OPTIONS
+	 *     none
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp go_content_stats fill_post_ids
+	 */
+	public function fill_post_ids()
+	{
+		WP_CLI::line( 'Filling GUIDs.' );
 		$count = 1;
 		$time = time();
 		while ( $count > 0 )
@@ -73,5 +88,5 @@ class GO_Content_Stats_WP_CLI extends WP_CLI_Command
 		}// end while
 
 		WP_CLI::success( 'Post IDs filled.' );
-	}//end fetch
+	}//end fill_post_ids
 }//end class
