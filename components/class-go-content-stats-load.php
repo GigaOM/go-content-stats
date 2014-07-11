@@ -2,13 +2,12 @@
 
 class GO_Content_Stats_Load
 {
-	private $config;
 	private $google_analytics;
 	public $output_directory = NULL;
 
 	public function load_range( $start, $end )
 	{
-		$profiles = $this->config( 'google_profiles' );
+		$profiles = go_content_stats()->config( 'google_profiles' );
 		$date = $start;
 		$data = array();
 		while ( strtotime( $date ) <= strtotime( $end ) )
@@ -25,40 +24,11 @@ class GO_Content_Stats_Load
 		}//end while
 	}// end load_range
 
-	/**
-	 * get the configuration for this plugin
-	 *
-	 * @param $key (string) if not NULL, return the value of this configuration
-	 *  key if it's set. else return FALSE. if $key is NULL then return
-	 *  the whole config array.
-	 */
-	private function config( $key = NULL )
-	{
-		if ( ! $this->config )
-		{
-			$this->config = apply_filters( 'go_config', array(), 'go-content-stats' );
-		}//end if
-
-		if ( $key )
-		{
-			if ( isset( $this->config[ $key ] ) )
-			{
-				return $this->config[ $key ];
-			}//end if
-			else
-			{
-				return FALSE;
-			}//end else
-		}//end if
-
-		return $this->config;
-	}//end config
-
 	private function google_analytics()
 	{
 		if ( ! $this->google_analytics )
 		{
-			$this->google_analytics = go_google( $this->config( 'application_name' ), $this->config( 'google_auth_account' ), $this->config( 'key_file' ) )->analytics();
+			$this->google_analytics = go_google( go_content_stats()->config( 'application_name' ), go_content_stats()->config( 'google_auth_account' ), go_content_stats()->config( 'key_file' ) )->analytics();
 		}// end if
 
 		return $this->google_analytics;
