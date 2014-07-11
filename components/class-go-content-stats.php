@@ -155,7 +155,7 @@ class GO_Content_Stats
 	 *  key if it's set. else return FALSE. if $key is NULL then return
 	 *  the whole config array.
 	 */
-	private function config( $key = NULL )
+	public function config( $key = NULL )
 	{
 		if ( ! $this->config )
 		{
