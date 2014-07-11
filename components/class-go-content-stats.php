@@ -148,31 +148,49 @@ class GO_Content_Stats
 		return $this->load;
 	}//end load
 
-	private function config()
+	/**
+	 * get the configuration for this plugin
+	 *
+	 * @param $key (string) if not NULL, return the value of this configuration
+	 *  key if it's set. else return FALSE. if $key is NULL then return
+	 *  the whole config array.
+	 */
+	public function config( $key = NULL )
 	{
-		if ( $this->config )
+		if ( ! $this->config )
 		{
-			return $this->config;
+			$this->config = apply_filters( 'go_config', array(), 'go-content-stats' );
+
+			// prep the config vars so we don't have to check them later
+			if ( ! isset( $this->config['taxonomies'] ) )
+			{
+				$this->config['taxonomies'] = array();
+			}//end if
+
+			if ( ! isset( $this->config['content_matches'] ) )
+			{
+				$this->config['content_matches'] = array();
+			}//end if
+
+			// prefix the matches so we can avoid collisions
+			foreach ( $this->config['content_matches'] as $k => $v )
+			{
+				$this->config['content_matches'][ 'match_' . $k ] = $v;
+				unset( $this->config['content_matches'][ $k ] );
+			}//end foreach
 		}//end if
 
-		$this->config = apply_filters( 'go_config', array(), 'go-content-stats' );
-		// prep the config vars so we don't have to check them later
-		if ( ! isset( $this->config['taxonomies'] ) )
+		if ( $key )
 		{
-			$this->config['taxonomies'] = array();
-		}
-
-		if ( ! isset( $this->config['content_matches'] ) )
-		{
-			$this->config['content_matches'] = array();
-		}
-
-		// prefix the matches so we can avoid collisions
-		foreach ( $this->config['content_matches'] as $k => $v )
-		{
-			$this->config['content_matches'][ 'match_' . $k ] = $v;
-			unset( $this->config['content_matches'][ $k ] );
-		}
+			if ( isset( $this->config[ $key ] ) )
+			{
+				return $this->config[ $key ];
+			}//end if
+			else
+			{
+				return FALSE;
+			}//end else
+		}//end if
 
 		return $this->config;
 	}// end config
