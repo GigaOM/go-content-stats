@@ -281,8 +281,11 @@ if ( 'undefined' === typeof go_content_stats ) {
 						xaxis: xaxis,
 						posts: 0,
 						comments: 0,
-						match_pro: 0,
-						match_events: 0,
+						column_pro: 0,
+						column_events: 0,
+						column_words: 0,
+						column_images: 0,
+						column_embeds: 0,
 						pvs: null
 					};
 				}// end if
@@ -295,8 +298,11 @@ if ( 'undefined' === typeof go_content_stats ) {
 				}// end if
 
 				// @TODO: these need to be done conditionally, or dynamically, or something...
-				tmp_stats[ item ].match_pro += this.day_stats[ date ].match_pro;
-				tmp_stats[ item ].match_events += this.day_stats[ date ].match_events;
+				tmp_stats[ item ].column_pro += this.day_stats[ date ].column_pro;
+				tmp_stats[ item ].column_events += this.day_stats[ date ].column_events;
+				tmp_stats[ item ].column_words += this.day_stats[ date ].column_words;
+				tmp_stats[ item ].column_images += this.day_stats[ date ].column_images;
+				tmp_stats[ item ].column_embeds += this.day_stats[ date ].column_embeds;
 			}// end for
 		} // end else
 
@@ -908,8 +914,11 @@ if ( 'undefined' === typeof go_content_stats ) {
 				c: data.comments,
 				d: data.day,
 				p: data.posts,
-				r: data.match_pro,
-				e: data.match_events,
+				r: data.column_pro,
+				e: data.column_events,
+				w: data.column_words,
+				i: data.column_images,
+				m: data.column_embeds,
 				t: new Date().getTime()
 			};
 		}
@@ -919,8 +928,11 @@ if ( 'undefined' === typeof go_content_stats ) {
 				comments: data.c,
 				day: data.d,
 				posts: data.p,
-				match_pro: data.r,
-				match_events: data.e
+				column_pro: data.r,
+				column_events: data.e,
+				column_words: data.w,
+				column_images: data.i,
+				column_embeds: data.m
 			};
 		}
 
@@ -942,8 +954,11 @@ if ( 'undefined' === typeof go_content_stats ) {
 				c: stats.comments,
 				d: parseInt( stats.day.replace( /-/g, '') ),
 				p: stats.posts,
-				r: stats.match_pro,
-				e: stats.match_events,
+				r: stats.column_pro,
+				e: stats.column_events,
+				w: stats.column_words,
+				i: stats.column_images,
+				m: stats.column_embeds,
 				t: new Date().getTime()
 			};
 		}
@@ -953,8 +968,11 @@ if ( 'undefined' === typeof go_content_stats ) {
 				comments: stats.c,
 				day: ( stats.d + '' ).replace( /([0-9]{4})([0-9]{2})([0-9]{2})/, '$1-$2-$3' ),
 				posts: stats.p,
-				match_pro: stats.r,
-				match_events: stats.e
+				column_pro: stats.r,
+				column_events: stats.e,
+				column_words: stats.w,
+				column_images: stats.i,
+				column_embeds: stats.m
 			};
 		}
 

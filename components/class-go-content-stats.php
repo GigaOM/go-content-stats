@@ -14,6 +14,7 @@ class GO_Content_Stats
 		'go-graphing' => 'https://github.com/GigaOM/go-graphing',
 		'go-timepicker' => 'https://github.com/GigaOM/go-timepicker',
 		'go-ui' => 'https://github.com/GigaOM/go-ui',
+		'go-wordcounter' => 'https://github.com/GigaOM/go-wordcounter',
 	);
 	private $missing_dependencies = array();
 	private $pieces;
@@ -167,16 +168,16 @@ class GO_Content_Stats
 				$this->config['taxonomies'] = array();
 			}//end if
 
-			if ( ! isset( $this->config['content_matches'] ) )
+			if ( ! isset( $this->config['columns'] ) )
 			{
-				$this->config['content_matches'] = array();
+				$this->config['columns'] = array();
 			}//end if
 
 			// prefix the matches so we can avoid collisions
-			foreach ( $this->config['content_matches'] as $k => $v )
+			foreach ( $this->config['columns'] as $k => $v )
 			{
-				$this->config['content_matches'][ 'match_' . $k ] = $v;
-				unset( $this->config['content_matches'][ $k ] );
+				$this->config['columns'][ 'column_' . $k ] = $v;
+				unset( $this->config['columns'][ $k ] );
 			}//end foreach
 		}//end if
 
@@ -211,7 +212,7 @@ class GO_Content_Stats
 				'comments' => NULL,
 			),
 
-			array_fill_keys( array_keys( $this->config['content_matches'] ), NULL )
+			array_fill_keys( array_keys( $this->config['columns'] ), NULL )
 		);
 
 		return clone $this->pieces;
@@ -589,6 +590,8 @@ class GO_Content_Stats
 
 	private function fetch_general( $args )
 	{
+		global $post;
+
 		$posts = $this->fetch_stat_posts( $args );
 		if ( ! is_array( $posts ) )
 		{
@@ -600,17 +603,24 @@ class GO_Content_Stats
 		// iterate through the posts, aggregate their stats, and assign those into the stat array
 		foreach ( $posts as $post )
 		{
+			setup_postdata( $post );
 			$post_date = date( 'Y-m-d', strtotime( $post->post_date ) );
 			$stats[ $post_date ]->day = $post_date;
 			$stats[ $post_date ]->posts++;
 
 			$stats[ $post_date ]->comments += $post->comment_count;
-			foreach ( $this->config['content_matches'] as $key => $match )
+			foreach ( $this->config['columns'] as $key => $match )
 			{
-				if ( preg_match( $match['regex'], $post->post_content ) )
+				$args = array(
+					$post,
+				);
+
+				if ( isset( $match['value_args'] ) )
 				{
-					$stats[ $post_date ]->$key++;
-				}// end if
+					$args = array_merge( $args, $match['value_args'] );
+				}//end if
+
+				$stats[ $post_date ]->$key += call_user_func_array( $match['value'], $args );
 			}// end foreach
 		}// end foreach
 
@@ -673,6 +683,8 @@ class GO_Content_Stats
 
 	private function fetch_posts( $args )
 	{
+		global $post;
+
 		$posts = $this->fetch_stat_posts( $args );
 
 		if ( ! is_array( $posts ) )
@@ -683,6 +695,7 @@ class GO_Content_Stats
 		$post_data = array();
 		foreach ( $posts as $post )
 		{
+			setup_postdata( $post );
 			$data = new stdclass;
 
 			$data->id = $post->ID;
@@ -728,12 +741,18 @@ class GO_Content_Stats
 
 			$data->comments = $post->comment_count;
 
-			foreach ( $this->config['content_matches'] as $key => $match )
+			foreach ( $this->config['columns'] as $key => $match )
 			{
-				if ( preg_match( $match['regex'], $post->post_content ) )
+				$args = array(
+					$post,
+				);
+
+				if ( isset( $match['value_args'] ) )
 				{
-					$data->$key = 'yes';
-				}// end if
+					$args = array_merge( $args, $match['value_args'] );
+				}//end if
+
+				$data->$key = call_user_func_array( $match['value'], $args );
 			}// end foreach
 
 			$post_data[] = clone $data;
@@ -817,6 +836,23 @@ class GO_Content_Stats
 	{
 		return "{$this->id_base}-{$field_name}";
 	}//end get_field_id
+
+	public function count_regex( $post, $regex )
+	{
+		return preg_match_all( $regex, $post->post_content );
+	}//end count_regex
+
+	public function count_images( $post )
+	{
+		$regex = '!<img\s!';
+		return preg_match_all( $regex, $post->post_content );
+	}//end count_images
+
+	public function count_embeds( $post )
+	{
+		$regex = '!<(object|embed|iframe)\s!';
+		return preg_match_all( $regex, get_the_content() );
+	}//end count_embeds
 }// END GO_Content_Stats
 
 function go_content_stats()
