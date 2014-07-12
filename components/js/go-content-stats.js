@@ -630,14 +630,16 @@ if ( 'undefined' === typeof go_content_stats ) {
 	go_content_stats.render_posts = function ( data ) {
 		var source = $( '#post-row-template' ).html();
 		var template = Handlebars.compile( source );
+		var $row;
+		var $row_posts;
 
 		if ( 'undefined' === typeof data.key || ! data.key ) {
 			$( '#stat-data' ).html( template( data ) );
 		} else {
-			var $row = $( '#row-' + data.key );
+			$row = $( '#row-' + data.key );
 			$row.find( '.posts i' ).attr( 'class', '' ).addClass( 'fa fa-angle-up' );
 
-			var $row_posts = $( '#row-posts-' + data.key );
+			$row_posts = $( '#row-posts-' + data.key );
 			$row_posts.find( 'td' ).html( template( data ) );
 		}//end else
 
