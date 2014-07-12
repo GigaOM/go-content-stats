@@ -155,6 +155,10 @@
 		var width = this.$chart.width();
 		var height = this.$chart.height();
 
+		if ( 'post' === go_content_stats.get_zoom() ) {
+			return;
+		}//end if
+
 		this.top_graph.configure( {
 			width: width,
 			height: height

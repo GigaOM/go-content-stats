@@ -84,6 +84,7 @@ $end = isset( $_GET['end'] ) ? preg_replace( '/[^0-9\-]/', '', $_GET['end'] ) : 
 		}//end if
 
 		$zoom_levels = array(
+			'post',
 			'day',
 			'week',
 			'month',
