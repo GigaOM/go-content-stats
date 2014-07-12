@@ -1,4 +1,5 @@
 ( function ( $ ) {
+	'use strict';
 	go_content_stats.graph = {};
 	go_content_stats.graph.event = {};
 
@@ -21,13 +22,16 @@
 	};
 
 	go_content_stats.graph.top_data = function() {
-		var data = {
+		var data, parse_date, labels;
+
+		data = {
 			comments_per_post: [],
 			pvs_per_post: []
 		};
-		var parse_date = d3.time.format( '%Y-%m-%d' ).parse;
 
-		var labels = {
+		parse_date = d3.time.format( '%Y-%m-%d' ).parse;
+
+		labels = {
 			when: 'When',
 			comments_per_post: 'Comments per post',
 			pvs_per_post: 'Page view per post (in thousands)'
@@ -59,6 +63,8 @@
 		this.$chart.html( '' );
 		this.$pv_axis.html( '' );
 		this.$comment_axis.html( '' );
+
+		var hover_detail, legend;
 
 		var height = 160;
 		var width = this.$chart.width();
@@ -135,17 +141,17 @@
 
 		x_axis.render();
 
-		var legend = new Rickshaw.Graph.Legend( {
+		legend = new Rickshaw.Graph.Legend( {
 			graph: this.top_graph,
 			element: this.$legend.get( 0 )
 		} );
 
-		var hover_detail = new Rickshaw.Graph.HoverDetail( {
+		hover_detail = new Rickshaw.Graph.HoverDetail( {
 			graph: this.top_graph,
 			formatter: function( series, x, y ) {
 				var date = '<span class="date">' + moment.unix( x ).format( 'MMMM D, YYYY' ) + '</span>';
 				var swatch = '<span class="detail-swatch" style="background-color: ' + series.color + '"></span>';
-				var content = '<div class="info">' + swatch + series.name + ": " + parseInt( y, 10 ) + '</div>' + date;
+				var content = '<div class="info">' + swatch + series.name + ': ' + parseInt( y, 10 ) + '</div>' + date;
 				return content;
 			}
 		} );
@@ -167,7 +173,7 @@
 		this.top_graph.render();
 	};
 
-	go_content_stats.graph.event.resize = function( e ) {
+	go_content_stats.graph.event.resize = function() {
 		go_content_stats.graph.resize();
 	};
 } )( jQuery );
