@@ -241,6 +241,10 @@ if ( 'undefined' === typeof go_content_stats ) {
 		var zoom = this.get_zoom();
 		var xaxis = null;
 
+		// this is used for loading in custom columns
+		var custom = {};
+		var alias;
+
 		if ( 'day' === zoom || 'post' === zoom ) {
 			tmp_stats = this.day_stats;
 		}// end if
@@ -281,13 +285,14 @@ if ( 'undefined' === typeof go_content_stats ) {
 						xaxis: xaxis,
 						posts: 0,
 						comments: 0,
-						column_pro: 0,
-						column_events: 0,
-						column_words: 0,
-						column_images: 0,
-						column_embeds: 0,
 						pvs: null
 					};
+
+					for ( alias in this.custom_columns ) {
+						custom[ this.custom_columns[ alias ] ] = 0;
+					}//end for
+
+					$.extend( tmp_stats[ item ], custom );
 				}// end if
 
 				tmp_stats[ item ].posts += this.day_stats[ date ].posts;
@@ -297,12 +302,9 @@ if ( 'undefined' === typeof go_content_stats ) {
 					tmp_stats[ item ].pvs += this.day_stats[ date ].pvs;
 				}// end if
 
-				// @TODO: these need to be done conditionally, or dynamically, or something...
-				tmp_stats[ item ].column_pro += this.day_stats[ date ].column_pro;
-				tmp_stats[ item ].column_events += this.day_stats[ date ].column_events;
-				tmp_stats[ item ].column_words += this.day_stats[ date ].column_words;
-				tmp_stats[ item ].column_images += this.day_stats[ date ].column_images;
-				tmp_stats[ item ].column_embeds += this.day_stats[ date ].column_embeds;
+				for ( alias in this.custom_columns ) {
+					tmp_stats[ item ][ this.custom_columns[ alias ] ] += this.day_stats[ date ][ this.custom_columns[ alias ] ];
+				}//end for
 			}// end for
 		} // end else
 
@@ -903,41 +905,7 @@ if ( 'undefined' === typeof go_content_stats ) {
 	go_content_stats.store.set = function ( index, context, stats ) {
 		stats = this.massage( stats );
 		localStorage.setItem( this.key( index, context ), JSON.stringify( stats ) );
-	};
-
-	go_content_stats.store.massage = function( data ) {
-		var new_data;
-
-		if ( undefined !== data.comments ) {
-			new_data = {
-				v: data.pvs,
-				c: data.comments,
-				d: data.day,
-				p: data.posts,
-				r: data.column_pro,
-				e: data.column_events,
-				w: data.column_words,
-				i: data.column_images,
-				m: data.column_embeds,
-				t: new Date().getTime()
-			};
-		}
-		else {
-			new_data = {
-				pvs: data.v,
-				comments: data.c,
-				day: data.d,
-				posts: data.p,
-				column_pro: data.r,
-				column_events: data.e,
-				column_words: data.w,
-				column_images: data.i,
-				column_embeds: data.m
-			};
-		}
-
-		return new_data;
-	};
+	};//end go_content_stats.store.set
 
 	/**
 	 * massage the stats data into or out of a tighter indexed object
@@ -947,6 +915,8 @@ if ( 'undefined' === typeof go_content_stats ) {
 	 */
 	go_content_stats.store.massage = function( stats ) {
 		var new_stats;
+		var custom = {};
+		var alias;
 
 		if ( 'undefined' !== typeof stats.comments ) {
 			new_stats = {
@@ -954,30 +924,31 @@ if ( 'undefined' === typeof go_content_stats ) {
 				c: stats.comments,
 				d: parseInt( stats.day.replace( /-/g, '') ),
 				p: stats.posts,
-				r: stats.column_pro,
-				e: stats.column_events,
-				w: stats.column_words,
-				i: stats.column_images,
-				m: stats.column_embeds,
 				t: new Date().getTime()
 			};
-		}
-		else {
+
+			for ( alias in go_content_stats.custom_columns ) {
+				custom[ alias ] = stats[ go_content_stats.custom_columns[ alias ] ];
+			}//end for
+
+			$.extend( new_stats, custom );
+		} else {
 			new_stats = {
 				pvs: stats.v,
 				comments: stats.c,
 				day: ( stats.d + '' ).replace( /([0-9]{4})([0-9]{2})([0-9]{2})/, '$1-$2-$3' ),
-				posts: stats.p,
-				column_pro: stats.r,
-				column_events: stats.e,
-				column_words: stats.w,
-				column_images: stats.i,
-				column_embeds: stats.m
+				posts: stats.p
 			};
-		}
+
+			for ( alias in go_content_stats.custom_columns ) {
+				custom[ go_content_stats.custom_columns[ alias ] ] = stats[ alias ];
+			}//end for
+
+			$.extend( new_stats, custom );
+		}//end else
 
 		return new_stats;
-	};
+	};//end go_content_stats.store.massage
 
 	/**
 	 * delete stats for an index
@@ -988,7 +959,7 @@ if ( 'undefined' === typeof go_content_stats ) {
 	 */
 	go_content_stats.store.delete_item = function ( index, context ) {
 		localStorage.removeItem( this.key( index, context ) );
-	};
+	};//end go_content_stats.store.delete_item
 
 	/**
 	 * get a key string for a given index and context

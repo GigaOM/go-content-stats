@@ -256,10 +256,6 @@ class GO_Content_Stats
 			$script_config['version']
 		);
 
-		$data = array(
-			'endpoint' => admin_url( 'admin-ajax.php?action=go_content_stats_fetch' ),
-		);
-
 		wp_register_script(
 			'go-content-stats',
 			plugins_url( 'js/go-content-stats.js', __FILE__ ),
@@ -294,6 +290,17 @@ class GO_Content_Stats
 		);
 
 		wp_enqueue_script( 'go-content-stats-behavior' );
+
+		$custom_columns = array();
+		foreach ( $this->config( 'columns' ) as $key => $column )
+		{
+			$custom_columns[ $column['local_storage_alias'] ] = $key;
+		}//end foreach
+
+		$data = array(
+			'endpoint' => admin_url( 'admin-ajax.php?action=go_content_stats_fetch' ),
+			'custom_columns' => $custom_columns,
+		);
 
 		wp_localize_script( 'go-content-stats', 'go_content_stats', $data );
 	}//end admin_enqueue_scripts
