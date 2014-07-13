@@ -516,6 +516,9 @@ class GO_Content_Stats
 		return $return;
 	} // END get_terms_list
 
+	/**
+	 * handles the wp_ajax_go_content_stats_fetch action
+	 */
 	public function fetch_ajax()
 	{
 		if ( ! current_user_can( 'edit_posts' ) )
@@ -594,6 +597,11 @@ class GO_Content_Stats
 		wp_send_json_success( $stats );
 	}// end fetch_ajax
 
+	/**
+	 * fetches general stats
+	 *
+	 * @param array $args Array of arguments provided by the ajax call and fetch_ajax
+	 */
 	private function fetch_general( $args )
 	{
 		global $post;
@@ -633,6 +641,11 @@ class GO_Content_Stats
 		);
 	}// end fetch_general
 
+	/**
+	 * fetches page view stats
+	 *
+	 * @param array $args Array of arguments provided by the ajax call and fetch_ajax
+	 */
 	private function fetch_pvs( $args )
 	{
 		$posts = $this->fetch_stat_posts( $args );
@@ -665,6 +678,11 @@ class GO_Content_Stats
 		);
 	}//end fetch_pvs
 
+	/**
+	 * fetches taxonomy data
+	 *
+	 * @param array $unused_args Array of arguments provided by the ajax call and fetch_ajax
+	 */
 	private function fetch_taxonomies( $unused_args )
 	{
 		// print lists of items people can get stats on
@@ -685,6 +703,11 @@ class GO_Content_Stats
 		);
 	}//end fetch_taxonomies
 
+	/**
+	 * fetches posts for a provided start/end time (specified in args)
+	 *
+	 * @param array $args Array of arguments provided by the ajax call and fetch_ajax
+	 */
 	private function fetch_posts( $args )
 	{
 		global $post;
