@@ -610,16 +610,14 @@ class GO_Content_Stats
 			$stats[ $post_date ]->comments += $post->comment_count;
 			foreach ( $this->config['columns'] as $key => $match )
 			{
-				$args = array(
-					$post,
+				$stats[ $post_date ]->$key = call_user_func_array(
+					$match['summary'],
+					array(
+						$stats[ $post_date ]->$key,
+						$post,
+						$match,
+					)
 				);
-
-				if ( isset( $match['value_args'] ) )
-				{
-					$args = array_merge( $args, $match['value_args'] );
-				}//end if
-
-				$stats[ $post_date ]->$key += call_user_func_array( $match['value'], $args );
 			}// end foreach
 		}// end foreach
 
@@ -742,16 +740,14 @@ class GO_Content_Stats
 
 			foreach ( $this->config['columns'] as $key => $match )
 			{
-				$args = array(
-					$post,
+				$data->$key = call_user_func_array(
+					$match['summary'],
+					array(
+						$data->$key,
+						$post,
+						$match,
+					)
 				);
-
-				if ( isset( $match['value_args'] ) )
-				{
-					$args = array_merge( $args, $match['value_args'] );
-				}//end if
-
-				$data->$key = call_user_func_array( $match['value'], $args );
 			}// end foreach
 
 			$post_data[] = clone $data;
@@ -874,6 +870,29 @@ class GO_Content_Stats
 		$regex = '!<(object|embed|iframe|script)\s!';
 		return preg_match_all( $regex, get_the_content() );
 	}//end count_embeds
+
+	/**
+	 * Computes a sum of the results of a custom stat column config's "value" callback.
+	 *
+	 * @param int $value Current value of custom stat column
+	 * @param WP_Post $post Post object
+	 * @param array $column_config 
+	 */
+	public function summary_sum( $value, $post, $column_config )
+	{
+		$args = array(
+			$post,
+		);
+
+		if ( isset( $column_config['value_args'] ) )
+		{
+			$args = array_merge( $args, $column_config['value_args'] );
+		}//end if
+
+		$value += call_user_func_array( $column_config['value'], $args );
+
+		return $value;
+	}//end summary_sum
 }// END GO_Content_Stats
 
 function go_content_stats()
