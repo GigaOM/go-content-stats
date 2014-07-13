@@ -14,7 +14,6 @@ class GO_Content_Stats
 		'go-graphing' => 'https://github.com/GigaOM/go-graphing',
 		'go-timepicker' => 'https://github.com/GigaOM/go-timepicker',
 		'go-ui' => 'https://github.com/GigaOM/go-ui',
-		'go-wordcounter' => 'https://github.com/GigaOM/go-wordcounter',
 	);
 	private $missing_dependencies = array();
 	private $pieces;
@@ -837,20 +836,42 @@ class GO_Content_Stats
 		return "{$this->id_base}-{$field_name}";
 	}//end get_field_id
 
+	/**
+	 * counts the occurrences of the given regex in the post's content
+	 *
+	 * @param WP_Post $post Post object
+	 * @param string $regex Regular expression to check for within the post's contents
+	 *
+	 * @return int
+	 */
 	public function count_regex( $post, $regex )
 	{
 		return preg_match_all( $regex, $post->post_content );
 	}//end count_regex
 
+	/**
+	 * counts the images in the post's content
+	 *
+	 * @param WP_Post $post Post object
+	 *
+	 * @return int
+	 */
 	public function count_images( $post )
 	{
 		$regex = '!<img\s!';
 		return preg_match_all( $regex, $post->post_content );
 	}//end count_images
 
-	public function count_embeds( $post )
+	/**
+	 * counts the embeds in the post's content
+	 *
+	 * @param WP_Post $unused_post Post object
+	 *
+	 * @return int
+	 */
+	public function count_embeds( $unused_post )
 	{
-		$regex = '!<(object|embed|iframe)\s!';
+		$regex = '!<(object|embed|iframe|script)\s!';
 		return preg_match_all( $regex, get_the_content() );
 	}//end count_embeds
 }// END GO_Content_Stats
