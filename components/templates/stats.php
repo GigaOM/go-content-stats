@@ -5,14 +5,14 @@ $content_summary = '';
 $content_row = '';
 $posts_content_row = '';
 $columns = 6;
-if ( is_array( $this->config['content_matches'] ) )
+if ( is_array( $this->config['columns'] ) )
 {
-	foreach ( $this->config['content_matches'] as $key => $match )
+	foreach ( $this->config['columns'] as $key => $match )
 	{
 		$content_match_th .= '<th class="' . esc_attr( $key ) . '">' . esc_attr( $match['label'] ) . '</th>';
 		$content_summary .= '<th class="' . esc_attr( $key ) . '"></th>';
 		$content_row .= '<td class="matches ' . esc_attr( $key ) . '">{{number_format ' . esc_html( $key ) . '}}</td>';
-		$posts_content_row .= '<td class="matches ' . esc_attr( $key ) . '">{{' . esc_html( $key ) . '}}</td>';
+		$posts_content_row .= '<td class="matches ' . esc_attr( $key ) . '">{{number_format ' . esc_html( $key ) . '}}</td>';
 		$columns++;
 	}// end foreach
 }// end if
@@ -84,6 +84,7 @@ $end = isset( $_GET['end'] ) ? preg_replace( '/[^0-9\-]/', '', $_GET['end'] ) : 
 		}//end if
 
 		$zoom_levels = array(
+			'post',
 			'day',
 			'week',
 			'month',

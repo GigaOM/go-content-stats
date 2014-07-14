@@ -167,16 +167,16 @@ class GO_Content_Stats
 				$this->config['taxonomies'] = array();
 			}//end if
 
-			if ( ! isset( $this->config['content_matches'] ) )
+			if ( ! isset( $this->config['columns'] ) )
 			{
-				$this->config['content_matches'] = array();
+				$this->config['columns'] = array();
 			}//end if
 
 			// prefix the matches so we can avoid collisions
-			foreach ( $this->config['content_matches'] as $k => $v )
+			foreach ( $this->config['columns'] as $k => $v )
 			{
-				$this->config['content_matches'][ 'match_' . $k ] = $v;
-				unset( $this->config['content_matches'][ $k ] );
+				$this->config['columns'][ 'column_' . $k ] = $v;
+				unset( $this->config['columns'][ $k ] );
 			}//end foreach
 		}//end if
 
@@ -211,7 +211,7 @@ class GO_Content_Stats
 				'comments' => NULL,
 			),
 
-			array_fill_keys( array_keys( $this->config['content_matches'] ), NULL )
+			array_fill_keys( array_keys( $this->config['columns'] ), NULL )
 		);
 
 		return clone $this->pieces;
@@ -256,10 +256,6 @@ class GO_Content_Stats
 			$script_config['version']
 		);
 
-		$data = array(
-			'endpoint' => admin_url( 'admin-ajax.php?action=go_content_stats_fetch' ),
-		);
-
 		wp_register_script(
 			'go-content-stats',
 			plugins_url( 'js/go-content-stats.js', __FILE__ ),
@@ -294,6 +290,17 @@ class GO_Content_Stats
 		);
 
 		wp_enqueue_script( 'go-content-stats-behavior' );
+
+		$custom_columns = array();
+		foreach ( $this->config( 'columns' ) as $key => $column )
+		{
+			$custom_columns[ $column['local_storage_alias'] ] = $key;
+		}//end foreach
+
+		$data = array(
+			'endpoint' => admin_url( 'admin-ajax.php?action=go_content_stats_fetch' ),
+			'custom_columns' => $custom_columns,
+		);
 
 		wp_localize_script( 'go-content-stats', 'go_content_stats', $data );
 	}//end admin_enqueue_scripts
@@ -509,6 +516,9 @@ class GO_Content_Stats
 		return $return;
 	} // END get_terms_list
 
+	/**
+	 * handles the wp_ajax_go_content_stats_fetch action
+	 */
 	public function fetch_ajax()
 	{
 		if ( ! current_user_can( 'edit_posts' ) )
@@ -587,8 +597,15 @@ class GO_Content_Stats
 		wp_send_json_success( $stats );
 	}// end fetch_ajax
 
+	/**
+	 * fetches general stats
+	 *
+	 * @param array $args Array of arguments provided by the ajax call and fetch_ajax
+	 */
 	private function fetch_general( $args )
 	{
+		global $post;
+
 		$posts = $this->fetch_stat_posts( $args );
 		if ( ! is_array( $posts ) )
 		{
@@ -600,17 +617,22 @@ class GO_Content_Stats
 		// iterate through the posts, aggregate their stats, and assign those into the stat array
 		foreach ( $posts as $post )
 		{
+			setup_postdata( $post );
 			$post_date = date( 'Y-m-d', strtotime( $post->post_date ) );
 			$stats[ $post_date ]->day = $post_date;
 			$stats[ $post_date ]->posts++;
 
 			$stats[ $post_date ]->comments += $post->comment_count;
-			foreach ( $this->config['content_matches'] as $key => $match )
+			foreach ( $this->config['columns'] as $key => $match )
 			{
-				if ( preg_match( $match['regex'], $post->post_content ) )
-				{
-					$stats[ $post_date ]->$key++;
-				}// end if
+				$stats[ $post_date ]->$key = call_user_func_array(
+					$match['summary'],
+					array(
+						$stats[ $post_date ]->$key,
+						$post,
+						$match,
+					)
+				);
 			}// end foreach
 		}// end foreach
 
@@ -619,6 +641,11 @@ class GO_Content_Stats
 		);
 	}// end fetch_general
 
+	/**
+	 * fetches page view stats
+	 *
+	 * @param array $args Array of arguments provided by the ajax call and fetch_ajax
+	 */
 	private function fetch_pvs( $args )
 	{
 		$posts = $this->fetch_stat_posts( $args );
@@ -651,6 +678,11 @@ class GO_Content_Stats
 		);
 	}//end fetch_pvs
 
+	/**
+	 * fetches taxonomy data
+	 *
+	 * @param array $unused_args Array of arguments provided by the ajax call and fetch_ajax
+	 */
 	private function fetch_taxonomies( $unused_args )
 	{
 		// print lists of items people can get stats on
@@ -671,8 +703,15 @@ class GO_Content_Stats
 		);
 	}//end fetch_taxonomies
 
+	/**
+	 * fetches posts for a provided start/end time (specified in args)
+	 *
+	 * @param array $args Array of arguments provided by the ajax call and fetch_ajax
+	 */
 	private function fetch_posts( $args )
 	{
+		global $post;
+
 		$posts = $this->fetch_stat_posts( $args );
 
 		if ( ! is_array( $posts ) )
@@ -683,6 +722,7 @@ class GO_Content_Stats
 		$post_data = array();
 		foreach ( $posts as $post )
 		{
+			setup_postdata( $post );
 			$data = new stdclass;
 
 			$data->id = $post->ID;
@@ -728,12 +768,16 @@ class GO_Content_Stats
 
 			$data->comments = $post->comment_count;
 
-			foreach ( $this->config['content_matches'] as $key => $match )
+			foreach ( $this->config['columns'] as $key => $match )
 			{
-				if ( preg_match( $match['regex'], $post->post_content ) )
-				{
-					$data->$key = 'yes';
-				}// end if
+				$data->$key = call_user_func_array(
+					$match['summary'],
+					array(
+						$data->$key,
+						$post,
+						$match,
+					)
+				);
 			}// end foreach
 
 			$post_data[] = clone $data;
@@ -817,6 +861,68 @@ class GO_Content_Stats
 	{
 		return "{$this->id_base}-{$field_name}";
 	}//end get_field_id
+
+	/**
+	 * counts the occurrences of the given regex in the post's content
+	 *
+	 * @param WP_Post $post Post object
+	 * @param string $regex Regular expression to check for within the post's contents
+	 *
+	 * @return int
+	 */
+	public function count_regex( $post, $regex )
+	{
+		return preg_match_all( $regex, $post->post_content );
+	}//end count_regex
+
+	/**
+	 * counts the images in the post's content
+	 *
+	 * @param WP_Post $post Post object
+	 *
+	 * @return int
+	 */
+	public function count_images( $post )
+	{
+		$regex = '!<img\s!';
+		return preg_match_all( $regex, $post->post_content );
+	}//end count_images
+
+	/**
+	 * counts the embeds in the post's content
+	 *
+	 * @param WP_Post $unused_post Post object
+	 *
+	 * @return int
+	 */
+	public function count_embeds( $unused_post )
+	{
+		$regex = '!<(object|embed|iframe|script)\s!';
+		return preg_match_all( $regex, get_the_content() );
+	}//end count_embeds
+
+	/**
+	 * Computes a sum of the results of a custom stat column config's "value" callback.
+	 *
+	 * @param int $value Current value of custom stat column
+	 * @param WP_Post $post Post object
+	 * @param array $column_config 
+	 */
+	public function summary_sum( $value, $post, $column_config )
+	{
+		$args = array(
+			$post,
+		);
+
+		if ( isset( $column_config['value_args'] ) )
+		{
+			$args = array_merge( $args, $column_config['value_args'] );
+		}//end if
+
+		$value += call_user_func_array( $column_config['value'], $args );
+
+		return $value;
+	}//end summary_sum
 }// END GO_Content_Stats
 
 function go_content_stats()
