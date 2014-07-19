@@ -13,12 +13,14 @@ class GO_Content_Stats_WP_CLI extends WP_CLI_Command
 	 * : Date to end fetching data from (format: something strtotime-able)
 	 * [--json-dir=<json-dir>]
 	 * : Location to store and check for Google Analytics json data
+	 * [--fill-post-ids]
+	 * : If specified, will attempt to fill post ids upon completion of the fetch
 	 *
 	 * ## EXAMPLES
 	 *
 	 *     wp go_content_stats fetch --start='-3 weeks' --end='now' --json-dir='/tmp/google-analytics-json/'
 	 *
-	 * @synopsis [--start=<start>] [--end=<end>] [--json-dir=<json-dir>]
+	 * @synopsis [--start=<start>] [--end=<end>] [--json-dir=<json-dir>] [--fill-post-ids]
 	 */
 	public function fetch( $unused_args, $assoc_args )
 	{
@@ -59,7 +61,10 @@ class GO_Content_Stats_WP_CLI extends WP_CLI_Command
 
 		WP_CLI::line( 'Finished fetching analytics data.' );
 
-		$this->fill_post_ids();
+		if ( isset( $assoc_args['fill-post-ids'] ) )
+		{
+			$this->fill_post_ids();
+		}//end if
 	}//end fetch
 
 	/**
