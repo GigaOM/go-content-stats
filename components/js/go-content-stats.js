@@ -337,18 +337,39 @@ if ( 'undefined' === typeof go_content_stats ) {
 	};
 
 	go_content_stats.build_summary = function() {
+		var i;
+		var column;
+
 		this.summary = {
 			'items': 0,
 			'posts': 0,
 			'pvs': 0,
-			'comments': 0,
+			'comments': 0
 		};
 
-		for ( var i in this.stats ) {
+		// initialize summary properties for custom columns
+		for ( i in this.stats[0] ) {
+			if ( -1 === i.indexOf( 'column_' ) ) {
+				continue;
+			}//end if
+
+			this.summary[ i ] = 0;
+		}//end for
+
+		for ( i in this.stats ) {
 			this.summary.items++;
 			this.summary.posts += this.stats[ i ].posts;
 			this.summary.pvs += this.stats[ i ].pvs;
 			this.summary.comments += this.stats[ i ].comments;
+
+			// calculate summary data for custom columns
+			for ( column in this.summary ) {
+				if ( -1 === column.indexOf( 'column_' ) ) {
+					continue;
+				}//end if
+
+				this.summary[ column ] += this.stats[ i ][ column ];
+			}//end for
 		}//end for
 	};
 
@@ -629,6 +650,16 @@ if ( 'undefined' === typeof go_content_stats ) {
 			$summary.find( '.pvs' ).html( this.number_format( this.summary.pvs ) );
 			$summary.find( '.pvs-per-post' ).html( this.decimal_format( this.summary.pvs / this.summary.posts ) );
 		}
+
+		// summarize custom columns
+		for ( var column in this.summary ) {
+			if ( -1 === column.indexOf( 'column_' ) ) {
+				continue;
+			}//end if
+
+			$summary.find( '.' + column ).html( this.number_format( this.summary[ column ] ) );
+
+		}//end for
 
 		this.graph.render_top_graph();
 	};
