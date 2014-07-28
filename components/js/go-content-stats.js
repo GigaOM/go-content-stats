@@ -392,14 +392,15 @@ if ( 'undefined' === typeof go_content_stats ) {
 			}//end if
 		}//end for
 
+		this.$stat_data.find( '.fa-spinner' ).remove();
 		this.$stat_data.block( this.blockui_args );
-		this.$taxonomy_data.block( this.blockui_args );
 
 		this.fetch_in_chunks( 'general', this.gaps.general.slice( 0 ) );
 		this.fetch_in_chunks( 'pvs', this.gaps.pvs.slice( 0 ) );
 	};
 
 	go_content_stats.fetch_taxonomies = function() {
+		this.$taxonomy_data.block( this.blockui_args );
 		var taxonomies_promise = this.fetch_stats( 'taxonomies' );
 
 		// when the taxonomy data has come back, render it
@@ -681,6 +682,7 @@ if ( 'undefined' === typeof go_content_stats ) {
 		var template = Handlebars.compile( source );
 
 		$( '#taxonomy-data' ).html( template( data ) );
+		this.$taxonomy_data.unblock();
 	};
 
 	/**
