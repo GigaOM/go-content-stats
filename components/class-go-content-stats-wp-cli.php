@@ -29,7 +29,7 @@ class GO_Content_Stats_WP_CLI extends WP_CLI_Command
 		$start = strtotime( 'yesterday' );
 		$end = $start;
 
-		if ( ! isset( $assoc_args['url'] ) || FALSE === strstr( $assoc_args['url'], 'search' ) )
+		if ( ! isset( $assoc_args['url'] ) || FALSE === strpos( $assoc_args['url'], 'search' ) )
 		{
 			WP_CLI::error( '--url must be specified and it must be a search URL.' );
 		}// end if
@@ -87,7 +87,7 @@ class GO_Content_Stats_WP_CLI extends WP_CLI_Command
 	 */
 	public function fill_post_ids()
 	{
-		if ( ! isset( $assoc_args['url'] ) || FALSE === strstr( $assoc_args['url'], 'search' ) )
+		if ( ! isset( $assoc_args['url'] ) || FALSE === strpos( $assoc_args['url'], 'search' ) )
 		{
 			WP_CLI::error( '--url must be specified and it must be a search URL.' );
 		}// end if
