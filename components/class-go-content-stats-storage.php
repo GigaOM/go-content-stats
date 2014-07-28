@@ -306,10 +306,7 @@ class GO_Content_Stats_Storage
 
 						if ( $guid )
 						{
-							$sql = "SELECT ID FROM {$wpdb->posts} WHERE guid = %s";
-							$sql = $wpdb->prepare( $sql, $guid );
-							$result = $wpdb->get_var( $sql );
-							$post_id = $result ?: -3; // no GUID match
+							$post_id = $this->get_post_id_by_guid( $guid );
 						}//end if
 					}//end if
 				}//end else
@@ -322,6 +319,26 @@ class GO_Content_Stats_Storage
 
 		return $count;
 	}//end fill_post_id
+
+	/**
+	 * retrieves a post ID by guid
+	 *
+	 * @param string $guid WP Post GUID
+	 */
+	public function get_post_id_by_guid( $guid )
+	{
+		$sql = "SELECT ID FROM {$wpdb->posts} WHERE guid = %s";
+		$sql = $wpdb->prepare( $sql, $guid );
+		$result = $wpdb->get_var( $sql );
+		$post_id = $result ?: -3; // no GUID match
+
+		if ( $post_id > 0 )
+		{
+			wp_cache_set( $row->url, $post_id, $this->cache_group );
+		}//end if
+
+		return $post_id;
+	}//end get_post_id_by_guid
 
 	/**
 	 * create table if it doesn't exist
