@@ -306,7 +306,7 @@ class GO_Content_Stats_Storage
 
 						if ( $guid )
 						{
-							$post_id = $this->get_post_id_by_guid( $guid );
+							$post_id = $this->get_post_id_by_guid( $row->url, $guid );
 						}//end if
 					}//end if
 				}//end else
@@ -323,10 +323,12 @@ class GO_Content_Stats_Storage
 	/**
 	 * retrieves a post ID by guid
 	 *
+	 * @param string $url URL of page hit
 	 * @param string $guid WP Post GUID
 	 */
-	public function get_post_id_by_guid( $guid )
+	public function get_post_id_by_guid( $url, $guid )
 	{
+		global $wpdb;
 		$sql = "SELECT ID FROM {$wpdb->posts} WHERE guid = %s";
 		$sql = $wpdb->prepare( $sql, $guid );
 		$result = $wpdb->get_var( $sql );
@@ -334,7 +336,7 @@ class GO_Content_Stats_Storage
 
 		if ( $post_id > 0 )
 		{
-			wp_cache_set( $row->url, $post_id, $this->cache_group );
+			wp_cache_set( $url, $post_id, $this->cache_group );
 		}//end if
 
 		return $post_id;
