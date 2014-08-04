@@ -375,8 +375,7 @@ class GO_Content_Stats_Storage
 				`added_timestamp` timestamp DEFAULT 0,
 				PRIMARY KEY (id),
 				KEY `date` (`date`),
-				KEY `post_id` (`post_id`),
-  				KEY `url_property` (`property`(2),`url`)
+				KEY `post_id` (`post_id`)
 			) ENGINE=InnoDB $charset_collate
 		";
 
