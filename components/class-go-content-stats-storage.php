@@ -3,6 +3,7 @@
 class GO_Content_Stats_Storage
 {
 	private $table = NULL;
+	private $cache_group = 'go-content-stats';
 	private $core;
 	private $fields = array(
 		'id' => '%d',
@@ -279,43 +280,67 @@ class GO_Content_Stats_Storage
 			$post_id = -1; // couldn't find a GUID
 			$guid = '';
 
-			$content = wp_remote_get( $row->url, $remote_args );
-
-			if ( is_wp_error( $content ) )
+			if ( $temp_post_id = wp_cache_get( $row->url, $this->cache_group ) && $temp_post_id > 0 )
 			{
-				$post_id = -2; // page failed to load
+				$post_id = $temp_post_id;
 			}//end if
 			else
 			{
-				$pattern = '/var bstat = ({.+});/';
-				if ( 1 === preg_match( $pattern, $content['body'], $matches ) )
-				{
-					// the json payload
-					$bstat_var = json_decode( $matches[1] );
-					if ( ! empty( $bstat_var ) )
-					{
-						$guid = $bstat_var->guid;
-					}//end if
+				$content = wp_remote_get( $row->url, $remote_args );
 
-					if ( $guid )
-					{
-						$sql = "SELECT ID FROM {$wpdb->posts} WHERE guid = %s";
-						$sql = $wpdb->prepare( $sql, $guid );
-						$result = $wpdb->get_var( $sql );
-						$post_id = $result ?: -3; // no GUID match
-					}//end if
+				if ( is_wp_error( $content ) )
+				{
+					$post_id = -2; // page failed to load
 				}//end if
+				else
+				{
+					$pattern = '/var bstat = ({.+});/';
+					if ( 1 === preg_match( $pattern, $content['body'], $matches ) )
+					{
+						// the json payload
+						$bstat_var = json_decode( $matches[1] );
+						if ( ! empty( $bstat_var ) )
+						{
+							$guid = $bstat_var->guid;
+						}//end if
+
+						if ( $guid )
+						{
+							$post_id = $this->get_post_id_by_guid( $row->url, $guid );
+						}//end if
+					}//end if
+				}//end else
 			}//end else
 
 			$count += $this->update( array( 'post_id' => $post_id ), array(
-				'property' => $row->property,
-				'url' => $row->url,
-				'post_id' => 0,
+				'id' => $row->id,
 			) );
 		}//end foreach
 
 		return $count;
 	}//end fill_post_id
+
+	/**
+	 * retrieves a post ID by guid
+	 *
+	 * @param string $url URL of page hit
+	 * @param string $guid WP Post GUID
+	 */
+	public function get_post_id_by_guid( $url, $guid )
+	{
+		global $wpdb;
+		$sql = "SELECT ID FROM {$wpdb->posts} WHERE guid = %s";
+		$sql = $wpdb->prepare( $sql, $guid );
+		$result = $wpdb->get_var( $sql );
+		$post_id = $result ?: -3; // no GUID match
+
+		if ( $post_id > 0 )
+		{
+			wp_cache_set( $url, $post_id, $this->cache_group );
+		}//end if
+
+		return $post_id;
+	}//end get_post_id_by_guid
 
 	/**
 	 * create table if it doesn't exist
@@ -350,8 +375,7 @@ class GO_Content_Stats_Storage
 				`added_timestamp` timestamp DEFAULT 0,
 				PRIMARY KEY (id),
 				KEY `date` (`date`),
-				KEY `post_id` (`post_id`),
-  				KEY `url_property` (`property`(2),`url`)
+				KEY `post_id` (`post_id`)
 			) ENGINE=InnoDB $charset_collate
 		";
 
