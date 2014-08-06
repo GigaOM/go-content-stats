@@ -267,8 +267,6 @@ class GO_Content_Stats_Storage
 			'order' => 'DESC',
 		);
 
-		switch_to_blog( 3 );
-
 		$records = $this->get( $args );
 
 		$remote_args = array(
@@ -318,8 +316,6 @@ class GO_Content_Stats_Storage
 				'id' => $row->id,
 			) );
 		}//end foreach
-
-		restore_current_blog();
 
 		return $count;
 	}//end fill_post_id
