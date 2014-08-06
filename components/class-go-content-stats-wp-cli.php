@@ -7,8 +7,6 @@ class GO_Content_Stats_WP_CLI extends WP_CLI_Command
 	 *
 	 * ## OPTIONS
 	 *
-	 * [--url=<url>]
-	 * : WordPress gets executed in the context of this URL. Note: use a search URL (format: search.gigaom.com)
 	 * [--start=<start>]
 	 * : Date to begin fetching data from (format: something strtotime-able)
 	 * [--end=<end>]
@@ -28,11 +26,6 @@ class GO_Content_Stats_WP_CLI extends WP_CLI_Command
 	{
 		$start = strtotime( 'yesterday' );
 		$end = $start;
-
-		if ( ! isset( $assoc_args['url'] ) || FALSE === strpos( $assoc_args['url'], 'search' ) )
-		{
-			WP_CLI::error( '--url must be specified and it must be a search URL.' );
-		}// end if
 
 		if ( isset( $assoc_args['start'] ) )
 		{
@@ -78,8 +71,7 @@ class GO_Content_Stats_WP_CLI extends WP_CLI_Command
 	 * fills post ids on records that are missing them
 	 *
 	 * ## OPTIONS
-	 * [--url=<url>]
-	 * : WordPress gets executed in the context of this URL. Note: use a search URL (format: search.gigaom.com)
+	 *     none
 	 *
 	 * ## EXAMPLES
 	 *
@@ -87,11 +79,6 @@ class GO_Content_Stats_WP_CLI extends WP_CLI_Command
 	 */
 	public function fill_post_ids()
 	{
-		if ( ! isset( $assoc_args['url'] ) || FALSE === strpos( $assoc_args['url'], 'search' ) )
-		{
-			WP_CLI::error( '--url must be specified and it must be a search URL.' );
-		}// end if
-
 		WP_CLI::line( 'Filling GUIDs.' );
 		$count = 1;
 		$time = time();
