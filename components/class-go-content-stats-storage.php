@@ -257,15 +257,19 @@ class GO_Content_Stats_Storage
 	/**
 	 * fill post_id
 	 */
-	public function fill_post_id()
+	public function fill_post_id( $date = NULL )
 	{
-		global $wpdb;
 		$args = array(
 			'post_id' => 0,
 			'limit' => '0,50',
 			'orderby' => 'date',
 			'order' => 'DESC',
 		);
+
+		if ( ! empty( $date ) )
+		{
+			$args['date'] = date( 'Y-m-d', strtotime( $date ) );
+		}
 
 		$records = $this->get( $args );
 

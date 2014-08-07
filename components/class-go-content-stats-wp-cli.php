@@ -75,23 +75,50 @@ class GO_Content_Stats_WP_CLI extends WP_CLI_Command
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     wp go_content_stats fill_post_ids
+	 *     wp go_content_stats fill_post_ids --start='-3 weeks' --end='now'
+	 *
+	 * @synopsis [--start=<start>] [--end=<end>]
 	 */
-	public function fill_post_ids()
+	public function fill_post_ids( $unused_args, $assoc_args )
 	{
-		WP_CLI::line( 'Filling GUIDs.' );
+		$start = strtotime( '-1 year' );
+		$end = time();
+
+		if ( isset( $assoc_args['start'] ) )
+		{
+			$start = strtotime( $assoc_args['start'] );
+		}//end if
+
+		if ( isset( $assoc_args['end'] ) )
+		{
+			$end = strtotime( $assoc_args['end'] );
+		}//end if
+
+		if ( $start > $end )
+		{
+			WP_CLI::error( '--start must be less than --end' );
+		}// end if
+
+		WP_CLI::line( 'Filling GUIDs from ' . date( 'Y-m-d', $start ) . ' => ' . date( 'Y-m-d', $end ) . '...' );
 		$count = 1;
 		$time = time();
-		while ( $count > 0 )
+		$date = $start;
+
+		while ( $date <= $end )
 		{
-			$count = go_content_stats()->storage()->fill_post_id();
+			while ( $count > 0 )
+			{
+				$count = go_content_stats()->storage()->fill_post_id( date( 'Y-m-d', $date ) );
 
-			$new_time = time();
-			$seconds = $new_time - $time;
-			WP_CLI::line( " $count: $seconds seconds" );
-			$time = $new_time;
-		}// end while
+				$new_time = time();
+				$seconds = $new_time - $time;
+				WP_CLI::line( " $count: $seconds seconds" );
+				$time = $new_time;
+			}// end while
 
-		WP_CLI::success( 'Post IDs filled.' );
+			$date = strtotime( '+1 day', strtotime( $date ) );
+		}//end while
+
+		WP_CLI::success( 'Post IDs filled from ' . date( 'Y-m-d', $start ) . ' => ' . date( 'Y-m-d', $end ) . '.' );
 	}//end fill_post_ids
 }//end class
