@@ -269,6 +269,7 @@ class GO_Content_Stats_Storage
 		if ( ! empty( $date ) )
 		{
 			$args['date'] = date( 'Y-m-d', strtotime( $date ) );
+			$args['orderby'] = 'views';
 		}
 
 		$records = $this->get( $args );
