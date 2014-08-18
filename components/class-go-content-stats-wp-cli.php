@@ -100,12 +100,12 @@ class GO_Content_Stats_WP_CLI extends WP_CLI_Command
 		}// end if
 
 		WP_CLI::line( 'Filling GUIDs from ' . date( 'Y-m-d', $start ) . ' => ' . date( 'Y-m-d', $end ) . '...' );
-		$count = 1;
-		$time = time();
-		$date = $start;
 
+		$date = $start;
 		while ( $date <= $end )
 		{
+			$count = 1;
+			$time = time();
 			while ( $count > 0 )
 			{
 				$count = go_content_stats()->storage()->fill_post_id( date( 'Y-m-d', $date ) );
@@ -116,7 +116,7 @@ class GO_Content_Stats_WP_CLI extends WP_CLI_Command
 				$time = $new_time;
 			}// end while
 
-			$date = strtotime( '+1 day', strtotime( $date ) );
+			$date += 86400; // +1 day
 		}//end while
 
 		WP_CLI::success( 'Post IDs filled from ' . date( 'Y-m-d', $start ) . ' => ' . date( 'Y-m-d', $end ) . '.' );

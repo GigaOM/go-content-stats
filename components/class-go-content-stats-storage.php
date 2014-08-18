@@ -280,6 +280,11 @@ class GO_Content_Stats_Storage
 
 		$count = 0;
 
+		if ( ! count( $records ) )
+		{
+			return 0;
+		}
+
 		foreach ( $records as $row )
 		{
 			$post_id = -1; // couldn't find a GUID
