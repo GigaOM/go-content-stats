@@ -263,7 +263,7 @@ class GO_Content_Stats
 				'bootstrap-daterangepicker',
 				'rickshaw',
 				'handlebars',
-				'jquery-blockui',
+				'blockui',
 			),
 			$script_config['version'],
 			TRUE
