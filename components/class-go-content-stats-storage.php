@@ -259,6 +259,8 @@ class GO_Content_Stats_Storage
 	 */
 	public function fill_post_id( $date = NULL )
 	{
+		global $wpdb;
+
 		$args = array(
 			'post_id' => 0,
 			'limit' => '0,50',
@@ -296,6 +298,17 @@ class GO_Content_Stats_Storage
 			}//end if
 			else
 			{
+				$sql = "SELECT post_id FROM {$this->table} WHERE url = %s AND post_id <> 0 LIMIT 1";
+				$sql = $wpdb->prepare( $sql, $row->url );
+				$result = $wpdb->get_var( $sql );
+				$post_id = $result ?: -1;
+
+				if ( $post_id > 0 )
+				{
+					wp_cache_set( $url, $post_id, $this->cache_group );
+					break;
+				}//end if
+
 				$content = wp_remote_get( $row->url, $remote_args );
 
 				if ( is_wp_error( $content ) )
@@ -385,7 +398,8 @@ class GO_Content_Stats_Storage
 				`added_timestamp` timestamp DEFAULT 0,
 				PRIMARY KEY (id),
 				KEY `date` (`date`),
-				KEY `post_id` (`post_id`)
+				KEY `post_id` (`post_id`),
+				KEY `url` (`url`),
 			) ENGINE=InnoDB $charset_collate
 		";
 
