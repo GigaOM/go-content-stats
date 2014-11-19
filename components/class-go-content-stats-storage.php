@@ -298,41 +298,35 @@ class GO_Content_Stats_Storage
 			}//end if
 			else
 			{
-				$sql = "SELECT post_id FROM {$this->table} WHERE url = %s AND post_id <> 0 LIMIT 1";
-				$sql = $wpdb->prepare( $sql, $row->url );
-				$result = $wpdb->get_var( $sql );
-				$post_id = $result ?: -1;
+				$post_id = $this->get_post_id_from_stats( $row->url );
 
-				if ( $post_id > 0 )
+				if ( $post_id <= 0 )
 				{
-					wp_cache_set( $url, $post_id, $this->cache_group );
-					break;
-				}//end if
+					$content = wp_remote_get( $row->url, $remote_args );
 
-				$content = wp_remote_get( $row->url, $remote_args );
-
-				if ( is_wp_error( $content ) )
-				{
-					$post_id = -2; // page failed to load
-				}//end if
-				else
-				{
-					$pattern = '/var bstat = ({.+});/';
-					if ( 1 === preg_match( $pattern, $content['body'], $matches ) )
+					if ( is_wp_error( $content ) )
 					{
-						// the json payload
-						$bstat_var = json_decode( $matches[1] );
-						if ( ! empty( $bstat_var ) )
-						{
-							$guid = $bstat_var->guid;
-						}//end if
-
-						if ( $guid )
-						{
-							$post_id = $this->get_post_id_by_guid( $row->url, $guid );
-						}//end if
+						$post_id = -2; // page failed to load
 					}//end if
-				}//end else
+					else
+					{
+						$pattern = '/var bstat = ({.+});/';
+						if ( 1 === preg_match( $pattern, $content['body'], $matches ) )
+						{
+							// the json payload
+							$bstat_var = json_decode( $matches[1] );
+							if ( ! empty( $bstat_var ) )
+							{
+								$guid = $bstat_var->guid;
+							}//end if
+
+							if ( $guid )
+							{
+								$post_id = $this->get_post_id_by_guid( $row->url, $guid );
+							}//end if
+						}//end if
+					}//end else
+				}//end if
 			}//end else
 
 			$count += $this->update( array( 'post_id' => $post_id ), array(
@@ -342,6 +336,27 @@ class GO_Content_Stats_Storage
 
 		return $count;
 	}//end fill_post_id
+
+	/**
+	 * retrieves a post ID by url from stats
+	 *
+	 * @param string $url URL of page hit
+	 */
+	public function get_post_id_from_stats( $url )
+	{
+		global $wpdb;
+		$sql = "SELECT post_id FROM {$this->table} WHERE url = %s AND post_id <> 0 LIMIT 1";
+		$sql = $wpdb->prepare( $sql, $url );
+		$result = $wpdb->get_var( $sql );
+		$post_id = $result ?: -4; // couldn't find in stats
+
+		if ( $post_id > 0 )
+		{
+			wp_cache_set( $url, $post_id, $this->cache_group );
+		}//end if
+
+		return $post_id;
+	}//end get_post_id_from_stats
 
 	/**
 	 * retrieves a post ID by guid
