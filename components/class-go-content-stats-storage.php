@@ -259,8 +259,6 @@ class GO_Content_Stats_Storage
 	 */
 	public function fill_post_id( $date = NULL )
 	{
-		global $wpdb;
-
 		$args = array(
 			'post_id' => 0,
 			'limit' => '0,50',
@@ -276,16 +274,16 @@ class GO_Content_Stats_Storage
 
 		$records = $this->get( $args );
 
-		$remote_args = array(
-			'compress' => TRUE,
-		);
-
 		$count = 0;
 
 		if ( ! count( $records ) )
 		{
 			return 0;
 		}
+
+		$remote_args = array(
+			'compress' => TRUE,
+		);
 
 		foreach ( $records as $row )
 		{
@@ -302,7 +300,8 @@ class GO_Content_Stats_Storage
 
 				if ( $post_id <= 0 )
 				{
-					$content = wp_remote_get( $row->url, $remote_args );
+					$url = 'gigaom' == $row->property ? str_replace( 'http://', 'https://', $row->url ) : $row->url;
+					$content = wp_remote_get( $url, $remote_args );
 
 					if ( is_wp_error( $content ) )
 					{
@@ -329,9 +328,9 @@ class GO_Content_Stats_Storage
 				}//end if
 			}//end else
 
-			$count += $this->update( array( 'post_id' => $post_id ), array(
-				'id' => $row->id,
-			) );
+			// if we found a post match for the URL, go ahead and update all the entries
+			$where = $post_id > 0 ? array( 'url' => $row->url, 'post_id' => $args['post_id'] ) : array( 'id' => $row->id );
+			$count += $this->update( array( 'post_id' => $post_id ), $where );
 		}//end foreach
 
 		return $count;
@@ -414,7 +413,7 @@ class GO_Content_Stats_Storage
 				PRIMARY KEY (id),
 				KEY `date` (`date`),
 				KEY `post_id` (`post_id`),
-				KEY `url` (`url`),
+				KEY `url` (`url`)
 			) ENGINE=InnoDB $charset_collate
 		";
 
