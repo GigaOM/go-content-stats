@@ -127,6 +127,7 @@ class GO_Content_Stats_Load
 			$stat_row = array(
 				'date' => $date,
 				'property' => $property,
+				// this needs to remain http because that matches the guid
 				'url' => 'http://' .  $row[1] . $row[0],
 				'views' => $row[2],
 			);

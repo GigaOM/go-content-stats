@@ -274,16 +274,16 @@ class GO_Content_Stats_Storage
 
 		$records = $this->get( $args );
 
-		$remote_args = array(
-			'compress' => TRUE,
-		);
-
 		$count = 0;
 
 		if ( ! count( $records ) )
 		{
 			return 0;
 		}
+
+		$remote_args = array(
+			'compress' => TRUE,
+		);
 
 		foreach ( $records as $row )
 		{
@@ -296,39 +296,66 @@ class GO_Content_Stats_Storage
 			}//end if
 			else
 			{
-				$content = wp_remote_get( $row->url, $remote_args );
+				$post_id = $this->get_post_id_from_stats( $row->url );
 
-				if ( is_wp_error( $content ) )
+				if ( $post_id <= 0 )
 				{
-					$post_id = -2; // page failed to load
-				}//end if
-				else
-				{
-					$pattern = '/var bstat = ({.+});/';
-					if ( 1 === preg_match( $pattern, $content['body'], $matches ) )
+					$url = 'gigaom' == $row->property ? str_replace( 'http://', 'https://', $row->url ) : $row->url;
+					$content = wp_remote_get( $url, $remote_args );
+
+					if ( is_wp_error( $content ) )
 					{
-						// the json payload
-						$bstat_var = json_decode( $matches[1] );
-						if ( ! empty( $bstat_var ) )
-						{
-							$guid = $bstat_var->guid;
-						}//end if
-
-						if ( $guid )
-						{
-							$post_id = $this->get_post_id_by_guid( $row->url, $guid );
-						}//end if
+						$post_id = -2; // page failed to load
 					}//end if
-				}//end else
+					else
+					{
+						$pattern = '/var bstat = ({.+});/';
+						if ( 1 === preg_match( $pattern, $content['body'], $matches ) )
+						{
+							// the json payload
+							$bstat_var = json_decode( $matches[1] );
+							if ( ! empty( $bstat_var ) )
+							{
+								$guid = $bstat_var->guid;
+							}//end if
+
+							if ( $guid )
+							{
+								$post_id = $this->get_post_id_by_guid( $row->url, $guid );
+							}//end if
+						}//end if
+					}//end else
+				}//end if
 			}//end else
 
-			$count += $this->update( array( 'post_id' => $post_id ), array(
-				'id' => $row->id,
-			) );
+			// if we found a post match for the URL, go ahead and update all the entries
+			$where = $post_id > 0 ? array( 'url' => $row->url, 'post_id' => $args['post_id'] ) : array( 'id' => $row->id );
+			$count += $this->update( array( 'post_id' => $post_id ), $where );
 		}//end foreach
 
 		return $count;
 	}//end fill_post_id
+
+	/**
+	 * retrieves a post ID by url from stats
+	 *
+	 * @param string $url URL of page hit
+	 */
+	public function get_post_id_from_stats( $url )
+	{
+		global $wpdb;
+		$sql = "SELECT post_id FROM {$this->table} WHERE url = %s AND post_id <> 0 LIMIT 1";
+		$sql = $wpdb->prepare( $sql, $url );
+		$result = $wpdb->get_var( $sql );
+		$post_id = $result ?: -4; // couldn't find in stats
+
+		if ( $post_id > 0 )
+		{
+			wp_cache_set( $url, $post_id, $this->cache_group );
+		}//end if
+
+		return $post_id;
+	}//end get_post_id_from_stats
 
 	/**
 	 * retrieves a post ID by guid
@@ -385,7 +412,8 @@ class GO_Content_Stats_Storage
 				`added_timestamp` timestamp DEFAULT 0,
 				PRIMARY KEY (id),
 				KEY `date` (`date`),
-				KEY `post_id` (`post_id`)
+				KEY `post_id` (`post_id`),
+				KEY `url` (`url`)
 			) ENGINE=InnoDB $charset_collate
 		";
 
