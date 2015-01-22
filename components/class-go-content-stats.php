@@ -233,6 +233,8 @@ class GO_Content_Stats
 			return;
 		} // END if
 
+		$js_min = ( defined( 'GO_DEV' ) && GO_DEV ) ? 'lib' : 'min';
+
 		$script_config = apply_filters( 'go-config', array( 'version' => 1 ), 'go-script-version' );
 
 		// make sure our go-graphing styles and js are registered
@@ -258,7 +260,7 @@ class GO_Content_Stats
 
 		wp_register_script(
 			'go-content-stats',
-			plugins_url( 'js/go-content-stats.js', __FILE__ ),
+			plugins_url( 'js/' . $js_min . '/go-content-stats.js', __FILE__ ),
 			array(
 				'bootstrap-daterangepicker',
 				'rickshaw',
@@ -271,7 +273,7 @@ class GO_Content_Stats
 
 		wp_register_script(
 			'go-content-stats-graph',
-			plugins_url( 'js/go-content-stats-graph.js', __FILE__ ),
+			plugins_url( 'js/' . $js_min . '/go-content-stats-graph.js', __FILE__ ),
 			array(
 				'go-content-stats',
 			),
@@ -281,7 +283,7 @@ class GO_Content_Stats
 
 		wp_register_script(
 			'go-content-stats-behavior',
-			plugins_url( 'js/go-content-stats-behavior.js', __FILE__ ),
+			plugins_url( 'js/' . $js_min . '/go-content-stats-behavior.js', __FILE__ ),
 			array(
 				'go-content-stats-graph',
 			),
@@ -906,7 +908,7 @@ class GO_Content_Stats
 	 *
 	 * @param int $value Current value of custom stat column
 	 * @param WP_Post $post Post object
-	 * @param array $column_config 
+	 * @param array $column_config
 	 */
 	public function summary_sum( $value, $post, $column_config )
 	{
