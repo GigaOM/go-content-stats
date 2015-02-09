@@ -574,9 +574,13 @@ class GO_Content_Stats
 
 		$type = isset( $_GET['type'] ) ? sanitize_text_field( $_GET['type'] ) : 'general';
 		$key = isset( $_GET['key'] ) ? sanitize_text_field( $_GET['key'] ) : NULL;
+		$filter_type = isset( $_GET['filter_type'] ) ? sanitize_text_field( $_GET['filter_type'] ) : NULL;
+		$filter_key = isset( $_GET['filter_key'] ) ? sanitize_text_field( $_GET['filter_key'] ) : NULL;
 		$args = array(
 			'type' => $type,
 			'key' => $key,
+			'filter_type' => $filter_type,
+			'filter_key' => $filter_key,
 		);
 
 		$function = "fetch_$which";
@@ -825,6 +829,17 @@ class GO_Content_Stats
 
 	private function fetch_stat_posts( $args )
 	{
+		// fetching posts by day requires support for a secondary filter
+		if ( ! empty( $args['filter_type'] ) )
+		{
+			$args['type'] = $args['filter_type'];
+		}//end if
+
+		if ( ! empty( $args['filter_key'] ) )
+		{
+			$args['key'] = $args['filter_key'];
+		}//end if
+
 		// run the stats
 		if ( 'author' == $args['type'] && ( $author = get_user_by( 'id', $args['key'] ) ) )
 		{

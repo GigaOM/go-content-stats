@@ -593,11 +593,29 @@ if ( 'undefined' === typeof go_content_stats ) {
 		// @TODO: this will need to change when we are doing more than a single day per row
 		var key = $row.attr( 'id' ).replace( 'row-', '' );
 
+		var parsed_url = this.parse_url( window.location );
+		var filter_type = '';
+		var filter_key = '';
+
+		if (
+			'undefined' !== typeof parsed_url.type
+			&& parsed_url.type
+			&& 'undefined' !== typeof parsed_url.key
+			&& parsed_url.key
+		) {
+			filter_type = parsed_url.type;
+			filter_key = parsed_url.key;
+		}//end if
+
 		var post_date = this.stats[ key ].day;
 		var args = {
 			days: [ post_date ],
-			key: key
+			key: key,
+			filter_type: filter_type,
+			filter_key: filter_key
 		};
+
+		console.info( args );
 
 		var posts_promise = this.fetch_stats( 'posts', args );
 
@@ -764,6 +782,31 @@ if ( 'undefined' === typeof go_content_stats ) {
 		}//end if
 
 		this.render_stats();
+	};
+
+	/**
+	 * parses a URL into an object
+	 */
+	go_content_stats.parse_url = function( url ) {
+		url = url.search.substr( 1 ).split( '&' );
+
+		if ( '' === url ) {
+			return {};
+		}//end if
+
+		var url_obj = {};
+
+		for ( var i = 0; i < url.length; i++ ) {
+			var params = url[ i ].split( '=', 2 );
+
+			if ( 1 === params.length ) {
+				url_obj[ params[0] ] = '';
+			} else {
+				url_obj[ params[0] ] = decodeURIComponent( params[1].replace( /\+/g, ' ' ) );
+			}//end else
+		}//end for
+
+		return url_obj;
 	};
 
 	go_content_stats.event.mind_the_gap = function( e, data ) {
